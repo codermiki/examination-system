@@ -1,5 +1,5 @@
 <footer>
     <div class="footer__container">
-        <span>wcu.edu.et</span><span>&copy; All rights are reserved.</span>
+        <span>&copy; wcu.edu.et</span><span> All rights are reserved.</span>
     </div>
 </footer>
