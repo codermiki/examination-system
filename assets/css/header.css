@@ -1,0 +1,82 @@
+header {
+   height: 40px;
+   padding: 10px;
+   background-color: #fafbfc;
+   box-shadow: #d8d8d8 2px 2px 2px;
+}
+
+header nav {
+   display: flex;
+   justify-content: space-between;
+   align-items: center;
+   padding: 0 20px;
+   height: 100%;
+}
+.header__logo {
+   display: flex;
+   align-items: center;
+   gap: 5px;
+}
+
+.logo__container {
+   width: 40px;
+   height: 40px;
+   background: url("../images/logo/logo.png");
+   background-repeat: no-repeat;
+   background-position: center;
+   background-size: cover;
+}
+
+.header__content {
+   display: flex;
+   justify-content: space-between;
+   align-items: center;
+}
+
+.account button {
+   padding: 5px 10px;
+   cursor: pointer;
+   border: none;
+   font-weight: 700;
+   background-color: #f5f5f6;
+   border-radius: 2px;
+   transition: all 0.2s ease-in-out;
+}
+
+.btn {
+   width: 100%;
+   padding: 10px;
+   cursor: pointer;
+   border: none;
+   font-weight: 700;
+   background-color: #ffffff;
+   border-radius: 2px;
+   transition: all 0.2s ease-in-out;
+}
+
+.btn:hover {
+   background-color: #e0f3ff;
+}
+
+.user {
+   display: none;
+   padding: 10px;
+   border: solid 1px gray;
+   border-radius: 5px;
+   background-color: #ffffff;
+   transition: all 0.3s ease;
+}
+
+.display {
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   gap: 5px;
+   position: absolute;
+   top: 50px;
+   right: 40px;
+}
+
+.logout {
+   width: 100%;
+}
