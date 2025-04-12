@@ -11,10 +11,36 @@ include_once '../config.php';
     if ($_SESSION['role'] == 3) {
         ?>
         <div class="role__container">
-            <p>MANAGE COURSES</p>
+            <p>MANAGE STUDENTS</p>
             <div class="drop__down">
                 <button onclick="collapse();" type="button">Course</button>
                 <div class="collapse">
+                    <div class="v__line"></div>
+                    <div class="action">
+                        <a href="#">Add Student</a>
+                        <a href="#">Manage Student</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="role__container">
+            <p>MANAGE INSTRUCTOR</p>
+            <div class="drop__down">
+                <div class="non-collapse ">
+                    <div class="v__line"></div>
+                    <div class="action">
+                        <a href="#">Assign Instructor</a>
+                        <a href="#">Manage Instructor</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="role__container">
+            <p>MANAGE COURSES</p>
+            <div class="drop__down">
+                <div class="non-collapse ">
                     <div class="v__line"></div>
                     <div class="action">
                         <a href="#">Add Course</a>
@@ -32,19 +58,6 @@ include_once '../config.php';
                     <div class="action">
                         <a href="#">Schedule Exam</a>
                         <a href="#">Manage Schedule</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="role__container">
-            <p>MANAGE INSTRUCTOR</p>
-            <div class="drop__down">
-                <div class="non-collapse ">
-                    <div class="v__line"></div>
-                    <div class="action">
-                        <a href="#">Assign Instructor</a>
-                        <a href="#">Manage Instructor</a>
                     </div>
                 </div>
             </div>

@@ -1,10 +1,12 @@
 <header>
     <nav>
-        <div class="header__logo">
-            <div class="logo__container">
+        <a href="#">
+            <div class="header__logo">
+                <div class="logo__container">
+                </div>
+                <h1>softexam</h1>
             </div>
-            <h1>softexam</h1>
-        </div>
+        </a>
         <div class="header__content">
             <div class="account">
                 <button onclick="toggle();" type="button">
@@ -27,7 +29,7 @@
                     ?>
                 </button>
                 <div class="user">
-                    <div class="username btn">
+                    <div class="username">
                         <?php
                         if (isset($_SESSION['username'])) {
                             echo $_SESSION['username'];

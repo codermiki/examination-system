@@ -4,6 +4,7 @@ include_once '../config.php';
 if (!isset($_SESSION['username']) || !isset($_SESSION['role'])) {
     header('Location: ../login.php');
 }
+
 if (!($_SESSION['role'] == 1)) {
     header('Location: ../');
 }
@@ -43,7 +44,9 @@ if (isset($_POST['logout'])) {
 
         </section>
     </main>
-
+    <?php
+    include "../includes/layout/footer.php";
+    ?>
 </body>
 
 </html>

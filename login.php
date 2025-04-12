@@ -92,6 +92,9 @@ if (isset($_POST['login'])) {
             </form>
         </div>
     </div>
+    <?php
+    include "./includes/layout/footer.php";
+    ?>
 </body>
 
 </html>

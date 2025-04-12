@@ -44,7 +44,9 @@ if (isset($_POST['logout'])) {
 
         </section>
     </main>
-
+    <?php
+    include "../includes/layout/footer.php";
+    ?>
 </body>
 
 </html>
