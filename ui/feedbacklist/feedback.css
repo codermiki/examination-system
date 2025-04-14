@@ -1,0 +1,124 @@
+
+
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  margin: 0;
+  padding: 20px;
+  background-color: #eef1f5;
+  color: #333; 
+}
+
+
+.main-title {
+  font-size: 0.9em; 
+  font-weight: 600; 
+  color: #5a6a7a; 
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 15px;
+  padding-left: 5px;
+}
+
+
+.feedback-container {
+  background-color: #ffffff; 
+  border-radius: 8px; 
+  padding: 20px 25px; 
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08); 
+  margin-bottom: 40px; 
+  overflow-x: auto; 
+}
+
+
+.list-title {
+  font-size: 0.85em;
+  font-weight: 600;
+  color: #6c757d;
+  margin-top: 0;
+  margin-bottom: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+
+table {
+  width: 100%;
+  border-collapse: collapse; 
+  font-size: 0.9em;
+}
+
+
+th, td {
+  padding: 15px 10px; 
+  text-align: left;
+  vertical-align: top; 
+  border-bottom: 1px solid #dee2e6; 
+  line-height: 1.4; 
+}
+
+
+thead th {
+  font-weight: 600; 
+  color: #495057; 
+  font-size: 0.85em;
+  text-transform: capitalize; 
+  border-bottom-width: 2px; 
+}
+
+
+tbody tr:last-child td {
+  border-bottom: none;
+}
+
+
+th:nth-child(1), td:nth-child(1) { 
+  width: 25%;
+  min-width: 120px; 
+}
+
+th:nth-child(2), td:nth-child(2) { 
+  width: 50%;
+  min-width: 200px;
+}
+
+th:nth-child(3), td:nth-child(3) { 
+  width: 25%;
+  min-width: 100px;
+  text-align: right; 
+  color: #6c757d; 
+}
+
+
+tbody tr:hover {
+  background-color: #f8f9fa; 
+}
+
+
+.fab {
+  position: fixed; 
+  bottom: 25px;
+  right: 25px;
+  width: 56px;
+  height: 56px;
+  background-color: #ffc107; 
+  color: #333; 
+  border: none;
+  border-radius: 50%; 
+  font-size: 26px; 
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); 
+  transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out; 
+  z-index: 1000; 
+}
+
+.fab:hover {
+  background-color: #e0a800; 
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.25);
+}
+
+.fab:focus {
+  outline: none; 
+}
