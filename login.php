@@ -40,7 +40,7 @@ if (isset($_POST['login'])) {
         // create user session if user register successfully
         if ($result) {
             foreach ($result as $user) {
-                $_SESSION['username'] = $user['name'];
+                $_SESSION['username'] = $user['name'];//asign fullname of user to $_SESSION['username']
                 $_SESSION['role'] = $user['role'];
             }
         }
