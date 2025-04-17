@@ -8,7 +8,7 @@ include_once '../config.php';
 
     <!-- admin role start -->
     <?php
-    if ($_SESSION['role'] == 3) {
+    if ($_SESSION['role'] == 'admin') {
         ?>
         <div class="role__container">
             <p>MANAGE STUDENTS</p>
@@ -81,7 +81,7 @@ include_once '../config.php';
 
     <!-- instructor role start -->
     <?php
-    if ($_SESSION['role'] == 2) {
+    if ($_SESSION['role'] == 'instructor') {
         ?>
 
         <div class="role__container">
@@ -130,7 +130,7 @@ include_once '../config.php';
 
     <!-- student role start -->
     <?php
-    if ($_SESSION['role'] == 1) {
+    if ($_SESSION['role'] == 'student') {
         ?>
 
         <div class="role__container">

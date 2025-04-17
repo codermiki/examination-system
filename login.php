@@ -1,18 +1,8 @@
 <?php
 include_once 'config.php';
 
-if (isset($_SESSION['username']) && isset($_SESSION['role'])) {
+if (isset($_SESSION['email']) && isset($_SESSION['role'])) {
     header('Location: ./');
-}
-
-$_SESSION["auth"] = "login";
-
-if (isset($_POST['login_form'])) {
-    $_SESSION["auth"] = "login";
-}
-
-if (isset($_POST['signup_form'])) {
-    $_SESSION["auth"] = "signup";
 }
 
 ?>
@@ -22,15 +12,15 @@ if (isset($_POST['signup_form'])) {
 $form_error = "";
 
 if (isset($_POST['login'])) {
-    if (!empty($_POST['username']) || !empty($_POST['password'])) {
+    if (!empty($_POST['email']) || !empty($_POST['password'])) {
         $form_error = "all required field must fill";
     }
     try {
         include_once "./includes/db/db.config.php";
-        $sql = "SELECT name, username, password, role FROM users WHERE username = :username AND password = :password";
+        $sql = "SELECT name, email, password, role FROM users WHERE email = :email AND password = :password";
         $stmt = $conn->prepare($sql);
 
-        $stmt->bindParam(":username", $_POST['username']);
+        $stmt->bindParam(":email", $_POST['email']);
         $stmt->bindParam(":password", $_POST['password']);
 
         $stmt->execute();
@@ -40,7 +30,7 @@ if (isset($_POST['login'])) {
         // create user session if user register successfully
         if ($result) {
             foreach ($result as $user) {
-                $_SESSION['username'] = $user['name'];//asign fullname of user to $_SESSION['username']
+                $_SESSION['email'] = $user['email'];//asign fullname of user to $_SESSION['email']
                 $_SESSION['role'] = $user['role'];
             }
         }
@@ -78,8 +68,8 @@ if (isset($_POST['login'])) {
             </div>
             <form action="login.php" method="post">
                 <div class="input_container">
-                    <label for="username">Username</label>
-                    <input id="username" type="text" name="username" placeholder="Username">
+                    <label style="margin-left: 30px;" for="email">Email</label>
+                    <input id="email" type="email" name="email" placeholder="Email">
                 </div>
 
                 <div class="input_container">

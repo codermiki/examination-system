@@ -11,15 +11,15 @@
             <div class="account">
                 <button onclick="toggle();" type="button">
                     <?php
-                    if (isset($_SESSION['username'])) {
+                    if (isset($_SESSION['email'])) {
                         switch ($_SESSION['role']) {
-                            case 3:
+                            case 'admin':
                                 echo "Admin";
                                 break;
-                            case 2:
+                            case 'instructor':
                                 echo "Instructor";
                                 break;
-                            case 1:
+                            case 'student':
                                 echo "Student";
                                 break;
                         }
@@ -29,10 +29,10 @@
                     ?>
                 </button>
                 <div class="user">
-                    <div class="username">
+                    <div class="email">
                         <?php
-                        if (isset($_SESSION['username'])) {
-                            echo $_SESSION['username'];
+                        if (isset($_SESSION['email'])) {
+                            echo $_SESSION['email'];
                         } else {
                             echo 'Sign in to your Account';
                         }
@@ -41,7 +41,7 @@
                     <hr />
                     <div class="logout">
                         <?php
-                        if (isset($_SESSION['username'])) {
+                        if (isset($_SESSION['email'])) {
                             ?>
                             <form action="./" method="post">
                                 <input class="btn" type="submit" name="logout" id="" value="logout">

@@ -1,6 +1,6 @@
 <?php
 $host = "localhost";
-$db_name = "exam_user";
+$db_name = "softexam_db";
 $dsn = "mysql:host=$host;dbname=$db_name;";
 $user = "root";
 $pass = "";
