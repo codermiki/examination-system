@@ -47,10 +47,15 @@ CREATE TABLE exams (
     course_id INT,
     instructor_id INT,
     title VARCHAR(255),
+    description TEXT,
+    time_limit INT, -- in minutes
+    total_marks INT,
+    status ENUM('active', 'inactive') DEFAULT 'inactive',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (course_id) REFERENCES courses(course_id),
     FOREIGN KEY (instructor_id) REFERENCES users(user_id)
 );
+
 
 -- Questions
 CREATE TABLE questions (
@@ -128,9 +133,16 @@ INSERT INTO exam_schedule (course_id, exam_date, start_time, end_time) VALUES
 (1, '2025-06-10', '10:00:00', '11:00:00'),
 (2, '2025-06-12', '14:00:00', '15:30:00');
 
-INSERT INTO exams (course_id, instructor_id, title) VALUES
-(1, 2, 'DB Midterm Exam'),
-(2, 2, 'Web Dev Final');
+INSERT INTO exams (course_id, instructor_id, title, description, time_limit, total_marks)
+VALUES (
+    1,
+    2,
+    'DB Midterm Exam',
+    'This exam covers SQL basics, ER models, and constraints.',
+    60,
+    100
+);
+
 
 INSERT INTO questions (exam_id, question_text, question_type, correct_answer) VALUES
 (1, 'MySQL is a NoSQL DBMS.', 'true_false', 'false'),

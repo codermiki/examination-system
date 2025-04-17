@@ -1,48 +1,32 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Assign Instructor</title>
-  <link rel="stylesheet" href="./css/style.css" />
-</head>
-<body>
-  <div class="wrap">
-    <div class="wrap-header">
-      <h2>Assign Instructor</h2>
-      <button class="close-btn">&times;</button>
-    </div>
-    <form class="assign-form">
-      <label for="fullname">Fullname</label>
-      <input type="text" id="fullname" placeholder="Input Fullname" required />
+   <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>Assign Instructor</title>
+      <link rel="stylesheet" href="./css/style.css" />
+   </head>
+   <body>
+      <div class="wrap">
+         <div class="wrap-header">
+            <h2>Assign Instructor</h2>
+            <button class="close-btn">&times;</button>
+         </div>
+         <form class="assign-form">
+            <label for="course">Instructor</label>
+            <select id="course" required>
+               <option>Select instructor</option>
+            </select>
+            <label for="course">Course Assigned</label>
+            <select id="course" required>
+               <option>Select course</option>
+            </select>
 
-      <label for="birthdate">Birthdate</label>
-      <input type="date" id="birthdate" required />
-
-      <label for="gender">Gender</label>
-      <select id="gender" required>
-        <option >Select gender</option>
-        <option>Male</option>
-        <option>Female</option>
-        <option>Other</option>
-      </select>
-
-      <label for="course">Course Assigned</label>
-      <select id="course" required>
-        <option >Select course</option>
-      </select>
-
-      <label for="email">Email</label>
-      <input type="email" id="email" placeholder="admin@username" required />
-
-      <label for="password">Password</label>
-      <input type="password" id="password" placeholder="********" required />
-
-      <div class="form-actions">
-        <button type="button" class="close">Cancel</button>
-        <button type="submit" class="add">Add Now</button>
+            <div class="form-actions">
+               <button type="button" class="close">Cancel</button>
+               <button type="submit" class="add">Add Now</button>
+            </div>
+         </form>
       </div>
-    </form>
-  </div>
-</body>
+   </body>
 </html>
