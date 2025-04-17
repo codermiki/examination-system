@@ -24,7 +24,7 @@
                                 break;
                         }
                     } else {
-                        echo "Sign in";
+                        echo "Login";
                     }
                     ?>
                 </button>
