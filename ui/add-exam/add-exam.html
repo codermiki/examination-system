@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Add Exam</title>
+  <link rel="stylesheet" href="./css/style.css" />
+</head>
+<body>
+  <div class="wrap">
+    <div class="wrap-header">
+      <h2>Add Exam</h2>
+      <!--<button class="close-btn">&times;</button>-->
+    </div>
+    <form class="exam-form">
+      <label for="course">Select Course</label>
+      <select id="course" required>
+        <option >Select Course</option>
+        <option value="web design">Web design</option>
+      </select>
+
+      <label for="timeLimit">Exam Time Limit</label>
+      <select id="timeLimit" required>
+        <option >Select time</option>
+      </select>
+
+      <label for="questionLimit">Question Limit to Display</label>
+      <input type="number" id="questionLimit" placeholder="Input question limit to display" required />
+
+      <label for="examTitle">Exam Title</label>
+      <input type="text" id="examTitle" placeholder="Input Exam Title" required />
+
+      <label for="examDescription">Exam Description</label>
+      <textarea id="examDescription" placeholder="Input Exam Description" rows="4"></textarea>
+
+      <div class="form-actions">
+        <button type="button" class="close">Cancel</button>
+        <button type="submit" class="add">Add Now</button>
+      </div>
+    </form>
+  </div>
+</body>
+</html>
