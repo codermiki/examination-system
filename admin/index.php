@@ -41,7 +41,34 @@ if (isset($_POST['logout'])) {
         </section>
 
         <section class="right__panel">
+            <!-- dashboard -->
+            <div class="dashboard">
+                <?php
+                include "./ui/dashboard.php";
+                ?>
+            </div>
 
+            <!-- assign student -->
+            <div class="assign_student">
+                <?php
+                include "./ui/assign_student.php";
+                ?>
+            </div>
+
+            <!-- assign instructor -->
+            <div class="assign_instructor">
+
+                <?php
+                include "./ui/assign_instructor.php";
+                ?>
+            </div>
+
+            <!-- add course -->
+            <div class="add_course">
+                <?php
+                include "./ui/add_course.php";
+                ?>
+            </div>
         </section>
     </main>
 

@@ -13,12 +13,14 @@ include_once '../config.php';
         <div class="role__container">
             <p>MANAGE STUDENTS</p>
             <div class="drop__down">
-                <button onclick="collapse();" type="button">Course</button>
-                <div class="collapse">
-                    <div class="v__line"></div>
-                    <div class="action">
-                        <a href="#">Add Student</a>
-                        <a href="#">Manage Student</a>
+                <button onclick="collapse();" type="button">Students</button>
+                <div id="collapse" class="collapse-wrapper">
+                    <div class="collapse">
+                        <div class="v__line"></div>
+                        <div class="action">
+                            <a id="assign_student_toggler" onclick="showAssignStudent(event)" href="#">Add Student</a>
+                            <a href="#">Manage Student</a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -30,7 +32,9 @@ include_once '../config.php';
                 <div class="non-collapse ">
                     <div class="v__line"></div>
                     <div class="action">
-                        <a href="#">Assign Instructor</a>
+                        <a id="assign_instructor_toggler" onclick="showAssignInstructor(event)"
+                            href="#assign_instructor">Assign
+                            Instructor</a>
                         <a href="#">Manage Instructor</a>
                     </div>
                 </div>
@@ -43,7 +47,7 @@ include_once '../config.php';
                 <div class="non-collapse ">
                     <div class="v__line"></div>
                     <div class="action">
-                        <a href="#">Add Course</a>
+                        <a onclick="showAddCourse(event)" id="add_course_toggler" href="#">Add Course</a>
                         <a href="#">Manage Course</a>
                     </div>
                 </div>
@@ -180,7 +184,7 @@ include_once '../config.php';
 
 <script>
     function collapse() {
-        const el = document.querySelector(".collapse");
-        el.classList.toggle("action-collapsed");
+        const el = document.querySelector("#collapse");
+        el.classList.toggle("collapsed");
     }
 </script>
