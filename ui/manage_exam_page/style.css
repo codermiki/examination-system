@@ -1,0 +1,57 @@
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f5f8fa;
+  padding: 30px;
+}
+
+.container {
+  max-width: 1000px;
+  margin: auto;
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+h2 {
+  font-weight: bold;
+  color: #2d3e50;
+  margin-bottom: 20px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  text-align: left;
+  padding: 12px 15px;
+}
+
+th {
+  background-color: #f1f3f5;
+  font-weight: bold;
+  color: #2d3e50;
+}
+
+tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+.btn {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  color: white;
+  cursor: pointer;
+  margin-right: 5px;
+}
+
+.btn.manage {
+  background-color: #2f80ed;
+}
+
+.btn.delete {
+  background-color: #eb3b5a;
+}
