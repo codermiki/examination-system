@@ -96,7 +96,7 @@ include_once '../config.php';
                     <div class="v__line"></div>
                     <div class="action">
                         <a href="#">Add Exam</a>
-                        <a href="#">Manage Exam</a>
+                        <a href="/softexam/instructor/index.php?page=manage_exam">Manage Exam</a>
                     </div>
                 </div>
             </div>

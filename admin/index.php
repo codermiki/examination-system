@@ -40,7 +40,7 @@ if (isset($_POST['logout'])) {
             ?>
         </section>
 
-        <section class="right__panel">
+        <section id="main-content" class="right__panel">
             <!-- dashboard -->
             <div class="dashboard">
                 <?php
@@ -75,6 +75,18 @@ if (isset($_POST['logout'])) {
     <?php
     include "../includes/layout/footer.php";
     ?>
+    <script>
+        function loadPage(page) {
+            fetch(`/ui/${page}.php`)
+                .then(res => res.text())
+                .then(html => {
+                    document.getElementById('main-content').innerHTML = html;
+                })
+                .catch(err => {
+                    document.getElementById('main-content').innerHTML = `<p style="color:red;">Failed to load ${page}</p>`;
+                });
+        }
+    </script>
 </body>
 
 </html>
