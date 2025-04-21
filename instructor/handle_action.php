@@ -77,7 +77,7 @@ if (isset($_GET['action'])) {
             switch ($action) {
                  case 'dashboard':
                     
-                    echo '<h2>Instructor Dashboard</h2><p>Instructor dashboard content goes here.</p>';
+                    include "dashboard.php";
                     break;
                 case 'instructor_create_exam':
                     
