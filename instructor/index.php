@@ -35,6 +35,12 @@ if (isset($_POST['logout'])) {
     header('Location: ../');
     exit(); // Always exit after a header redirect
 }
+// get page from url
+$page = isset($_GET['page']) ? $_GET['page'] : 'dashboard';  // Default page
+
+// Sanitize and whitelist allowed pages
+$allowedPages = ['dashboard', 'add_exam', 'manage_exam'];
+$page = in_array($page, $allowedPages) ? $page : '404';
 ?>
 
 <!DOCTYPE html>
@@ -62,10 +68,14 @@ if (isset($_POST['logout'])) {
             ?>
         </section>
 
-        <section class="right__panel" id="rightPanel">
+        <section id="main-content" class="right__panel">
             <?php
-        include "dashboard.php";
-        ?>
+            if ($page === '404') {
+                echo "<h2>Page not found!</h2>";
+            } else {
+                include "ui/{$page}.php";
+            }
+            ?>
         </section>
     </main>
 

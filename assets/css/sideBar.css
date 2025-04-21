@@ -43,13 +43,17 @@
    margin: 5px 0;
    transition: all 0.5s ease;
 }
+.collapse-wrapper {
+   max-height: 0;
+   overflow: hidden;
+   opacity: 0;
+   transition: all 0.5s ease;
+}
 
 .collapse {
-   display: none;
+   display: flex;
    gap: 20px;
    padding-left: 15px;
-   height: 0;
-   transition: all 0.5s ease-in-out;
 }
 
 .non-collapse {
@@ -78,7 +82,7 @@
    border-radius: 2px;
 }
 
-.action-collapsed {
-   display: flex;
-   height: auto;
+.collapse-wrapper.collapsed {
+   max-height: 100px;
+   opacity: 1;
 }
