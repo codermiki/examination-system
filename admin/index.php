@@ -41,8 +41,9 @@ if (isset($_POST['logout'])) {
         </section>
 
         <section class="right__panel" id="rightPanel">
-            <h1>Welcome Admin!</h1>
-            <p>Select an action from the left panel.</p>
+        <?php
+        include "dashboard.php";
+        ?>
         </section>
     </main>
 

@@ -26,8 +26,7 @@ if (isset($_GET['action'])) {
             // Handle actions specific to the admin role
             switch ($action) {
                 case 'dashboard':
-                    // Include or generate admin dashboard content
-                    echo '<h2>Admin Dashboard</h2><p>Admin dashboard content goes here.</p>';
+                    include "dashboard.php";
                     break;
                 case 'admin_add_student':
                     // Include the file for adding a student
