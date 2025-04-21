@@ -1,14 +1,17 @@
 <?php
 include_once '../config.php';
+
+// Start the session if it hasn't been started already
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
 ?>
 
-
 <aside class="inner__left_panel">
-    <a href="#">Dashboards</a>
+    <a href="#" class="sidebar-link" data-content="dashboard">Dashboards</a>
 
-    <!-- admin role start -->
     <?php
-    if ($_SESSION['role'] == 'admin') {
+    if (isset($_SESSION['role']) && $_SESSION['role'] == 'admin') {
         ?>
         <div class="role__container">
             <p>MANAGE STUDENTS</p>
@@ -60,8 +63,8 @@ include_once '../config.php';
                 <div class="non-collapse ">
                     <div class="v__line"></div>
                     <div class="action">
-                        <a href="#">Schedule Exam</a>
-                        <a href="#">Manage Schedule</a>
+                        <a href="#" class="sidebar-link" data-content="admin_schedule_exam">Schedule Exam</a>
+                        <a href="#" class="sidebar-link" data-content="admin_manage_schedule">Manage Schedule</a>
                     </div>
                 </div>
             </div>
@@ -73,7 +76,7 @@ include_once '../config.php';
                 <div class="non-collapse ">
                     <div class="v__line"></div>
                     <div class="action">
-                        <a href="#">All Feedbacks</a>
+                        <a href="#" class="sidebar-link" data-content="admin_all_feedbacks">All Feedbacks</a>
                     </div>
                 </div>
             </div>
@@ -81,17 +84,14 @@ include_once '../config.php';
         <?php
     }
     ?>
-    <!-- admin role end -->
-
-    <!-- instructor role start -->
     <?php
-    if ($_SESSION['role'] == 'instructor') {
+    if (isset($_SESSION['role']) && $_SESSION['role'] == 'instructor') {
         ?>
 
         <div class="role__container">
             <p>MANAGE EXAM</p>
             <div class="drop__down">
-                <button onclick="collapse();" type="button">Exam</button>
+                <button class="collapsebtn" onclick="toggleCollapse(this);" type="button">Exam</button>
                 <div class="collapse">
                     <div class="v__line"></div>
                     <div class="action">
@@ -108,7 +108,7 @@ include_once '../config.php';
                 <div class="non-collapse ">
                     <div class="v__line"></div>
                     <div class="action">
-                        <a href="#">Exam Report</a>
+                        <a href="#" class="sidebar-link" data-content="instructor_exam_report">Exam Report</a>
                     </div>
                 </div>
             </div>
@@ -120,7 +120,7 @@ include_once '../config.php';
                 <div class="non-collapse ">
                     <div class="v__line"></div>
                     <div class="action">
-                        <a href="#">Feedbacks</a>
+                        <a href="#" class="sidebar-link" data-content="instructor_feedbacks">Feedbacks</a>
                     </div>
                 </div>
             </div>
@@ -129,23 +129,19 @@ include_once '../config.php';
         <?php
     }
     ?>
-    <!-- instructor role end -->
-
-
-    <!-- student role start -->
     <?php
-    if ($_SESSION['role'] == 'student') {
+    if (isset($_SESSION['role']) && $_SESSION['role'] == 'student') {
         ?>
 
         <div class="role__container">
             <p>AVAILABLE EXAMS</p>
             <div class="drop__down">
-                <button onclick="collapse();" type="button">Upcoming Exams</button>
+                 <button onclick="toggleCollapse(this);" type="button">Upcoming Exams</button>
                 <div class="collapse">
                     <div class="v__line"></div>
                     <div class="action">
-                        <a href="#">exam 1</a>
-                        <a href="#">Exam Schedule</a>
+                        <a href="#" class="sidebar-link" data-content="student_upcoming_exams">Upcoming Exams List</a>
+                        <a href="#" class="sidebar-link" data-content="student_exam_schedule">Exam Schedule</a>
                     </div>
                 </div>
             </div>
@@ -157,7 +153,7 @@ include_once '../config.php';
                 <div class="non-collapse ">
                     <div class="v__line"></div>
                     <div class="action">
-                        <a href="#">exam 1</a>
+                         <a href="#" class="sidebar-link" data-content="student_taken_exams">Taken Exams List</a>
                     </div>
                 </div>
             </div>
@@ -169,7 +165,7 @@ include_once '../config.php';
                 <div class="non-collapse ">
                     <div class="v__line"></div>
                     <div class="action">
-                        <a href="#">Add Feedback</a>
+                        <a href="#" class="sidebar-link" data-content="student_add_feedback">Add Feedback</a>
                     </div>
                 </div>
             </div>
@@ -179,8 +175,7 @@ include_once '../config.php';
     }
     ?>
 
-    <!-- student role end -->
-</aside>
+    </aside>
 
 <script>
     function collapse() {

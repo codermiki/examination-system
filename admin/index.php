@@ -39,7 +39,6 @@ if (isset($_POST['logout'])) {
             include "../includes/layout/SideBar.php";
             ?>
         </section>
-
         <section id="main-content" class="right__panel">
             <!-- dashboard -->
             <div class="dashboard">
