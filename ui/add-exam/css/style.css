@@ -1,81 +1,81 @@
-body{
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color: #f4f4f4;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
+body {
+   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+   background-color: #f4f4f4;
+   display: flex;
+   justify-content: center;
+   align-items: center;
+   height: 100vh;
 }
 
-.wrap{
-  background-color: #ffff;
-  width: 400px;
-  padding: 24px;
-  border-radius: 8px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+.wrap {
+   background-color: #ffff;
+   width: 400px;
+   padding: 24px;
+   border-radius: 8px;
+   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
 }
 
 .wrap-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
+   display: flex;
+   justify-content: space-between;
+   align-items: center;
+   margin-bottom: 16px;
 }
 
 .wrap-header h2 {
-  margin: 0;
+   margin: 0;
 }
 
 .close-btn {
-  font-size: 24px;
-  background: none;
-  border: none;
-  cursor: pointer;
+   font-size: 24px;
+   background: none;
+   border: none;
+   cursor: pointer;
 }
 
 .exam-form label {
-  display: block;
-  margin-top: 12px;
-  font-weight: 500;
+   display: block;
+   margin-top: 12px;
+   font-weight: 500;
 }
 
 .exam-form input,
 .exam-form select,
 .exam-form textarea {
-  width: 100%;
-  padding: 10px;
-  margin-top: 6px;
-  margin-bottom: 8px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  font-size: 14px;
+   width: 100%;
+   padding: 10px;
+   margin-top: 6px;
+   margin-bottom: 8px;
+   border: 1px solid #ccc;
+   border-radius: 6px;
+   font-size: 14px;
 }
 
 .form-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 16px;
+   display: flex;
+   justify-content: flex-end;
+   gap: 10px;
+   margin-top: 16px;
 }
 
 button.close {
-  background-color: #6c757d;
-  color: white;
-  border: none;
-  padding: 8px 14px;
-  border-radius: 6px;
-  cursor: pointer;
+   background-color: #6c757d;
+   color: white;
+   border: none;
+   padding: 8px 14px;
+   border-radius: 6px;
+   cursor: pointer;
 }
 
 button.add {
-  background-color: #2563eb;
-  color: white;
-  border: none;
-  padding: 8px 14px;
-  border-radius: 6px;
-  cursor: pointer;
+   background-color: #2563eb;
+   color: white;
+   border: none;
+   padding: 8px 14px;
+   border-radius: 6px;
+   cursor: pointer;
 }
 
 button:hover {
-  opacity: 0.9;
+   opacity: 0.9;
 }

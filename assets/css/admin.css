@@ -12,10 +12,11 @@
 }
 
 .right__panel {
+   position: relative;
    flex: 4;
    background-color: #fff;
    height: 90vh;
    min-height: 90vh;
    overflow-y: scroll;
-   box-shadow: inset #dedee1 5px 2px 10px; 
+   box-shadow: inset #dedee1 5px 2px 10px;
 }
