@@ -89,7 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Select all links in the sidebar with the class 'sidebar-link'
     const sidebarLinks = document.querySelectorAll('.inner__left_panel .sidebar-link');
     // Select the right panel where content will be loaded
-    const rightPanel = document.getElementById('rightPanel');
+    const rightPanel = document.getElementById('main-content');//rightPanel
 
     // Add a click event listener to each sidebar link
     sidebarLinks.forEach(link => {
