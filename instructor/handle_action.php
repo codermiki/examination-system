@@ -87,8 +87,7 @@ if (isset($_GET['action'])) {
                     include "import_exam.php";
                     break;
                 case 'instructor_manage_exam':
-                   
-                     echo '<h2>Manage Exams</h2><p>Manage exams interface goes here.</p>'; 
+                    include "manage_exam.php";
                     break;
                 case 'instructor_view_exam':
                     
