@@ -17,7 +17,7 @@ if (isset($_POST['login'])) {
     }
     try {
         include_once "./includes/db/db.config.php";
-        $sql = "SELECT name, email, password, role FROM users WHERE email = :email AND password = :password";
+        $sql = "SELECT name, email, password, role,user_id FROM users WHERE email = :email AND password = :password";
         $stmt = $conn->prepare($sql);
 
         $stmt->bindParam(":email", $_POST['email']);
@@ -32,6 +32,7 @@ if (isset($_POST['login'])) {
             foreach ($result as $user) {
                 $_SESSION['email'] = $user['email'];//asign fullname of user to $_SESSION['email']
                 $_SESSION['role'] = $user['role'];
+                $_SESSION['user_id']=$user['user_id'];
             }
         }
 

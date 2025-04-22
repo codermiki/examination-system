@@ -77,19 +77,17 @@ if (isset($_GET['action'])) {
             switch ($action) {
                  case 'dashboard':
                     
-                    echo '<h2>Instructor Dashboard</h2><p>Instructor dashboard content goes here.</p>';
+                    include "dashboard.php";
                     break;
                 case 'instructor_create_exam':
                     
                     include "create_exam.php";
                     break;
                 case 'instructor_import_exam':
-                    
-                     echo '<h2>Import Exam</h2><p>Import exam form goes here.</p>'; 
+                    include "import_exam.php";
                     break;
                 case 'instructor_manage_exam':
-                   
-                     echo '<h2>Manage Exams</h2><p>Manage exams interface goes here.</p>'; 
+                    include "manage_exam.php";
                     break;
                 case 'instructor_view_exam':
                     

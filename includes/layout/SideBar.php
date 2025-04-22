@@ -95,8 +95,11 @@ if (session_status() == PHP_SESSION_NONE) {
                 <div class="collapse">
                     <div class="v__line"></div>
                     <div class="action">
-                        <a href="#">Add Exam</a>
-                        <a href="/softexam/instructor/index.php?page=manage_exam">Manage Exam</a>
+                        <!-- <a href="/softexam/instructor/index.php?page=manage_exam">Manage Exam</a> -->
+                        <a href="#" class="sidebar-link" data-content="instructor_create_exam">Create Exam</a>
+                        <a href="#" class="sidebar-link" data-content="instructor_import_exam">Import Exam</a>
+                        <a href="#" class="sidebar-link" data-content="instructor_manage_exam">Manage Exam</a>
+                        <a href="#" class="sidebar-link" data-content="instructor_view_exam">View Exam</a>
                     </div>
                 </div>
             </div>

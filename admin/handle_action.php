@@ -26,44 +26,38 @@ if (isset($_GET['action'])) {
             // Handle actions specific to the admin role
             switch ($action) {
                 case 'dashboard':
-                    // Include or generate admin dashboard content
-                    echo '<h2>Admin Dashboard</h2><p>Admin dashboard content goes here.</p>';
+                    include "dashboard.php";
                     break;
                 case 'admin_add_student':
-                    // Include the file for adding a student
-                    include "add_student.php";
+                    include "add_students.php";
                     break;
                 case 'admin_manage_student':
-                    // Include the file for managing students
                     include "manage_student.php";
                     break;
                 case 'admin_assign_instructor':
-                    // Include the file for assigning instructors
-                    echo '<h2>Assign Instructor</h2><p>Assign instructor form goes here.</p>'; // Placeholder
+                    echo '<h2>Assign Instructor</h2><p>Assign instructor form goes here.</p>'; 
                     break;
                 case 'admin_manage_instructor':
-                    // Include the file for managing instructors
-                    echo '<h2>Manage Instructors</h2><p>Manage instructors interface goes here.</p>'; // Placeholder
+                    echo '<h2>Manage Instructors</h2><p>Manage instructors interface goes here.</p>'; 
                     break;
                 case 'admin_add_course':
-                     // Include the file for adding a course
-                    echo '<h2>Add Course</h2><p>Add course form goes here.</p>'; // Placeholder
+
+                    echo '<h2>Add Course</h2><p>Add course form goes here.</p>'; 
                     break;
                 case 'admin_manage_course':
-                    // Include the file for managing courses
-                    echo '<h2>Manage Courses</h2><p>Manage courses interface goes here.</p>'; // Placeholder
+                    echo '<h2>Manage Courses</h2><p>Manage courses interface goes here.</p>'; 
                     break;
                 case 'admin_schedule_exam':
                     // Include the file for scheduling exams (admin)
-                     echo '<h2>Schedule Exam</h2><p>Schedule exam form goes here (Admin view).</p>'; // Placeholder
+                     echo '<h2>Schedule Exam</h2><p>Schedule exam form goes here (Admin view).</p>'; 
                     break;
                 case 'admin_manage_schedule':
                     // Include the file for managing exam schedules (admin)
-                     echo '<h2>Manage Schedule</h2><p>Manage exam schedules interface goes here (Admin view).</p>'; // Placeholder
+                     echo '<h2>Manage Schedule</h2><p>Manage exam schedules interface goes here (Admin view).</p>'; 
                     break;
                 case 'admin_all_feedbacks':
                     // Include the file for viewing all feedbacks (admin)
-                     echo '<h2>All Feedbacks</h2><p>List of all feedbacks goes here (Admin view).</p>'; // Placeholder
+                     echo '<h2>All Feedbacks</h2><p>List of all feedbacks goes here (Admin view).</p>'; 
                     break;
                 default:
                     // Action not found for admin
