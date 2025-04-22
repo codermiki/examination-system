@@ -1,11 +1,12 @@
 <?php
 // includes/instructor/import_exam.php
 
-// This file handles the functionality for importing exams from a file.
+// This file handles the functionality for importing exams from a file
+// and inserting the data into the database based on the provided schema.
 
 // Include necessary configuration or database files
-// include_once '../../config/database.php'; // Example database connection
-include_once '../config.php'; // Assuming config.php is needed for session/role checks
+// Assuming config.php establishes a $pdo database connection
+include_once '../config.php';
 
 // Start the session if it hasn't been started already
 if (session_status() == PHP_SESSION_NONE) {
@@ -13,8 +14,9 @@ if (session_status() == PHP_SESSION_NONE) {
 }
 
 // Security check: Ensure the user is logged in and is an instructor
-if (!isset($_SESSION['email']) || !isset($_SESSION['role']) || $_SESSION['role'] !== 'instructor') {
-    echo '<p>Access denied. You must be an instructor to import exams.</p>';
+// Also check if user_id is set in the session
+if (!isset($_SESSION['email']) || !isset($_SESSION['role']) || $_SESSION['role'] !== 'instructor' || !isset($_SESSION['user_id'])) {
+    echo '<p>Access denied. You must be a logged-in instructor to import exams.</p>';
     exit();
 }
 
@@ -23,14 +25,21 @@ $message = ''; // Variable to store feedback messages
 // Handle file upload and processing when the form is submitted
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['examFile'])) {
     $uploadDir = '../uploads/exams/'; // Directory where uploaded files will be stored
-    $allowedTypes = ['text/csv', 'application/json', 'application/xml', 'text/xml']; // Allowed file types
+    // Updated allowed types based on common exam data formats and your schema
+    $allowedTypes = [
+        'application/json', // JSON
+        'text/csv',         // CSV
+        'application/xml',  // XML
+        'text/xml'          // XML
+    ];
     $maxFileSize = 5 * 1024 * 1024; // 5MB max file size
+    $instructorId = $_SESSION['user_id']; // Get the logged-in instructor's user_id
 
     $fileName = basename($_FILES['examFile']['name']);
     $fileType = mime_content_type($_FILES['examFile']['tmp_name']); // Get actual file type
     $fileSize = $_FILES['examFile']['size'];
     $tempFilePath = $_FILES['examFile']['tmp_name'];
-    $uploadFilePath = $uploadDir . $fileName;
+    $uploadFilePath = $uploadDir . uniqid() . '_' . $fileName; // Use uniqid to prevent filename conflicts
 
     // Create upload directory if it doesn't exist
     if (!is_dir($uploadDir)) {
@@ -47,39 +56,162 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['examFile'])) {
     } else {
         // Move uploaded file to the destination directory
         if (move_uploaded_file($tempFilePath, $uploadFilePath)) {
-            // File uploaded successfully, now process it
             $message = '<p class="success">File uploaded successfully. Processing exam data...</p>';
 
-            // --- Start: Placeholder for file processing and database insertion ---
+            // --- Start: File processing and database insertion ---
 
-            // You will need to implement the logic here to:
-            // 1. Read the content of the uploaded file ($uploadFilePath).
-            // 2. Parse the file content based on its type ($fileType).
-            //    - For CSV: Use fgetcsv() or a library.
-            //    - For JSON: Use json_decode().
-            //    - For XML: Use simplexml_load_file() or DOMDocument.
-            // 3. Validate the extracted exam data structure and content.
-            // 4. Insert the validated exam data (exam details, questions, options, answers)
-            //    into your database tables. Ensure data integrity and handle potential errors
-            //    during database operations.
-            // 5. Provide feedback based on the processing result (e.g., number of questions imported, errors encountered).
+            $fileContent = file_get_contents($uploadFilePath);
+            $importSuccess = false; // Flag to track overall import success
 
-            // Example placeholder:
-            // $examData = file_get_contents($uploadFilePath);
-            // if ($fileType === 'application/json') {
-            //     $examObject = json_decode($examData);
-            //     // Process JSON data and insert into DB
-            // } elseif ($fileType === 'text/csv') {
-            //     // Process CSV data and insert into DB
-            // }
-            // ... database insertion logic ...
+            try {
+                // Start a database transaction
+                $pdo->beginTransaction();
 
-            $message .= '<p>Placeholder: File processing and database insertion logic goes here.</p>';
+                if ($fileType === 'application/json') {
+                    $examData = json_decode($fileContent, true); // Decode JSON into associative array
 
-            // --- End: Placeholder ---
+                    // Validate basic JSON structure (you'll need more robust validation)
+                    if ($examData === null) {
+                        throw new Exception("Error parsing JSON file.");
+                    }
+                    if (!isset($examData['title'], $examData['description'], $examData['time_limit'], $examData['total_marks'], $examData['course_id'], $examData['questions'])) {
+                         throw new Exception("Invalid JSON structure. Missing required fields.");
+                    }
 
-            // Optional: Delete the uploaded file after processing
-            // unlink($uploadFilePath);
+                    // Insert into exams table
+                    $stmt = $pdo->prepare("INSERT INTO exams (course_id, instructor_id, title, description, time_limit, total_marks, status) VALUES (:course_id, :instructor_id, :title, :description, :time_limit, :total_marks, 'inactive')");
+                    $stmt->bindParam(':course_id', $examData['course_id'], PDO::PARAM_INT);
+                    $stmt->bindParam(':instructor_id', $instructorId, PDO::PARAM_INT);
+                    $stmt->bindParam(':title', $examData['title'], PDO::PARAM_STR);
+                    $stmt->bindParam(':description', $examData['description'], PDO::PARAM_STR);
+                    $stmt->bindParam(':time_limit', $examData['time_limit'], PDO::PARAM_INT);
+                    $stmt->bindParam(':total_marks', $examData['total_marks'], PDO::PARAM_INT);
+
+                    if (!$stmt->execute()) {
+                        throw new Exception("Error inserting exam data: " . implode(" ", $stmt->errorInfo()));
+                    }
+                    $examId = $pdo->lastInsertId(); // Get the ID of the newly inserted exam
+
+                    // Insert questions and choices
+                    if (is_array($examData['questions'])) {
+                        foreach ($examData['questions'] as $question) {
+                            if (!isset($question['question_text'], $question['question_type'])) {
+                                throw new Exception("Invalid question structure. Missing required fields.");
+                            }
+
+                            // Validate question type against allowed ENUM values
+                            $allowedQuestionTypes = ['true_false', 'multiple_choice', 'blank_space'];
+                            if (!in_array($question['question_type'], $allowedQuestionTypes)) {
+                                throw new Exception("Invalid question type: " . htmlspecialchars($question['question_type']));
+                            }
+
+                            $correctAnswer = $question['correct_answer'] ?? null; // Correct answer is optional for some types
+
+                            // Insert into questions table
+                            $stmt = $pdo->prepare("INSERT INTO questions (exam_id, question_text, question_type, correct_answer) VALUES (:exam_id, :question_text, :question_type, :correct_answer)");
+                            $stmt->bindParam(':exam_id', $examId, PDO::PARAM_INT);
+                            $stmt->bindParam(':question_text', $question['question_text'], PDO::PARAM_STR);
+                            $stmt->bindParam(':question_type', $question['question_type'], PDO::PARAM_STR);
+                            $stmt->bindParam(':correct_answer', $correctAnswer, PDO::PARAM_STR);
+
+                            if (!$stmt->execute()) {
+                                throw new Exception("Error inserting question: " . implode(" ", $stmt->errorInfo()));
+                            }
+                            $questionId = $pdo->lastInsertId(); // Get the ID of the newly inserted question
+
+                            // Handle choices for multiple choice questions
+                            if ($question['question_type'] === 'multiple_choice' && isset($question['options']) && is_array($question['options'])) {
+                                if (!isset($question['correct_answer'])) {
+                                     throw new Exception("Multiple choice question missing correct_answer field.");
+                                }
+                                $correctOptionValue = $question['correct_answer']; // The value that indicates the correct option
+
+                                foreach ($question['options'] as $optionValue => $optionText) {
+                                    // Determine if this choice is the correct one
+                                    $isCorrect = ($optionValue === $correctOptionValue);
+
+                                    $stmt = $pdo->prepare("INSERT INTO choices (question_id, choice_text, is_correct) VALUES (:question_id, :choice_text, :is_correct)");
+                                    $stmt->bindParam(':question_id', $questionId, PDO::PARAM_INT);
+                                    $stmt->bindParam(':choice_text', $optionText, PDO::PARAM_STR);
+                                    $stmt->bindParam(':is_correct', $isCorrect, PDO::PARAM_BOOL);
+
+                                    if (!$stmt->execute()) {
+                                        throw new Exception("Error inserting choice: " . implode(" ", $stmt->errorInfo()));
+                                    }
+                                }
+                            } elseif ($question['question_type'] === 'blank_space') {
+                                // For blank space, the 'correct_answer' column in the questions table
+                                // should store the correct answer(s). If multiple blanks, you might
+                                // store them as a delimited string (e.g., "answer1|answer2").
+                                // The current schema has `correct_answer` as TEXT, which can work.
+                                // Ensure your JSON structure for blank_space provides the correct_answer.
+                                if (!isset($question['correct_answer'])) {
+                                     // Depending on your design, you might require a correct answer for blanks
+                                     // throw new Exception("Blank space question missing correct_answer field.");
+                                }
+                                // The correct answer is already handled by the main question insert.
+                            } elseif ($question['question_type'] === 'true_false') {
+                                // For true/false, the 'correct_answer' column stores 'true' or 'false'.
+                                // Ensure your JSON structure for true_false provides the correct_answer ('true' or 'false').
+                                if (!isset($question['correct_answer']) || !in_array($question['correct_answer'], ['true', 'false'])) {
+                                    throw new Exception("True/False question missing or invalid correct_answer field.");
+                                }
+                                // The correct answer is already handled by the main question insert.
+                            }
+                            // Add handling for 'math_equation' and 'coding' if you decide to add them to the DB schema
+                            // The current DB schema only supports 'true_false', 'multiple_choice', 'blank_space'.
+                        }
+                    }
+
+                    $pdo->commit(); // Commit the transaction if all insertions were successful
+                    $message = '<p class="success">Exam "' . htmlspecialchars($examData['title']) . '" imported successfully with ' . count($examData['questions']) . ' questions.</p>';
+                    $importSuccess = true;
+
+                } elseif ($fileType === 'text/csv') {
+                    // --- Placeholder for CSV parsing ---
+                    $message .= '<p>CSV file uploaded. Implement CSV parsing and database insertion logic here.</p>';
+                    // Example:
+                    // $handle = fopen($uploadFilePath, "r");
+                    // if ($handle) {
+                    //     while (($data = fgetcsv($handle)) !== FALSE) {
+                    //         // Process CSV row and insert into DB
+                    //     }
+                    //     fclose($handle);
+                    // }
+                    // --- End Placeholder ---
+                     $pdo->rollBack(); // Rollback if not fully implemented
+                     $message = '<p class="error">CSV import is not fully implemented yet.</p>'; // Indicate not fully implemented
+                } elseif ($fileType === 'application/xml' || $fileType === 'text/xml') {
+                     // --- Placeholder for XML parsing ---
+                    $message .= '<p>XML file uploaded. Implement XML parsing and database insertion logic here.</p>';
+                    // Example:
+                    // $xml = simplexml_load_file($uploadFilePath);
+                    // if ($xml) {
+                    //     // Process XML data and insert into DB
+                    // }
+                    // --- End Placeholder ---
+                     $pdo->rollBack(); // Rollback if not fully implemented
+                     $message = '<p class="error">XML import is not fully implemented yet.</p>'; // Indicate not fully implemented
+                } else {
+                    // Should not happen due to file type validation, but as a fallback
+                    throw new Exception("Unsupported file type.");
+                }
+
+            } catch (Exception $e) {
+                // Rollback the transaction if any error occurred
+                if ($pdo->inTransaction()) {
+                    $pdo->rollBack();
+                }
+                error_log("Exam import error: " . $e->getMessage()); // Log the detailed error
+                $message = '<p class="error">Error processing exam file: ' . htmlspecialchars($e->getMessage()) . '</p>';
+            } finally {
+                 // Optional: Delete the uploaded file after processing (whether successful or not)
+                 if (file_exists($uploadFilePath)) {
+                     unlink($uploadFilePath);
+                 }
+            }
+
+            // --- End: File processing and database insertion ---
 
         } else {
             $message = '<p class="error">Error moving uploaded file.</p>';
@@ -182,6 +314,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['examFile'])) {
 
     <p><small>Accepted file formats: CSV, JSON, XML. Maximum file size: 5MB.</small></p>
     <p><small>Please ensure your file is correctly formatted. Refer to documentation for required file structure.</small></p>
+    <p><small><strong>JSON Example Structure:</strong></small></p>
+    <pre><code class="language-json">{
+  "title": "Sample Exam",
+  "description": "A brief description.",
+  "time_limit": 60,
+  "total_marks": 100,
+  "course_id": 1, // Ensure this course_id exists in your database
+  "questions": [
+    {
+      "question_text": "What is PHP?",
+      "question_type": "multiple_choice",
+      "correct_answer": "option_a", // Refers to the value of the correct option
+      "options": {
+        "option_a": "A server-side scripting language",
+        "option_b": "A database system",
+        "option_c": "A frontend framework"
+      }
+    },
+    {
+      "question_text": "The capital of France is Paris.",
+      "question_type": "true_false",
+      "correct_answer": "true"
+    },
+    {
+      "question_text": "SQL stands for [BLANK] Query Language.",
+      "question_type": "blank_space",
+      "correct_answer": "Structured" // For multiple blanks, you might use "Answer1|Answer2"
+    }
+    // Add more questions here
+  ]
+}
+</code></pre>
 </div>
 
 <?php
