@@ -100,6 +100,7 @@ if (session_status() == PHP_SESSION_NONE) {
                         <a href="#" class="sidebar-link" data-content="instructor_import_exam">Import Exam</a>
                         <a href="#" class="sidebar-link" data-content="instructor_manage_exam">Manage Exam</a>
                         <a href="#" class="sidebar-link" data-content="instructor_view_exam">View Exam</a>
+                        <a href="#" class="sidebar-link" data-content="instructor_edit_exam">Edit Exam</a>
                     </div>
                 </div>
             </div>
