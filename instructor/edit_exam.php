@@ -27,6 +27,7 @@ $courses = []; // Array to hold courses for the dropdown
 
 $instructorId = $_SESSION['user_id']; // Get the logged-in instructor's user_id
 
+$_GET['exam_id']=1;
 // --- Start: PHP Logic for Handling Form Submission (Updating Exam) ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Get and validate exam details from POST

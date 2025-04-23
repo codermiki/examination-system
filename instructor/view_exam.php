@@ -25,11 +25,10 @@ $exam = null; // Variable to hold exam details
 $questions = []; // Array to hold questions
 
 // --- Start: PHP Logic for Fetching Exam Details ---
-
+$_GET['exam_id']=1;
 // Check if exam_id is provided in the GET request
 if (isset($_GET['exam_id']) && filter_var($_GET['exam_id'], FILTER_VALIDATE_INT)) {
     $examId = filter_var($_GET['exam_id'], FILTER_VALIDATE_INT);
-    $examId=1;
     $instructorId = $_SESSION['user_id']; // Get the logged-in instructor's user_id
 
     try {
@@ -56,7 +55,7 @@ if (isset($_GET['exam_id']) && filter_var($_GET['exam_id'], FILTER_VALIDATE_INT)
             foreach ($questions as &$question) { // Use & to modify the original array elements
                 if ($question['question_type'] === 'multiple_choice') {
                     $sql = "SELECT * FROM choices WHERE question_id = :question_id ORDER BY choice_id ASC"; // Order might be different
-                    $stmt = $conn->prepare($sql);
+                    $stmt = $pdo->prepare($sql);
                     $stmt->bindParam(':question_id', $question['question_id'], PDO::PARAM_INT);
                     $stmt->execute();
                     $question['choices'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -241,6 +240,14 @@ if (isset($_GET['exam_id']) && filter_var($_GET['exam_id'], FILTER_VALIDATE_INT)
     <?php endif; ?>
 
 </div>
+
+<!-- <div class="create-exam">
+<form method="$_GET">
+<label for="examid">Exam ID</label>
+<input id="examid" type="number" name="exam_id" required placeholder="enter exam id">
+</form>
+
+</div> -->
 
 <?php
 // No JavaScript needed for this basic view page.
