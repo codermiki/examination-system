@@ -7,6 +7,7 @@
 // Include necessary configuration or database files
 // Assuming config.php establishes a $pdo database connection
 include_once '../config.php';
+include_once '../includes/db/db.config.php';
 
 // Start the session if it hasn't been started already
 if (session_status() == PHP_SESSION_NONE) {

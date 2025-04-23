@@ -51,7 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $pdo->beginTransaction();
 
             // 1. Insert into exams table
-            $stmt = $conn->prepare("INSERT INTO exams (course_id, instructor_id, title, description, time_limit, total_marks, status) VALUES (:course_id, :instructor_id, :title, :description, :time_limit, :total_marks, 'inactive')");
+            $stmt = $pdo->prepare("INSERT INTO exams (course_id, instructor_id, title, description, time_limit, total_marks, status) VALUES (:course_id, :instructor_id, :title, :description, :time_limit, :total_marks, 'inactive')");
             $stmt->bindParam(':course_id', $courseId, PDO::PARAM_INT);
             $stmt->bindParam(':instructor_id', $instructorId, PDO::PARAM_INT);
             $stmt->bindParam(':title', $examTitle, PDO::PARAM_STR);
@@ -62,7 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (!$stmt->execute()) {
                 throw new Exception("Error inserting exam data: " . implode(" ", $stmt->errorInfo()));
             }
-            $examId = $conn->lastInsertId(); // Get the ID of the newly inserted exam
+            $examId = $pdo->lastInsertId(); // Get the ID of the newly inserted exam
 
             // 2. Insert questions and choices
             $allowedQuestionTypes = ['true_false', 'multiple_choice', 'blank_space'];
@@ -100,7 +100,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
 
                 // Insert into questions table
-                $stmt = $conn->prepare("INSERT INTO questions (exam_id, question_text, question_type, correct_answer) VALUES (:exam_id, :question_text, :question_type, :correct_answer)");
+                $stmt = $pdo->prepare("INSERT INTO questions (exam_id, question_text, question_type, correct_answer) VALUES (:exam_id, :question_text, :question_type, :correct_answer)");
                 $stmt->bindParam(':exam_id', $examId, PDO::PARAM_INT);
                 $stmt->bindParam(':question_text', $questionText, PDO::PARAM_STR);
                 $stmt->bindParam(':question_type', $questionType, PDO::PARAM_STR);
@@ -131,7 +131,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         // Determine if this choice is the correct one
                         $isCorrect = ($optionValue === $correctOptionValue);
 
-                        $stmt = $conn->prepare("INSERT INTO choices (question_id, choice_text, is_correct) VALUES (:question_id, :choice_text, :is_correct)");
+                        $stmt = $pdo->prepare("INSERT INTO choices (question_id, choice_text, is_correct) VALUES (:question_id, :choice_text, :is_correct)");
                         $stmt->bindParam(':question_id', $questionId, PDO::PARAM_INT);
                         $stmt->bindParam(':choice_text', $optionText, PDO::PARAM_STR);
                         $stmt->bindParam(':is_correct', $isCorrect, PDO::PARAM_BOOL);
@@ -143,13 +143,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
 
-            $conn->commit(); // Commit the transaction if all insertions were successful
+            $pdo->commit(); // Commit the transaction if all insertions were successful
             $message = '<p class="success">Exam "' . htmlspecialchars($examTitle) . '" created successfully.</p>';
 
         } catch (Exception $e) {
             // Rollback the transaction if any error occurred
-            if ($conn->inTransaction()) {
-                $conn->rollBack();
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
             }
             error_log("Exam creation error: " . $e->getMessage()); // Log the detailed error
             $message = '<p class="error">Error creating exam: ' . htmlspecialchars($e->getMessage()) . '</p>';
@@ -168,7 +168,7 @@ try {
             JOIN instructor_courses ic ON c.course_id = ic.course_id
             WHERE ic.instructor_id = :instructor_id
             ORDER BY c.course_name";
-    $stmt = $conn->prepare($sql);
+    $stmt = $pdo->prepare($sql);
     $stmt->bindParam(':instructor_id', $instructorId, PDO::PARAM_INT);
     $stmt->execute();
     $courses = $stmt->fetchAll(PDO::FETCH_ASSOC);
