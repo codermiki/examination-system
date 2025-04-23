@@ -42,19 +42,19 @@ if (isset($_GET['delete_id'])) {
 
         // Example deletion (assuming ON DELETE CASCADE is NOT set for simplicity, adjust if it is)
         // Delete student answers for this exam's questions
-        $stmt = $conn->prepare("DELETE sa FROM student_answers sa JOIN questions q ON sa.question_id = q.question_id WHERE q.exam_id = ?");
+        $stmt = $pdo->prepare("DELETE sa FROM student_answers sa JOIN questions q ON sa.question_id = q.question_id WHERE q.exam_id = ?");
         $stmt->execute([$examIdToDelete]);
 
         // Delete choices for this exam's questions
-        $stmt = $conn->prepare("DELETE c FROM choices c JOIN questions q ON c.question_id = q.question_id WHERE q.exam_id = ?");
+        $stmt = $pdo->prepare("DELETE c FROM choices c JOIN questions q ON c.question_id = q.question_id WHERE q.exam_id = ?");
         $stmt->execute([$examIdToDelete]);
 
         // Delete questions for this exam
-        $stmt = $conn->prepare("DELETE FROM questions WHERE exam_id = ?");
+        $stmt = $pdo->prepare("DELETE FROM questions WHERE exam_id = ?");
         $stmt->execute([$examIdToDelete]);
 
         // Finally, delete the exam itself, ensuring it belongs to the instructor
-        $stmt = $conn->prepare("DELETE FROM exams WHERE exam_id = ? AND instructor_id = ?");
+        $stmt = $pdo->prepare("DELETE FROM exams WHERE exam_id = ? AND instructor_id = ?");
         $stmt->execute([$examIdToDelete, $instructorId]);
 
         // Check if deletion was successful
@@ -93,7 +93,7 @@ try {
             WHERE e.instructor_id = :instructor_id
             ORDER BY e.created_at DESC";
 
-    $stmt = $conn->prepare($sql);
+    $stmt = $pdo->prepare($sql);
     $stmt->bindParam(':instructor_id', $instructorId, PDO::PARAM_INT);
     $stmt->execute();
 

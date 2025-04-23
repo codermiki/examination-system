@@ -89,9 +89,14 @@ if (isset($_GET['action'])) {
                 case 'instructor_manage_exam':
                     include "manage_exam.php";
                     break;
-                case 'instructor_view_exam':
-                    
-                     echo '<h2>View Exam</h2><p>View exam details goes here.</p>'; 
+                case 'instructor_create_exam_submit':
+                    include "process_create_exam.php";
+                    break;
+                    case 'instructor_view_exam':
+                    include "view_exam.php";
+                    break;
+                case 'instructor_edit_exam':
+                    include "edit_exam.php";
                     break;
                 case 'instructor_exam_report':
                     
