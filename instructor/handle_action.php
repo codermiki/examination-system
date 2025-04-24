@@ -92,6 +92,9 @@ if (isset($_GET['action'])) {
                 case 'instructor_create_exam_submit':
                     include "process_create_exam.php";
                     break;
+                    case 'instructor_edit_exam_submit':
+                    include "process_edit_exam.php";
+                    break;
                     case 'instructor_view_exam':
                     include "view_exam.php";
                     break;

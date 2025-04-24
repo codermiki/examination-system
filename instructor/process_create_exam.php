@@ -146,6 +146,7 @@ if (empty($examTitle) || $examDuration === false || $examDuration <= 0 || $cours
 
         $pdo->commit(); // Commit the transaction if all insertions were successful
         echo '<p class="success">Exam "' . htmlspecialchars($examTitle) . '" created successfully.</p>';
+        header('Location: ../instructor/index.php');
 
     } catch (Exception $e) {
         // Rollback the transaction if any error occurred
