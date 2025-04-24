@@ -98,8 +98,11 @@ if (isset($_GET['action'])) {
                 case 'instructor_edit_exam':
                     include "edit_exam.php";
                     break;
-                    case 'instructor_edit_exam_submit':
+                case 'instructor_edit_exam_submit':
                     include "process_edit_exam.php";
+                    break;
+                case 'instructor_manage_questions':
+                    include "manage_questions.php";
                     break;
                 case 'instructor_exam_report':
                     
