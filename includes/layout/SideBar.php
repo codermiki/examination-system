@@ -147,6 +147,10 @@ if (session_status() == PHP_SESSION_NONE) {
                     <div class="action">
                         <a href="#" class="sidebar-link" data-content="student_upcoming_exams">Upcoming Exams List</a>
                         <a href="#" class="sidebar-link" data-content="student_exam_schedule">Exam Schedule</a>
+                        <a href="#" class="sidebar-link" data-content="student_take_exam">Take Exam</a>
+                        <a href="#" class="sidebar-link" data-content="student_taken_exams">Taken Exams</a>
+                        <a href="#" class="sidebar-link" data-content="student_view_result">View Result</a>
+                        <a href="#" class="sidebar-link" data-content="student_exam_schedule">Exam Schedule</a>
                     </div>
                 </div>
             </div>
