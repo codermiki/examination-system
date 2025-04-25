@@ -25,7 +25,7 @@ $questions = []; // Array to hold questions with student answers
 $message = ''; // Variable for messages
 
 // --- Start: PHP Logic for Fetching Result Details ---
-
+$_GET['student_exam_id']=1;//
 // Check if student_exam_id is provided in the GET request
 if (isset($_GET['student_exam_id']) && filter_var($_GET['student_exam_id'], FILTER_VALIDATE_INT)) {
     $studentExamId = filter_var($_GET['student_exam_id'], FILTER_VALIDATE_INT);

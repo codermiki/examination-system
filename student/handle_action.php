@@ -29,63 +29,48 @@ if (isset($_GET['action'])) {
             // Handle actions specific to the admin role
             switch ($action) {
                 case 'dashboard':
-                    // Include or generate admin dashboard content
                     echo '<h2>Admin Dashboard</h2><p>Admin dashboard content goes here.</p>';
                     break;
                 case 'admin_add_student':
-                    // Include the file for adding a student
                     include '../includes/admin/add_student.php';
                     break;
                 case 'admin_manage_student':
-                    // Include the file for managing students
                     include '../includes/admin/manage_student.php';
                     break;
                 case 'admin_assign_instructor':
-                    // Include the file for assigning instructors
                     echo '<h2>Assign Instructor</h2><p>Assign instructor form goes here.</p>'; // Placeholder
                     break;
                 case 'admin_manage_instructor':
-                    // Include the file for managing instructors
                     echo '<h2>Manage Instructors</h2><p>Manage instructors interface goes here.</p>'; // Placeholder
                     break;
                 case 'admin_add_course':
-                     // Include the file for adding a course
                     echo '<h2>Add Course</h2><p>Add course form goes here.</p>'; // Placeholder
                     break;
                 case 'admin_manage_course':
-                    // Include the file for managing courses
                     echo '<h2>Manage Courses</h2><p>Manage courses interface goes here.</p>'; // Placeholder
                     break;
                 case 'admin_schedule_exam':
-                    // Include the file for scheduling exams (admin)
                      echo '<h2>Schedule Exam</h2><p>Schedule exam form goes here (Admin view).</p>'; // Placeholder
                     break;
                 case 'admin_manage_schedule':
-                    // Include the file for managing exam schedules (admin)
                      echo '<h2>Manage Schedule</h2><p>Manage exam schedules interface goes here (Admin view).</p>'; // Placeholder
                     break;
                 case 'admin_all_feedbacks':
-                    // Include the file for viewing all feedbacks (admin)
                      echo '<h2>All Feedbacks</h2><p>List of all feedbacks goes here (Admin view).</p>'; // Placeholder
                     break;
                 default:
-                    // Action not found for admin
                     echo '<p>Admin action not found.</p>';
                     break;
             }
             break;
 
         case 'instructor':
-             // Use instructorId for instructor-specific actions
             $instructorId = $userId;
-            // Handle actions specific to the instructor role
             switch ($action) {
                  case 'dashboard':
-                    // Include or generate instructor dashboard content
                     echo '<h2>Instructor Dashboard</h2><p>Instructor dashboard content goes here.</p>';
                     break;
                 case 'instructor_create_exam':
-                    // Include the file that contains the "Create Exam" form HTML
                     include '../includes/instructor/create_exam.php';
                     break;
                 case 'instructor_import_exam':
@@ -152,9 +137,11 @@ if (isset($_GET['action'])) {
             // Handle actions specific to the student role
             switch ($action) {
                  case 'dashboard':
+                    // Include the student dashboard file
                     include "student_dashboard.php";
                     break;
                 case 'student_upcoming_exams':
+                    // Include the upcoming exams/schedule file
                     include "student_upcoming_exams.php";
                     break;
                  case 'student_exam_schedule':
@@ -164,31 +151,37 @@ if (isset($_GET['action'])) {
                     include "student_upcoming_exams.php";
                     break;
                  case 'student_take_exam':
+                     // Include the take exam placeholder file
                     include "student_take_exam.php";
+                    // include "student_take_exam.php";
                     break;
                  case 'student_taken_exams':
+                     // Include the taken exams list file
                     include "student_taken_exams.php";
                     break;
                  case 'student_view_result':
+                     // Include the view result file
                     include "student_view_result.php";
                     break;
                  case 'student_add_feedback':
                      // Include the add feedback file
-                    include '../includes/student/student_add_feedback.php';
+                    include "student_add_feedback.php";
                     break;
 
                 // --- Start: Handle Student Form Submissions ---
                  case 'student_submit_exam':
                      // Include the file that processes exam submission
-                     echo '<h2>Submit Exam</h2><p>Exam submission processing logic goes here.</p>'; // Placeholder
-                     // include '../includes/student/process_submit_exam.php'; // You'll need to create this file
+                     // Pass $pdo and $studentId to the included file
+                     $pdo = $pdo; // Assuming $pdo is available globally or from config.php
+                     $studentId = $userId;
+                     include "process_submit_exam.php"; // Include the new file
                      break;
                  case 'student_add_feedback_submit':
                      // Include the file that processes feedback submission
                      // Pass $pdo and $studentId to the included file
                      $pdo = $pdo; // Assuming $pdo is available globally or from config.php
                      $studentId = $userId;
-                     include '../includes/student/process_add_feedback.php'; // You'll need to create this file
+                     include "process_add_feedback.php"; // You'll need to create this file
                      break;
                  // Add cases for other student form submissions
                  // --- End: Handle Student Form Submissions ---
