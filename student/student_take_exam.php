@@ -12,6 +12,7 @@
 
 // Include necessary configuration or database files
 include_once '../config.php';
+include_once '../includes/db/db.config.php';
 
 // Start the session if it hasn't been started already
 if (session_status() == PHP_SESSION_NONE) {
@@ -30,7 +31,7 @@ $exam = null; // Variable to hold exam details
 $questions = []; // Array to hold questions
 
 // --- Start: PHP Logic to Fetch Exam and Questions ---
-
+$_GET['exam_id']=1;
 // Check if exam_id is provided in the GET request
 if (isset($_GET['exam_id']) && filter_var($_GET['exam_id'], FILTER_VALIDATE_INT)) {
     $examId = filter_var($_GET['exam_id'], FILTER_VALIDATE_INT);

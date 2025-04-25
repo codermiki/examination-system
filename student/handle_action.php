@@ -152,30 +152,25 @@ if (isset($_GET['action'])) {
             // Handle actions specific to the student role
             switch ($action) {
                  case 'dashboard':
-                    // Include the student dashboard file
-                    include '../includes/student/student_dashboard.php';
+                    include "student_dashboard.php";
                     break;
                 case 'student_upcoming_exams':
-                    // Include the upcoming exams/schedule file
-                    include '../includes/student/student_upcoming_exams.php';
+                    include "student_upcoming_exams.php";
                     break;
                  case 'student_exam_schedule':
                      // This action might also load student_upcoming_exams.php
                      // or a dedicated schedule view if different.
                      // For now, let's include the same file.
-                    include '../includes/student/student_upcoming_exams.php';
+                    include "student_upcoming_exams.php";
                     break;
                  case 'student_take_exam':
-                     // Include the take exam placeholder file
-                    include '../includes/student/student_take_exam.php';
+                    include "student_take_exam.php";
                     break;
                  case 'student_taken_exams':
-                     // Include the taken exams list file
-                    include '../includes/student/student_taken_exams.php';
+                    include "student_taken_exams.php";
                     break;
                  case 'student_view_result':
-                     // Include the view result file
-                    include '../includes/student/student_view_result.php';
+                    include "student_view_result.php";
                     break;
                  case 'student_add_feedback':
                      // Include the add feedback file
