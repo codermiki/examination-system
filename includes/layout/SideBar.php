@@ -99,6 +99,7 @@ if (session_status() == PHP_SESSION_NONE) {
                         <a href="#" class="sidebar-link" data-content="instructor_create_exam">Create Exam</a>
                         <a href="#" class="sidebar-link" data-content="instructor_import_exam">Import Exam</a>
                         <a href="#" class="sidebar-link" data-content="instructor_manage_exam">Manage Exam</a>
+                        <a href="#" class="sidebar-link" data-content="instructor_manage_questions">Manage Questions</a>
                         <a href="#" class="sidebar-link" data-content="instructor_view_exam">View Exam</a>
                         <a href="#" class="sidebar-link" data-content="instructor_edit_exam">Edit Exam</a>
                     </div>
@@ -146,6 +147,9 @@ if (session_status() == PHP_SESSION_NONE) {
                     <div class="action">
                         <a href="#" class="sidebar-link" data-content="student_upcoming_exams">Upcoming Exams List</a>
                         <a href="#" class="sidebar-link" data-content="student_exam_schedule">Exam Schedule</a>
+                        <a href="#" class="sidebar-link" data-content="student_take_exam">Take Exam</a>
+                        <a href="#" class="sidebar-link" data-content="student_taken_exams">Taken Exams</a>
+                        <a href="#" class="sidebar-link" data-content="student_view_result">View Result</a>
                     </div>
                 </div>
             </div>
