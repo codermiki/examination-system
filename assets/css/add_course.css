@@ -1,0 +1,70 @@
+.form-container {
+   background: white;
+   padding: 20px;
+   border-radius: 8px;
+   max-width: 1000px;
+   margin: auto;
+   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.section {
+   display: flex;
+   gap: 20px;
+   margin-bottom: 20px;
+}
+
+.box {
+   flex: 1;
+   padding: 15px;
+   border: 1px solid #ccc;
+   border-radius: 6px;
+   background-color: #fdfdfd;
+}
+
+.box h3 {
+   margin-top: 0;
+   margin-bottom: 10px;
+}
+
+select,
+button {
+   padding: 8px;
+   width: 100%;
+   margin-top: 10px;
+   margin-bottom: 15px;
+}
+
+.course-list {
+   max-height: 250px;
+   overflow-y: auto;
+   border: 1px solid #ccc;
+   padding: 10px;
+   border-radius: 4px;
+}
+
+.course-list label {
+   display: block;
+   margin-bottom: 6px;
+}
+
+#selectAll {
+   margin-top: 10px;
+   margin-bottom: 10px;
+}
+
+.success {
+   color: green;
+   margin-top: 15px;
+}
+
+.add_course {
+   display: none;
+   position: absolute;
+   top: 30px;
+   left: 20px;
+}
+
+.add_course.show {
+   display: block;
+   z-index: 1000;
+}

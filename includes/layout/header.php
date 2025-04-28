@@ -9,46 +9,49 @@
         </a>
         <div class="header__content">
             <div class="account">
-                <button onclick="toggle();" type="button">
+                <button id="toggler" onclick="toggle();" type="button">
                     <?php
-                    if (isset($_SESSION['username'])) {
+                    if (isset($_SESSION['email'])) {
                         switch ($_SESSION['role']) {
-                            case 3:
+                            case 'admin':
                                 echo "Admin";
                                 break;
-                            case 2:
+                            case 'instructor':
                                 echo "Instructor";
                                 break;
-                            case 1:
+                            case 'student':
                                 echo "Student";
                                 break;
                         }
                     } else {
-                        echo "Sign in";
+                        echo "Login";
                     }
                     ?>
+                    &#65088;
                 </button>
-                <div class="user">
-                    <div class="username">
-                        <?php
-                        if (isset($_SESSION['username'])) {
-                            echo $_SESSION['username'];
-                        } else {
-                            echo 'Sign in to your Account';
-                        }
-                        ?>
-                    </div>
-                    <hr />
-                    <div class="logout">
-                        <?php
-                        if (isset($_SESSION['username'])) {
-                            ?>
-                            <form action="./" method="post">
-                                <input class="btn" type="submit" name="logout" id="" value="logout">
-                            </form>
+                <div id="drop_down" class="drop-down">
+                    <div class="user">
+                        <div class="email">
                             <?php
-                        }
-                        ?>
+                            if (isset($_SESSION['email'])) {
+                                echo $_SESSION['email'];
+                            } else {
+                                echo 'Sign in to your Account';
+                            }
+                            ?>
+                        </div>
+                        <hr />
+                        <div class="logout">
+                            <?php
+                            if (isset($_SESSION['email'])) {
+                                ?>
+                                <form action="./" method="post">
+                                    <input class="btn" type="submit" name="logout" id="" value="logout">
+                                </form>
+                                <?php
+                            }
+                            ?>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -58,8 +61,14 @@
 
 
 <script>
+    const el = document.querySelector("#drop_down");
+    const togglerBtn = document.querySelector("#toggler");
     function toggle() {
-        const el = document.querySelector(".user");
         el.classList.toggle("display");
     }
+    document.addEventListener("click", function (e) {
+        if (!el.contains(e.target) && !togglerBtn.contains(e.target)) {
+            el.classList.remove("display");
+        }
+    });
 </script>

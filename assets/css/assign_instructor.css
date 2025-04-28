@@ -1,0 +1,88 @@
+.wrap {
+   background-color: #fff;
+   width: 400px;
+   padding: 24px;
+   border-radius: 10px;
+   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.wrap-header {
+   display: flex;
+   justify-content: space-between;
+   align-items: center;
+   margin-bottom: 20px;
+}
+
+.wrap-header h2 {
+   margin: 0;
+}
+
+.close-btn {
+   width: max-content;
+   font-size: 24px;
+   background: none;
+   border: none;
+   cursor: pointer;
+}
+
+.assign-form label {
+   display: block;
+   margin-top: 12px;
+   font-weight: 500;
+}
+
+.assign-form input,
+.assign-form select {
+   width: 100%;
+   padding: 10px;
+   margin-top: 6px;
+   margin-bottom: 8px;
+   border: 1px solid #ccc;
+   border-radius: 6px;
+   font-size: 14px;
+}
+
+.assign-form select option {
+   cursor: pointer;
+}
+
+.form-actions {
+   display: flex;
+   justify-content: flex-end;
+   gap: 10px;
+   margin-top: 20px;
+}
+
+.assign_instructor button.close {
+   background-color: #6c757d;
+   color: white;
+   border: none;
+   padding: 8px 14px;
+   border-radius: 6px;
+   cursor: pointer;
+}
+
+.assign_instructor button.add {
+   background-color: #2563eb;
+   color: white;
+   border: none;
+   padding: 8px 14px;
+   border-radius: 6px;
+   cursor: pointer;
+}
+
+.assign_instructor button:hover {
+   opacity: 0.9;
+}
+
+.assign_instructor {
+   display: none;
+   position: absolute;
+   top: 15vh;
+   left: 20vw;
+}
+
+.assign_instructor.show {
+   display: block;
+   z-index: 1000;
+}

@@ -1,0 +1,95 @@
+body {
+   font-family: Arial, sans-serif;
+   background: #f0f2f5;
+   margin: 0;
+   padding: 0;
+}
+
+.container {
+   display: flex;
+   justify-content: center;
+   gap: 30px;
+   padding: 40px;
+}
+
+.card {
+   background: white;
+   padding: 30px;
+   border-radius: 10px;
+   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+   width: 400px;
+}
+
+.update-card {
+   max-width: 500px;
+   margin: 40px auto;
+}
+
+label {
+   display: block;
+   font-weight: bold;
+   margin-top: 15px;
+}
+
+input,
+select,
+textarea {
+   width: 100%;
+   padding: 10px;
+   margin-top: 5px;
+   border: 1px solid #ccc;
+   border-radius: 6px;
+}
+
+.btn {
+   margin-top: 20px;
+   padding: 10px;
+   background: #4a90e2;
+   color: white;
+   border: none;
+   border-radius: 6px;
+   cursor: pointer;
+}
+
+.question-box {
+   background: #f8f8f8;
+   padding: 15px;
+   border-radius: 6px;
+   margin-top: 10px;
+}
+
+.question-actions {
+   margin-top: 10px;
+}
+
+.update-btn {
+   background-color: #4a90e2;
+   color: white;
+   border: none;
+   padding: 6px 12px;
+   border-radius: 4px;
+   cursor: pointer;
+}
+
+.delete-btn {
+   background-color: #e74c3c;
+   color: white;
+   border: none;
+   padding: 6px 12px;
+   border-radius: 4px;
+   cursor: pointer;
+}
+
+.correct-label {
+   color: green;
+   font-weight: bold;
+}
+
+.page {
+   display: none;
+}
+
+.page.active {
+   display: flex;
+   flex-direction: column;
+}
