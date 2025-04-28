@@ -1,8 +1,5 @@
 
--- Online Examination System SQL Dump
---CAUTION: to import a my sql file into your XAMP server,first create a database with the name 
---softexam_db then goto import and the navigate to the folder where you located the sql file.
-
+use softexam_db;
 -- Drop tables if they exist
 DROP TABLE IF EXISTS student_answers, student_exams, choices, questions, exams, exam_schedule, instructor_courses, courses, users;
 
