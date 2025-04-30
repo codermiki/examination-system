@@ -43,7 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($examTitle) || $examDuration === false || $examDuration <= 0 || $courseId === false || $courseId <= 0 || $totalMarks === false || $totalMarks < 0) {
         $message = '<p class="error">Error: Please fill in all required exam details correctly.</p>';
     } elseif (!isset($_POST['questions']) || !is_array($_POST['questions']) || count($_POST['questions']) === 0) {
-         $message = '<p class="error">Error: Please add at least one question.</p>';
+        $message = '<p class="error">Error: Please add at least one question.</p>';
     } else {
         // Data seems valid, proceed with database insertion
         try {
@@ -80,19 +80,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($questionType === 'true_false') {
                     $correctAnswer = $question['correct_answer'] ?? null;
                     if (!in_array($correctAnswer, ['true', 'false'])) {
-                         throw new Exception("Invalid correct answer for True/False question.");
+                        throw new Exception("Invalid correct answer for True/False question.");
                     }
                 } elseif ($questionType === 'blank_space') {
                     // For blank space, collect all submitted answers and store them as a delimited string
                     if (isset($question['answers']) && is_array($question['answers']) && count($question['answers']) > 0) {
-                         // Filter out empty answers
-                         $validAnswers = array_filter($question['answers'], 'trim');
-                         if (count($validAnswers) > 0) {
-                             $correctAnswer = implode('|', $validAnswers); // Store as pipe-separated string
-                         } else {
-                              // Depending on your design, you might require at least one answer for blanks
-                              // throw new Exception("Blank space question requires at least one answer.");
-                         }
+                        // Filter out empty answers
+                        $validAnswers = array_filter($question['answers'], 'trim');
+                        if (count($validAnswers) > 0) {
+                            $correctAnswer = implode('|', $validAnswers); // Store as pipe-separated string
+                        } else {
+                            // Depending on your design, you might require at least one answer for blanks
+                            // throw new Exception("Blank space question requires at least one answer.");
+                        }
                     } else {
                         // Depending on your design, you might require answers for blanks
                         // throw new Exception("Blank space question missing answers.");
@@ -114,18 +114,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Handle choices for multiple choice questions
                 if ($questionType === 'multiple_choice') {
                     if (!isset($question['options']) || !is_array($question['options']) || count($question['options']) < 2) {
-                         throw new Exception("Multiple choice question requires at least two options.");
+                        throw new Exception("Multiple choice question requires at least two options.");
                     }
-                     if (!isset($question['correct_answer'])) {
-                         throw new Exception("Multiple choice question missing correct_answer selection.");
+                    if (!isset($question['correct_answer'])) {
+                        throw new Exception("Multiple choice question missing correct_answer selection.");
                     }
                     $correctOptionValue = $question['correct_answer']; // The value that indicates the correct option
 
                     foreach ($question['options'] as $optionValue => $optionText) {
                         $optionText = trim($optionText);
                         if (empty($optionText)) {
-                             // Skip empty options or throw an error
-                             continue; // Or throw new Exception("Empty option text provided for multiple choice question.");
+                            // Skip empty options or throw an error
+                            continue; // Or throw new Exception("Empty option text provided for multiple choice question.");
                         }
 
                         // Determine if this choice is the correct one
@@ -217,11 +217,13 @@ try {
         padding: 10px;
         border: 1px solid #ccc;
         border-radius: 4px;
-        box-sizing: border-box; /* Include padding and border in element's total width and height */
+        box-sizing: border-box;
+        /* Include padding and border in element's total width and height */
     }
 
     textarea {
-        resize: vertical; /* Allow vertical resizing */
+        resize: vertical;
+        /* Allow vertical resizing */
     }
 
     .question-section {
@@ -254,20 +256,24 @@ try {
     }
 
     .question-options input[type="text"] {
-        width: calc(100% - 70px); /* Adjust width considering label/checkbox */
+        width: calc(100% - 70px);
+        /* Adjust width considering label/checkbox */
         display: inline-block;
         vertical-align: middle;
         margin-right: 10px;
     }
 
     .question-options label {
-         display: inline-block;
-         margin-right: 10px;
-         vertical-align: middle;
-         font-weight: normal;
+        display: inline-block;
+        margin-right: 10px;
+        vertical-align: middle;
+        font-weight: normal;
     }
 
-    .add-question-button, .add-option-button, .remove-item-button, .add-blank-button {
+    .add-question-button,
+    .add-option-button,
+    .remove-item-button,
+    .add-blank-button {
         display: inline-block;
         background-color: #28a745;
         color: white;
@@ -280,21 +286,25 @@ try {
         margin-right: 5px;
     }
 
-     .add-option-button {
-         background-color: #007bff;
-     }
+    .add-option-button {
+        background-color: #007bff;
+    }
 
-     .remove-item-button {
-         background-color: #dc3545;
-     }
+    .remove-item-button {
+        background-color: #dc3545;
+    }
 
-     .add-blank-button {
-         background-color: #ffc107; /* Example color for add blank */
-         color: #333;
-     }
+    .add-blank-button {
+        background-color: #ffc107;
+        /* Example color for add blank */
+        color: #333;
+    }
 
 
-    .add-question-button:hover, .add-option-button:hover, .remove-item-button:hover, .add-blank-button:hover {
+    .add-question-button:hover,
+    .add-option-button:hover,
+    .remove-item-button:hover,
+    .add-blank-button:hover {
         opacity: 0.9;
     }
 
@@ -324,7 +334,8 @@ try {
         padding-left: 10px;
         border-left: 2px solid #eee;
     }
-     .message {
+
+    .message {
         margin-top: 15px;
         padding: 10px;
         border-radius: 4px;
@@ -365,7 +376,7 @@ try {
             <textarea id="examDescription" name="examDescription" rows="4"></textarea>
         </div>
 
-         <div class="form-group">
+        <div class="form-group">
             <label for="course_id">Assign to Course:</label>
             <select id="course_id" name="course_id" required>
                 <option value="">-- Select Course --</option>
@@ -383,7 +394,7 @@ try {
             <input type="number" id="examDuration" name="examDuration" required min="1">
         </div>
 
-         <div class="form-group">
+        <div class="form-group">
             <label for="total_marks">Total Marks:</label>
             <input type="number" id="total_marks" name="total_marks" required min="0">
         </div>
@@ -392,9 +403,10 @@ try {
         <div class="question-section">
             <h3>Questions</h3>
             <div id="questionsContainer">
-                </div>
+            </div>
 
-            <button type="button" class="add-question-button">Add Question</button> </div>
+            <button onclick="logfun();" type="button" class="add-question-button">Add Question</button>
+        </div>
 
         <button type="submit">Create Exam</button>
     </form>
@@ -402,6 +414,10 @@ try {
 
 <script>
     let questionCounter = 0;
+
+    const logfun = () => {
+        alert("button");
+    }
 
     // Wait for the DOM to be fully loaded before adding event listeners
     document.addEventListener('DOMContentLoaded', () => {
@@ -415,7 +431,7 @@ try {
             console.error('Error: #questionsContainer not found!');
             return;
         }
-         if (!addQuestionButton) {
+        if (!addQuestionButton) {
             console.error('Error: .add-question-button not found!');
             return;
         }
@@ -423,7 +439,7 @@ try {
         // Add event listener to the "Add Question" button
         addQuestionButton.addEventListener('click', addQuestion);
 
-         console.log('Event listener added to .add-question-button'); // Debugging line
+        console.log('Event listener added to .add-question-button'); // Debugging line
 
     });
 
@@ -514,7 +530,7 @@ try {
                 `;
                 break;
             case 'blank_space':
-                 html = `
+                html = `
                     <p>Blank Answers (Use [BLANK] in the question text for each blank):</p>
                     <div id="blank_answers_${questionId}">
                         <div class="blank-answer-group">
@@ -526,7 +542,7 @@ try {
                     <button type="button" class="add-blank-button" onclick="addBlankAnswer(${questionId})">Add Blank Answer</button>
                     <p><small>Use <code>[BLANK]</code> in the question text to indicate where a blank space should appear for the student.</small></p>
                  `;
-                 break;
+                break;
             // Removed math_equation and coding as they are not directly supported by the DB schema
             default:
                 html = '<p>Select a question type to add options or answers.</p>';
@@ -559,7 +575,7 @@ try {
         mcOptionsContainer.appendChild(optionGroup);
     }
 
-     function addBlankAnswer(questionId) {
+    function addBlankAnswer(questionId) {
         const blankAnswersContainer = document.getElementById(`blank_answers_${questionId}`);
         // Calculate blank count based on existing blank answer groups
         const blankCount = blankAnswersContainer.querySelectorAll('.blank-answer-group').length + 1;
@@ -572,10 +588,10 @@ try {
              <button type="button" class="remove-item-button" onclick="removeOption(this)">Remove Blank</button>
         `;
         blankAnswersContainer.appendChild(blankGroup);
-     }
+    }
 
 
-     function removeOption(button) {
+    function removeOption(button) {
         // This function is used for removing both MC options and Blank Answers
         button.parentElement.remove(); // Remove the parent .option-group or .blank-answer-group div
     }
@@ -614,5 +630,3 @@ try {
     //     });
     // });
 </script>
-
-

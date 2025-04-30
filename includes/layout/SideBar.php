@@ -8,7 +8,6 @@ if (session_status() == PHP_SESSION_NONE) {
 ?>
 
 <aside class="inner__left_panel">
-    <a href="#" class="sidebar-link" data-content="dashboard">Dashboards</a>
 
     <?php
     if (isset($_SESSION['role']) && $_SESSION['role'] == 'admin') {
@@ -87,6 +86,7 @@ if (session_status() == PHP_SESSION_NONE) {
     <?php
     if (isset($_SESSION['role']) && $_SESSION['role'] == 'instructor') {
         ?>
+        <a href="/">Dashboards</a>
 
         <div class="role__container">
             <p>MANAGE EXAM</p>
@@ -141,7 +141,7 @@ if (session_status() == PHP_SESSION_NONE) {
         <div class="role__container">
             <p>AVAILABLE EXAMS</p>
             <div class="drop__down">
-                 <button onclick="toggleCollapse(this);" type="button">Upcoming Exams</button>
+                <button onclick="toggleCollapse(this);" type="button">Upcoming Exams</button>
                 <div class="collapse">
                     <div class="v__line"></div>
                     <div class="action">
@@ -161,7 +161,7 @@ if (session_status() == PHP_SESSION_NONE) {
                 <div class="non-collapse ">
                     <div class="v__line"></div>
                     <div class="action">
-                         <a href="#" class="sidebar-link" data-content="student_taken_exams">Taken Exams List</a>
+                        <a href="#" class="sidebar-link" data-content="student_taken_exams">Taken Exams List</a>
                     </div>
                 </div>
             </div>
@@ -183,7 +183,7 @@ if (session_status() == PHP_SESSION_NONE) {
     }
     ?>
 
-    </aside>
+</aside>
 
 <script>
     function collapse() {

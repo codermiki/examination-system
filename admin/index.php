@@ -40,52 +40,80 @@ if (isset($_POST['logout'])) {
             ?>
         </section>
         <section id="main-content" class="right__panel">
-            <!-- dashboard -->
-            <div class="dashboard">
-                <?php
-                include "./ui/dashboard.php";
-                ?>
-            </div>
-
-            <!-- assign student -->
-            <div class="assign_student">
-                <?php
-                include "./ui/assign_student.php";
-                ?>
-            </div>
-
-            <!-- assign instructor -->
-            <div class="assign_instructor">
-
-                <?php
-                include "./ui/assign_instructor.php";
-                ?>
-            </div>
-
-            <!-- add course -->
-            <div class="add_course">
-                <?php
-                include "./ui/add_course.php";
-                ?>
-            </div>
+            <!--  -->
         </section>
     </main>
 
     <?php
     include "../includes/layout/footer.php";
     ?>
+    
     <script>
-        function loadPage(page) {
-            fetch(`/ui/${page}.php`)
-                .then(res => res.text())
-                .then(html => {
-                    document.getElementById('main-content').innerHTML = html;
-                })
-                .catch(err => {
-                    document.getElementById('main-content').innerHTML = `<p style="color:red;">Failed to load ${page}</p>`;
-                });
-        }
-    </script>
+
+// run the script on the page loaded
+document.addEventListener('DOMContentLoaded', () => {
+    // Select all links in the sidebar with the class 'sidebar-link'
+    const sidebarLinks = document.querySelectorAll('.inner__left_panel .sidebar-link');
+
+    // Select the right panel where content will be loaded
+    const rightPanel = document.getElementById('main-content');
+
+    // Add a click event listener to each sidebar link
+    sidebarLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+            // Prevent the default behavior of the link 
+            e.preventDefault();
+
+            const contentType = link.getAttribute('data-content');
+            // Check if the data-content attribute exists and is not empty
+            if (contentType) {
+                // Optional: Display a loading indicator in the right panel
+                rightPanel.innerHTML = '<p>Loading...</p>';
+
+                // Make an AJAX request to the server to load the content
+                fetch(`handle_action.php?action=${contentType}`)
+                    .then(response => {
+                        // Check if the HTTP response was successful
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        return response.text();
+                    })
+                    .then(html => {
+                        // Create a temporary element to parse the HTML string
+                        const tempDiv = document.createElement('div');
+                        tempDiv.innerHTML = html;
+                        rightPanel.innerHTML = '';
+
+                        // append the content to right Panel
+                        rightPanel.appendChild(tempDiv);
+
+                        // Find and execute script tags within the loaded content
+                        const scripts = rightPanel.querySelectorAll('script');
+                        scripts.forEach(script => {
+                            const newScript = document.createElement('script');
+                            // Copy attributes from the original script tag
+                            script.getAttributeNames().forEach(attrName => {
+                                newScript.setAttribute(attrName, script.getAttribute(attrName));
+                            });
+                            // Set the script content
+                            newScript.textContent = script.textContent;
+                            // Append the new script tag to the right panel to execute it
+                            rightPanel.appendChild(newScript);
+                            // Remove the original script tag (optional, but keeps the DOM clean)
+                            script.remove();
+                        });
+                    })
+                    .catch(error => {
+                        rightPanel.innerHTML = '<p>Something wrong.</p>';
+                    });
+            }
+        });
+    });
+});
+
+</script>
+
 </body>
 
 </html>
