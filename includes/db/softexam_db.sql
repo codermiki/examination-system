@@ -171,3 +171,13 @@ VALUES (3, 1, 1, 'The exam was well structured and fair.', 5);
 UPDATE student_exams
 SET submitted_at = NOW(), score = 100
 WHERE id = 1;
+
+
+-- new add course table with year and semester
+
+CREATE TABLE assigned_courses (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    course_id VARCHAR(20),
+    year INT,
+    semester INT
+);

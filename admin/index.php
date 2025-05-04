@@ -12,6 +12,9 @@ if (isset($_POST['logout'])) {
     session_destroy();
     header('Location: ../');
 }
+
+$page = $_GET["page"] ?? "dashboard";
+
 ?>
 
 
@@ -41,14 +44,25 @@ if (isset($_POST['logout'])) {
         </section>
         <section id="main-content" class="right__panel">
             <!--  -->
+            <?php
+            switch ($page) {
+                case 'add_course':
+                    include "admin/ui/add_course.php";
+                    break;
+
+                default:
+                    echo "Page Not Found";
+                    break;
+            }
+            ?>
         </section>
     </main>
 
     <?php
     include "../includes/layout/footer.php";
     ?>
-    
-    <script>
+
+    <!-- <script>
 
 // run the script on the page loaded
 document.addEventListener('DOMContentLoaded', () => {
@@ -112,7 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-</script>
+</script> -->
 
 </body>
 

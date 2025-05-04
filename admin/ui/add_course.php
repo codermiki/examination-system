@@ -101,7 +101,7 @@
                     return;
                 }
 
-                fetch("assign_courses_to_year_semester.php", {
+                fetch("api/addCourse", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
