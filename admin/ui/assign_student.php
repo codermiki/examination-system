@@ -8,23 +8,23 @@
     <div class="form-container">
         <div class="wrap-header">
             <h2>Assign Student</h2>
-            <button id="close_student_btn" class="close-btn">&times;</button>
         </div>
         <form id="assignForm">
             <div class="section">
                 <!-- Left box: Year & Semester + Assign button -->
                 <div class="box left">
                     <h3>Select Year & Semester</h3>
-                    <label for="year">Academic Year:</label>
                     <select id="year">
                         <option value="">-- Choose Year --</option>
-                        <option value="1">1st Year</option>
                         <option value="2">2nd Year</option>
                         <option value="3">3rd Year</option>
                         <option value="4">4th Year</option>
+                        <option value="5">5th Year</option>
                     </select>
 
-                    <label for="semester">Semester:</label>
+                    <br>
+                    <br>
+
                     <select id="semester">
                         <option value="">-- Choose Semester --</option>
                         <option value="1">1st Semester</option>
@@ -48,6 +48,7 @@
                         <strong>Select All Students</strong></label>
                     <div class="student-list" id="studentList">
                         <!-- Student checkboxes inserted here -->
+                        <p>Please select Year and Semester first and student list will display Here...</p>
                     </div>
                 </div>
             </div>
@@ -61,38 +62,7 @@
         const assign_student = document.querySelector('.assign_student');
         const close_student_btn = document.querySelector('#close_student_btn');
         const assign_student_toggler = document.querySelector('#assign_student_toggler');
-
-
-        // Load students
-        document.addEventListener("DOMContentLoaded", () => {
-            fetch("./data/get_student.json")
-                .then((res) => res.json())
-                .then((data) => {
-                    const studentList = document.getElementById("studentList");
-                    const selectAllCheckbox =
-                        document.getElementById("selectAll");
-                    if (data.length === 0) {
-                        studentList.innerHTML = "<p>No students available.</p>";
-                        return;
-                    }
-                    data.forEach((student) => {
-                        const label = document.createElement("label");
-                        label.innerHTML = `
-                <input type="checkbox" name="student_ids" value="${student.user_id}" class="student-checkbox">
-                ${student.name} (${student.email})
-                `;
-                        studentList.appendChild(label);
-                    });
-
-                    selectAllCheckbox.addEventListener("change", () => {
-                        const checkboxes =
-                            document.querySelectorAll(".student-checkbox");
-                        checkboxes.forEach(
-                            (cb) => (cb.checked = selectAllCheckbox.checked)
-                        );
-                    });
-                });
-        });
+        const studentList = document.getElementById("studentList");
 
         // Load courses when year or semester changes
         [yearSelect, semesterSelect].forEach((select) => {
@@ -101,7 +71,39 @@
                 const semester = semesterSelect.value;
 
                 if (year && semester) {
-                    fetch(`./data/get_course.json`)
+                    fetch("./data/get_student.json")
+                        .then((res) => res.json())
+                        .then((data) => {
+                            const selectAllCheckbox =
+                                document.getElementById("selectAll");
+                            if (data.length === 0) {
+                                studentList.innerHTML = "<p>No students available.</p>";
+                                return;
+                            }
+                            studentList.innerHTML = "";
+                            data.forEach((student) => {
+                                const label = document.createElement("label");
+                                label.innerHTML = `
+                <input type="checkbox" name="student_ids" value="${student.user_id}" class="student-checkbox">
+                ${student.name} (${student.email})
+                `;
+                                studentList.appendChild(label);
+                            });
+
+                            selectAllCheckbox.addEventListener("change", () => {
+                                const checkboxes =
+                                    document.querySelectorAll(".student-checkbox");
+                                checkboxes.forEach(
+                                    (cb) => (cb.checked = selectAllCheckbox.checked)
+                                );
+                            });
+                        });
+                } else {
+                    studentList.innerHTML = "<p>Please select Year and Semester first and student list will display Here...</p>";
+                }
+
+                if (year && semester) {
+                    fetch(`./data/courses.json`)
                         .then((res) => res.json())
                         .then((data) => {
                             courseSelect.innerHTML =
@@ -127,6 +129,7 @@
                 const checkedBoxes = document.querySelectorAll(
                     'input[name="student_ids"]:checked'
                 );
+
                 const student_ids = Array.from(checkedBoxes).map(
                     (cb) => cb.value
                 );
@@ -136,34 +139,25 @@
                     return;
                 }
 
-                fetch("assign_students_to_course.php", {
+                fetch("/softexam/api/assignStudent", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ course_id, student_ids }),
                 })
-                    .then((res) => res.json())
+                    .then((res) => {
+                        console.log(res)
+                        return res.json()
+                    })
                     .then((response) => {
                         document.getElementById("message").textContent =
                             response.message;
+                        // console.log(response)
+                        window.location.replace("index.php?page=manage_student")
                     });
             });
 
 
-        close_student_btn.addEventListener('click', () => {
-            assign_student.classList.remove('show');
-        });
 
-
-        function showAssignStudent(e) {
-            e.preventDefault();
-            assign_student.classList.add('show');
-        }
-
-        document.addEventListener('click', (e) => {
-            if (!assign_student.contains(e.target) && !assign_student_toggler.contains(e.target)) {
-                assign_student.classList.remove('show');
-            }
-        });
     </script>
 </body>
 

@@ -181,3 +181,16 @@ CREATE TABLE assigned_courses (
     year INT,
     semester INT
 );
+
+CREATE TABLE assigned_students (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    student_id VARCHAR(50),
+    course_id VARCHAR(50)
+);
+
+CREATE TABLE assigned_instructors (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    instructor_id VARCHAR(50),
+    course_id VARCHAR(50)
+);
+

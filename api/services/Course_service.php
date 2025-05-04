@@ -39,4 +39,25 @@ class Course_service
             return ['error' => 'Database error: ' . $e->getMessage()];
         }
     }
+    public static function assignInstructor($instructor_id, $course_id)
+    {
+        global $conn;
+
+        if (!$instructor_id || !$course_id) {
+            return ['error' => 'Instructor ID and Course ID are required'];
+        }
+
+        $sql = "INSERT INTO assigned_instructors (instructor_id, course_id) VALUES (:instructor_id, :course_id)";
+        $stmt = $conn->prepare($sql);
+        $stmt->bindParam(':instructor_id', $instructor_id);
+        $stmt->bindParam(':course_id', $course_id);
+
+        if ($stmt->execute()) {
+            return ['message' => 'Instructor assigned successfully'];
+        } else {
+            return ['error' => 'Failed to assign instructor'];
+        }
+    }
+
+
 }

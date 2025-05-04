@@ -1,6 +1,7 @@
 <?php
 require_once "controllers/User_controller.php";
 require_once "controllers/Course_controller.php";
+require_once "controllers/Student_controller.php";
 require_once "helpers/Response_helper.php";
 
 $method = $_SERVER['REQUEST_METHOD'];
@@ -21,6 +22,26 @@ switch ("$method $path") {
         $course_ids = $data['course_ids'] ?? [];
         Course_controller::addCourse($year, $semester, $course_ids);
         break;
+
+    case "POST /assignStudent":
+        $data = json_decode(file_get_contents("php://input"), true);
+        $course_id = $data['course_id'] ?? null;
+        $student_ids = $data['student_ids'] ?? [];
+
+        if (!$course_id || empty($student_ids)) {
+            Response_helper::json(['error' => 'Course ID and student list are required']);
+            exit;
+        }
+        Student_controller::assignStudent($course_id, $student_ids);
+        break;
+
+    case "POST /assignInstructor":
+        $data = json_decode(file_get_contents("php://input"), true);
+        $instructor_id = $data['instructor_id'] ?? null;
+        $course_id = $data['course_id'] ?? null;
+        Course_controller::assignInstructor($instructor_id, $course_id);
+        break;
+
     default:
         Response_helper::json(['error' => 'Invalid Request'], 401);
         break;
