@@ -96,8 +96,8 @@
                     return res.json()
                 })
                 .then((response) => {
-                    console.log(response)
                     document.getElementById("message").textContent = response.message;
+                    window.location.replace("index.php?page=manage_course");
                 });
         });
     </script>

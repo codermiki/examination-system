@@ -46,8 +46,22 @@ $page = $_GET["page"] ?? "dashboard";
             <!--  -->
             <?php
             switch ($page) {
+                case 'dashboard':
+                    include "./dashboard.php";
+                    break;
+
                 case 'add_course':
                     include "./ui/add_course.php";
+                    break;
+
+                case 'manage_course':
+                    include "./ui/manage_course.php";
+                    break;
+                case 'schedule_exam':
+                    include "./ui/schedule_exam.php";
+                    break;
+                case 'manage_schedule':
+                    include "./ui/manage_schedule.php";
                     break;
 
                 default:
