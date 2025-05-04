@@ -47,7 +47,7 @@ $page = $_GET["page"] ?? "dashboard";
             <?php
             switch ($page) {
                 case 'dashboard':
-                    include "./dashboard.php";
+                    include "./ui/dashboard.php";
                     break;
 
                 case 'add_course':
