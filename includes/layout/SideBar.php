@@ -49,7 +49,7 @@ if (session_status() == PHP_SESSION_NONE) {
                 <div class="non-collapse ">
                     <div class="v__line"></div>
                     <div class="action">
-                        <a onclick="showAddCourse(event)" id="add_course_toggler" href="#">Add Course</a>
+                        <a href="index.php?page=add_course">Add Course</a>
                         <a href="#">Manage Course</a>
                     </div>
                 </div>

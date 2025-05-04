@@ -1,0 +1,6 @@
+[
+   { "course_id": "CS101", "course_name": "Introduction to Programming" },
+   { "course_id": "CS102", "course_name": "Data Structures" },
+   { "course_id": "CS103", "course_name": "Database Systems" },
+   { "course_id": "CS104", "course_name": "Web Development" }
+]

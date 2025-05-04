@@ -13,9 +13,8 @@ switch ("$method $path") {
     case "GET /users":
         User_controller::getAllUsers();
         break;
-        
+
     case "POST /addCourse":
-        header("Content-Type: application/json");
         $data = json_decode(file_get_contents("php://input"), true);
         $year = $data['year'] ?? null;
         $semester = $data['semester'] ?? null;
