@@ -1,115 +1,187 @@
+/* assets/css/header.css */
+
+:root {
+   --header-bg: #ffffff; /* White background */
+   --header-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /* Softer, more spread shadow */
+   --header-link-color: #333; /* Dark grey for links */
+   --header-link-hover-color: #007bff; /* Blue on hover */
+   --header-transition-duration: 0.3s;
+   --account-button-bg: #e9ecef; /* Light grey button background */
+   --account-button-hover-bg: #dee2e6; /* Slightly darker on hover */
+   --dropdown-bg: #ffffff; /* White dropdown background */
+   --dropdown-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); /* More prominent dropdown shadow */
+   --dropdown-border-color: #e9ecef; /* Light border for dropdown items */
+   --logout-button-bg: #dc3545; /* Red for logout */
+   --logout-button-hover-bg: #c82333; /* Darker red on hover */
+   --logout-button-color: #ffffff; /* White text for logout */
+}
+
 header {
-   height: 40px;
-   padding: 10px;
-   background-color: #fafbfc;
-   box-shadow: #d8d8d8 2px 2px 2px;
+   height: 60px; /* Increased height */
+   padding: 0 20px; /* Adjusted padding */
+   background-color: var(--header-bg);
+   box-shadow: var(--header-shadow);
    position: sticky;
-   top: -3px;
+   top: 0;
    left: 0;
-   transition: all 0.3s ease;
+   width: 100%; /* Ensure it spans the full width */
+   box-sizing: border-box; /* Include padding in width */
    z-index: 1000;
+   display: flex; /* Use flexbox for main header layout */
+   align-items: center; /* Vertically center content */
 }
 
 header nav {
    display: flex;
    justify-content: space-between;
    align-items: center;
-   padding: 0 20px;
+   width: 100%; /* Make nav take full header width */
    height: 100%;
+   padding: 0; /* Remove nav padding */
 }
 
 header nav a {
    text-decoration: none;
-   color: #000;
+   color: var(--header-link-color);
+   transition: color var(--header-transition-duration) ease;
+   display: flex; /* Use flex for logo area */
+   align-items: center;
+}
+
+header nav a:hover {
+   color: var(--header-link-hover-color);
 }
 
 .header__logo {
    display: flex;
    align-items: center;
-   gap: 5px;
+   gap: 10px; /* Increased gap */
+   font-size: 1.4em; /* Larger logo text */
+   font-weight: bold;
+   color: #333; /* Dark color for logo text */
 }
 
 .logo__container {
-   width: 40px;
+   width: 40px; /* Keep logo size */
    height: 40px;
-   background: url("../images/logo/logo.png");
-   background-repeat: no-repeat;
-   background-position: center;
-   background-size: cover;
+   background: url("../images/logo/logo.png") no-repeat center center;
+   background-size: contain; /* Use contain to ensure logo is fully visible */
+   /* Optional: Add a subtle border or background to logo container */
+   /* border: 1px solid #ccc; */
+   /* border-radius: 50%; */
+   /* background-color: #f0f0f0; */
 }
 
 .header__content {
    display: flex;
-   justify-content: space-between;
    align-items: center;
+}
+
+.account {
+   position: relative; /* Needed for positioning the dropdown */
+   display: inline-block;
 }
 
 .account button {
-   padding: 5px 10px;
+   padding: 8px 15px; /* Adjusted padding */
    cursor: pointer;
    border: none;
-   font-weight: 700;
-   background-color: #f5f5f6;
-   border-radius: 2px;
-   transition: all 0.2s ease-in-out;
+   font-weight: 600; /* Slightly less bold */
+   background-color: var(--account-button-bg);
+   border-radius: 20px; /* Pill shape */
+   transition: background-color var(--header-transition-duration) ease, box-shadow var(--header-transition-duration) ease;
+   display: flex;
+   align-items: center;
+   gap: 5px; /* Space between text and arrow */
+   color: var(--header-link-color);
 }
 
-.btn {
-   width: 100%;
-   padding: 10px;
-   cursor: pointer;
-   border: none;
-   font-weight: 700;
-   background-color: #ffffff;
-   border-radius: 2px;
-   transition: all 0.2s ease-in-out;
+.account button:hover {
+   background-color: var(--account-button-hover-bg);
+   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow on hover */
 }
 
-.btn:hover {
-   background-color: #e0f3ff;
+.account button span {
+   transition: transform var(--header-transition-duration) ease;
 }
 
-header form {
-   width: 100%;
+.account button[aria-expanded="true"] span {
+   transform: rotate(180deg); /* Rotate arrow when expanded */
 }
+
 
 .drop-down {
-   display: flex;
-   flex-direction: column;
-   align-items: center;
-   gap: 5px;
-   box-shadow: gray 0px 0px 2px;
-   border-radius: 5px;
-   background-color: #ffffff;
-   max-height: 0px;
-   overflow: hidden;
    position: absolute;
-   top: 50px;
-   right: 70px;
-   translate: 0 -20px;
-   opacity: 0;
-   transition: all 0.4s ease;
-}
-
-.user {
-   padding: 10px;
+   top: calc(100% + 10px); /* Position below the button with some space */
+   right: 0; /* Align to the right of the button */
+   background-color: var(--dropdown-bg);
+   box-shadow: var(--dropdown-shadow);
+   border-radius: 8px; /* Rounded corners */
+   overflow: hidden; /* Hide content during transition */
+   max-height: 0; /* Start collapsed */
+   opacity: 0; /* Start invisible */
+   visibility: hidden; /* Hide completely when collapsed */
+   transition: max-height var(--header-transition-duration) ease-in-out, opacity var(--header-transition-duration) ease, visibility var(--header-transition-duration) ease;
+   min-width: 200px; /* Minimum width for dropdown */
+   z-index: 1001; /* Ensure it's above other header elements */
 }
 
 .drop-down.display {
-   max-height: 100px;
-   translate: 0 0;
+   max-height: 200px; /* Sufficient height to show content */
    opacity: 1;
+   visibility: visible;
+}
+
+.user {
+   padding: 10px 15px; /* Adjusted padding */
+   text-align: left;
+}
+
+.user .email {
+   font-size: 0.9em;
+   color: #555;
+   margin-bottom: 5px;
+   word-break: break-word; /* Prevent long emails from overflowing */
+}
+
+.user hr {
+   border: none;
+   height: 1px;
+   background-color: var(--dropdown-border-color);
+   margin: 10px 0;
 }
 
 .logout {
-   width: 100%;
+   padding: 0 15px 10px; /* Padding around the logout button */
 }
 
-/* footer style */
+.logout form {
+   margin: 0; /* Remove form margin */
+}
 
+.logout .btn {
+   width: 100%;
+   padding: 10px;
+   cursor: pointer;
+   border: none;
+   font-weight: 600;
+   background-color: var(--logout-button-bg);
+   color: var(--logout-button-color);
+   border-radius: 4px;
+   transition: background-color var(--header-transition-duration) ease;
+   text-align: center; /* Center button text */
+}
+
+.logout .btn:hover {
+   background-color: var(--logout-button-hover-bg);
+}
+
+/* footer style (kept from previous code, assuming it's in header.css) */
+/* It's generally better to have footer styles in a separate footer.css */
 footer {
    padding: 30px 0;
    background-color: #d8d8d8;
+   text-align: center; /* Center footer content */
 }
 
 .footer__container {
@@ -117,4 +189,37 @@ footer {
    justify-content: center;
    align-items: center;
    gap: 10px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+   header {
+       padding: 0 10px; /* Reduce padding on smaller screens */
+       height: 50px; /* Slightly smaller height */
+   }
+
+   .header__logo {
+       font-size: 1.2em; /* Smaller logo text */
+       gap: 5px;
+   }
+
+   .logo__container {
+       width: 35px;
+       height: 35px;
+   }
+
+   header nav {
+       padding: 0 10px; /* Reduce nav padding */
+   }
+
+   .account button {
+       padding: 6px 10px; /* Reduce button padding */
+       font-size: 0.9em;
+   }
+
+    .drop-down {
+        top: calc(100% + 8px); /* Adjust dropdown position */
+        right: 0; /* Keep right aligned */
+        min-width: 180px;
+    }
 }

@@ -80,6 +80,17 @@ if (session_status() == PHP_SESSION_NONE) {
                 </div>
             </div>
         </div>
+        <div class="role__container">
+            <p>Profile</p>
+            <div class="drop__down">
+                <div class="non-collapse ">
+                    <div class="v__line"></div>
+                    <div class="action">
+                        <a href="#" class="sidebar-link" data-content="admin_update_password">Update Password</a>
+                    </div>
+                </div>
+            </div>
+        </div>
         <?php
     }
     ?>
@@ -130,6 +141,17 @@ if (session_status() == PHP_SESSION_NONE) {
                 </div>
             </div>
         </div>
+        <div class="role__container">
+            <p>Profile</p>
+            <div class="drop__down">
+                <div class="non-collapse ">
+                    <div class="v__line"></div>
+                    <div class="action">
+                        <a href="#" class="sidebar-link" data-content="inst_update_password">Update Password</a>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <?php
     }
@@ -174,6 +196,17 @@ if (session_status() == PHP_SESSION_NONE) {
                     <div class="v__line"></div>
                     <div class="action">
                         <a href="#" class="sidebar-link" data-content="student_add_feedback">Add Feedback</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="role__container">
+            <p>Profile</p>
+            <div class="drop__down">
+                <div class="non-collapse ">
+                    <div class="v__line"></div>
+                    <div class="action">
+                        <a href="#" class="sidebar-link" data-content="stud_update_password">Update Password</a>
                     </div>
                 </div>
             </div>

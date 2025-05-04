@@ -17,6 +17,10 @@ if (isset($_GET['action'])) {
                     include "create_exam.php";
                     break;
 
+                case 'inst_update_password':
+                    include "update_password.php";
+                    break;
+
                 case 'instructor_import_exam':
                     include "import_exam.php";
                     break;

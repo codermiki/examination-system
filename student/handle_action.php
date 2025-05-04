@@ -15,6 +15,10 @@ if (isset($_GET['action'])) {
                     include "student_dashboard.php";
                     break;
 
+                    case 'stud_update_password':
+                    include "update_password.php";
+                    break;
+
                 case 'student_upcoming_exams':
                     include "student_upcoming_exams.php";
                     break;

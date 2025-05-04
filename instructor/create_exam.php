@@ -1,15 +1,7 @@
 <?php
-// includes/instructor/create_exam.php
-
-// This file contains the HTML, CSS, JavaScript for the "Create Exam" form
-// and PHP logic to save the exam data to the database.
-
-// Include necessary configuration or database files
-// Assuming config.php establishes a $pdo database connection
 include_once '../config.php';
 include_once '../includes/db/db.config.php';
 
-// Start the session if it hasn't been started already
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
@@ -23,17 +15,13 @@ if (!isset($_SESSION['email']) || !isset($_SESSION['role']) || $_SESSION['role']
 
 $message = ''; // Variable to store feedback messages
 
-// --- Start: PHP Logic for Handling Form Submission ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $instructorId = $_SESSION['user_id']; // Get the logged-in instructor's user_id
+    $instructorId = $_SESSION['user_id']; 
 
-    // Get and validate exam details
     $examTitle = trim($_POST['examTitle'] ?? '');
     $examDescription = trim($_POST['examDescription'] ?? '');
     $examDuration = filter_var($_POST['examDuration'] ?? 0, FILTER_VALIDATE_INT);
-    // You'll need a way to select the course for the exam in the form.
-    // For now, let's assume a 'course_id' is submitted via a hidden field or a dropdown.
-    // Add a form field for course selection in the HTML below.
+
     $courseId = filter_var($_POST['course_id'] ?? 0, FILTER_VALIDATE_INT);
     // You might also need total_marks in the form
     $totalMarks = filter_var($_POST['total_marks'] ?? 0, FILTER_VALIDATE_INT);
