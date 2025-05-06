@@ -1,10 +1,4 @@
-<html>
-
-<head>
-    <link rel="stylesheet" href="../assets/css/add_course.css">
-</head>
-
-<body>
+<div class="outer-wrapper">
     <div class="form-container">
         <div class="wrap-header">
             <h2>Add Courses to Year & Semester</h2>
@@ -21,6 +15,7 @@
                         <option value="2">2nd Year</option>
                         <option value="3">3rd Year</option>
                         <option value="4">4th Year</option>
+                        <option value="5">5th Year</option>
                     </select>
 
                     <label for="semester">Semester:</label>
@@ -46,63 +41,59 @@
             </div>
         </form>
     </div>
+</div>
 
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            fetch("./data/courses.json") // Path to your JSON file
-                .then((res) => res.json())
-                .then((data) => {
-                    const courseList = document.getElementById("courseList");
-                    const selectAllCheckbox = document.getElementById("selectAll");
-                    console.log(data)
-                    data.forEach((course) => {
-                        const label = document.createElement("label");
-                        label.innerHTML = `
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        fetch("./data/courses.json") // Path to your JSON file
+            .then((res) => res.json())
+            .then((data) => {
+                const courseList = document.getElementById("courseList");
+                const selectAllCheckbox = document.getElementById("selectAll");
+                console.log(data)
+                data.forEach((course) => {
+                    const label = document.createElement("label");
+                    label.innerHTML = `
                         <input type="checkbox" name="course_ids" value="${course.course_id}" class="course-checkbox">
                         ${course.course_name}
                     `;
-                        courseList.appendChild(label);
-                    });
-
-                    // Handle "Select All"
-                    selectAllCheckbox.addEventListener("change", () => {
-                        const checkboxes = document.querySelectorAll(".course-checkbox");
-                        checkboxes.forEach((cb) => (cb.checked = selectAllCheckbox.checked));
-                    });
+                    courseList.appendChild(label);
                 });
-        });
 
-        document.getElementById("courseForm").addEventListener("submit", (e) => {
-            e.preventDefault();
+                // Handle "Select All"
+                selectAllCheckbox.addEventListener("change", () => {
+                    const checkboxes = document.querySelectorAll(".course-checkbox");
+                    checkboxes.forEach((cb) => (cb.checked = selectAllCheckbox.checked));
+                });
+            });
+    });
 
-            const year = document.getElementById("year").value;
-            const semester = document.getElementById("semester").value;
-            const selectedCourses = Array.from(
-                document.querySelectorAll('input[name="course_ids"]:checked')
-            ).map((cb) => cb.value);
+    document.getElementById("courseForm").addEventListener("submit", (e) => {
+        e.preventDefault();
 
-            if (!year || !semester || selectedCourses.length === 0) {
-                alert("Please select year, semester and at least one course.");
-                return;
-            }
+        const year = document.getElementById("year").value;
+        const semester = document.getElementById("semester").value;
+        const selectedCourses = Array.from(
+            document.querySelectorAll('input[name="course_ids"]:checked')
+        ).map((cb) => cb.value);
 
-            fetch("/softexam/api/addCourse", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ year, semester, course_ids: selectedCourses }),
+        if (!year || !semester || selectedCourses.length === 0) {
+            alert("Please select year, semester and at least one course.");
+            return;
+        }
+
+        fetch("/softexam/api/addCourse", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ year, semester, course_ids: selectedCourses }),
+        })
+            .then((res) => {
+                console.log(res)
+                return res.json()
             })
-                .then((res) => {
-                    console.log(res)
-                    return res.json()
-                })
-                .then((response) => {
-                    document.getElementById("message").textContent = response.message;
-                    window.location.replace("index.php?page=manage_course");
-                });
-        });
-    </script>
-
-
-</body>
-
-</html>
+            .then((response) => {
+                document.getElementById("message").textContent = response.message;
+                window.location.replace("index.php?page=manage_course");
+            });
+    });
+</script>

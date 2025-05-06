@@ -1,10 +1,5 @@
-<html>
+<div class="outer-wrapper">
 
-<head>
-    <link rel="stylesheet" href="../assets/css/assign_instructor.css">
-</head>
-
-<body>
     <div class="wrap">
         <div class="wrap-header">
             <h2>Assign Instructor</h2>
@@ -21,13 +16,12 @@
             </select>
 
             <div class="form-actions">
-                <button type="submit" class="add">Add Now</button>
+                <button type="submit" class="add" id="add">Add Now</button>
             </div>
             <p class="success" id="message"></p>
         </form>
-
     </div>
-</body>
+</div>
 
 <script>
     document.addEventListener("DOMContentLoaded", () => {
@@ -83,5 +77,3 @@
             })
     });
 </script>
-
-</html>

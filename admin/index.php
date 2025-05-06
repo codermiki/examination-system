@@ -27,8 +27,8 @@ $page = $_GET["page"] ?? "dashboard";
     <title>online examination admin portal</title>
     <link rel="stylesheet" href="../assets/css/header.css">
     <link rel="stylesheet" href="../assets/css/main.css">
-    <link rel="stylesheet" href="../assets/css/admin.css">
     <link rel="stylesheet" href="../assets/css/sideBar.css">
+    <link rel="stylesheet" href="../assets/css/admin.css">
 </head>
 
 <body>
@@ -52,6 +52,10 @@ $page = $_GET["page"] ?? "dashboard";
 
                 case 'assign_student':
                     include "./ui/assign_student.php";
+                    break;
+
+                case 'manage_student':
+                    include "./ui/manage_student.php";
                     break;
 
                 case 'assign_instructor':
