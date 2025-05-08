@@ -8,11 +8,12 @@ if (session_status() == PHP_SESSION_NONE) {
 ?>
 
 <aside class="inner__left_panel">
-
+    <!-- admin roles -->
     <?php
     if (isset($_SESSION['role']) && $_SESSION['role'] == 'admin') {
         ?>
-        <div class="role__container">
+        <a href="./">Dashboards</a>
+        <!-- <div class="role__container">
             <p>MANAGE STUDENTS</p>
             <div class="drop__down">
                 <button onclick="collapse();" type="button">Students</button>
@@ -26,6 +27,20 @@ if (session_status() == PHP_SESSION_NONE) {
                     </div>
                 </div>
             </div>
+        </div> -->
+
+        <div class="role__container">
+            <p>MANAGE STUDENTS</p>
+            <div class="drop__down">
+                <div class="non-collapse ">
+                    <div class="v__line"></div>
+                    <div class="action">
+                        <a href="index.php?page=assign_student">Assign
+                            Student</a>
+                        <a href="index.php?page=manage_student">Manage Student</a>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div class="role__container">
@@ -34,10 +49,9 @@ if (session_status() == PHP_SESSION_NONE) {
                 <div class="non-collapse ">
                     <div class="v__line"></div>
                     <div class="action">
-                        <a id="assign_instructor_toggler" onclick="showAssignInstructor(event)"
-                            href="#assign_instructor">Assign
+                        <a href="index.php?page=assign_instructor">Assign
                             Instructor</a>
-                        <a href="#">Manage Instructor</a>
+                        <a href="index.php?page=manage_instructor">Manage Instructor</a>
                     </div>
                 </div>
             </div>
@@ -49,8 +63,8 @@ if (session_status() == PHP_SESSION_NONE) {
                 <div class="non-collapse ">
                     <div class="v__line"></div>
                     <div class="action">
-                        <a onclick="showAddCourse(event)" id="add_course_toggler" href="#">Add Course</a>
-                        <a href="#">Manage Course</a>
+                        <a href="index.php?page=add_course">Add Course</a>
+                        <a href="index.php?page=manage_course">Manage Course</a>
                     </div>
                 </div>
             </div>
@@ -62,8 +76,8 @@ if (session_status() == PHP_SESSION_NONE) {
                 <div class="non-collapse ">
                     <div class="v__line"></div>
                     <div class="action">
-                        <a href="#" class="sidebar-link" data-content="admin_schedule_exam">Schedule Exam</a>
-                        <a href="#" class="sidebar-link" data-content="admin_manage_schedule">Manage Schedule</a>
+                        <a href="index.php?page=schedule_exam">Schedule Exam</a>
+                        <a href="index.php?page=manage_schedule">Manage Schedule</a>
                     </div>
                 </div>
             </div>
@@ -75,7 +89,7 @@ if (session_status() == PHP_SESSION_NONE) {
                 <div class="non-collapse ">
                     <div class="v__line"></div>
                     <div class="action">
-                        <a href="#" class="sidebar-link" data-content="admin_all_feedbacks">All Feedbacks</a>
+                        <a href="index.php?page=feed_backs">All Feedbacks</a>
                     </div>
                 </div>
             </div>
@@ -94,10 +108,12 @@ if (session_status() == PHP_SESSION_NONE) {
         <?php
     }
     ?>
+
+    <!-- Instructor roles -->
     <?php
     if (isset($_SESSION['role']) && $_SESSION['role'] == 'instructor') {
         ?>
-        <a href="/">Dashboards</a>
+        <a href="./">Dashboards</a>
 
         <div class="role__container">
             <p>MANAGE EXAM</p>

@@ -24,11 +24,16 @@ header {
    position: sticky;
    top: 0;
    left: 0;
+<<<<<<< HEAD
    width: 100%; /* Ensure it spans the full width */
    box-sizing: border-box; /* Include padding in width */
    z-index: 1000;
    display: flex; /* Use flexbox for main header layout */
    align-items: center; /* Vertically center content */
+=======
+   transition: all 0.3s ease;
+   z-index: 2000;
+>>>>>>> main
 }
 
 header nav {
@@ -86,6 +91,7 @@ header nav a:hover {
    padding: 8px 15px; /* Adjusted padding */
    cursor: pointer;
    border: none;
+<<<<<<< HEAD
    font-weight: 600; /* Slightly less bold */
    background-color: var(--account-button-bg);
    border-radius: 20px; /* Pill shape */
@@ -94,6 +100,12 @@ header nav a:hover {
    align-items: center;
    gap: 5px; /* Space between text and arrow */
    color: var(--header-link-color);
+=======
+   font-weight: 700;
+   border-radius: 2px;
+   opacity: 0.9;
+   transition: all 0.2s ease-in-out;
+>>>>>>> main
 }
 
 .account button:hover {
@@ -101,8 +113,14 @@ header nav a:hover {
    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow on hover */
 }
 
+<<<<<<< HEAD
 .account button span {
    transition: transform var(--header-transition-duration) ease;
+=======
+.btn:hover {
+   background-color: #e0f3ff;
+   opacity: 1;
+>>>>>>> main
 }
 
 .account button[aria-expanded="true"] span {

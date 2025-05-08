@@ -13,16 +13,21 @@ if (isset($_GET['action'])) {
                     include "dashboard.php";
                     break;
 
+<<<<<<< HEAD:admin/handle_action.php
                     case 'admin_update_password':
                     include "update_password.php";
                     break;
 
                 case 'admin_add_student':
                     include "add_students.php";
+=======
+                case 'assign_student':
+                    include "./ui/assign_student.php";
+>>>>>>> main:admin/data/handle_action.php
                     break;
 
-                case 'admin_manage_student':
-                    include "manage_student.php";
+                case 'manage_student':
+                    include "./ui/manage_student.php";
                     break;
 
                 case 'admin_assign_instructor':

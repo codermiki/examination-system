@@ -12,6 +12,9 @@ if (isset($_POST['logout'])) {
     session_destroy();
     header('Location: ../');
 }
+
+$page = $_GET["page"] ?? "dashboard";
+
 ?>
 
 
@@ -24,8 +27,8 @@ if (isset($_POST['logout'])) {
     <title>online examination admin portal</title>
     <link rel="stylesheet" href="../assets/css/header.css">
     <link rel="stylesheet" href="../assets/css/main.css">
-    <link rel="stylesheet" href="../assets/css/admin.css">
     <link rel="stylesheet" href="../assets/css/sideBar.css">
+    <link rel="stylesheet" href="../assets/css/admin.css">
 </head>
 
 <body>
@@ -41,14 +44,61 @@ if (isset($_POST['logout'])) {
         </section>
         <section id="main-content" class="right__panel">
             <!--  -->
+            <?php
+            switch ($page) {
+                case 'dashboard':
+                    include "./ui/dashboard.php";
+                    break;
+
+                case 'assign_student':
+                    include "./ui/assign_student.php";
+                    break;
+
+                case 'manage_student':
+                    include "./ui/manage_student.php";
+                    break;
+
+                case 'assign_instructor':
+                    include "./ui/assign_instructor.php";
+                    break;
+
+                case 'manage_instructor':
+                    include "./ui/manage_instructor.php";
+                    break;
+
+                case 'add_course':
+                    include "./ui/add_course.php";
+                    break;
+
+                case 'manage_course':
+                    include "./ui/manage_course.php";
+                    break;
+
+                case 'schedule_exam':
+                    include "./ui/schedule_exam.php";
+                    break;
+
+                case 'manage_schedule':
+                    include "./ui/manage_schedule.php";
+                    break;
+
+                case 'feed_backs':
+                    include "./ui/feedback.php";
+                    break;
+
+                default:
+                    echo "Page Not Found";
+                    break;
+            }
+            ?>
         </section>
     </main>
 
     <?php
     include "../includes/layout/footer.php";
     ?>
-    
-    <script>
+
+    <!-- <script>
 
 // run the script on the page loaded
 document.addEventListener('DOMContentLoaded', () => {
@@ -112,7 +162,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-</script>
+</script> -->
 
 </body>
 
