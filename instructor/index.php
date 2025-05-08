@@ -38,6 +38,8 @@ $page = $_GET["page"] ?? "dashboard";
     <link rel="stylesheet" href="../assets/css/main.css">
     <link rel="stylesheet" href="../assets/css/admin.css">
     <link rel="stylesheet" href="../assets/css/sideBar.css">
+    <link rel="stylesheet" href="../assets/css/edit_exam.css">
+    <link rel="stylesheet" href="../assets/css/instructor.css">
 </head>
 
 <body>
@@ -64,8 +66,8 @@ $page = $_GET["page"] ?? "dashboard";
                         include "./ui/create_exam.php";
                         break;
                     case 'view_exam':
-                            include "./ui/view_exam.php";
-                            break;
+                        include "./ui/view_exam.php";
+                        break;
     
                     case 'update_password':
                         include "./ui/update_password.php";
@@ -79,15 +81,11 @@ $page = $_GET["page"] ?? "dashboard";
                         include "./ui/manage_exam.php";
                         break;
     
-                    case 'create_exam_submit':
-                        include "process_create_exam.php";
-                        break;
-    
                     case 'edit_exam':
                         include "./ui/edit_exam.php";
                         break;
     
-                    case 'instructor_edit_exam_submit':
+                    case 'edit_exam_submit':
                         include "process_edit_exam.php";
                         break;
     
@@ -95,8 +93,8 @@ $page = $_GET["page"] ?? "dashboard";
                         include "./ui/manage_questions.php";
                         break;
     
-                    case 'instructor_exam_report':
-                        echo '<h2>Exam Report</h2><p>Exam report content goes here.</p>';
+                    case 'exam_report':
+                        include "./ui/instructor_exam_report.php";
                         break;
     
                     case 'feedbacks':
@@ -178,6 +176,8 @@ $page = $_GET["page"] ?? "dashboard";
         });
 
     </script>
+
+
 
 </body>
 

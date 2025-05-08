@@ -182,7 +182,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['updatepass'])) {
         }
         ?>
 
-        <form action="handle_action.php?action=instructor_update_password" method="POST">
+        <form action="index.php?page=update_password" method="POST">
             <div class="input_container">
                 <label for="pass1">Enter New Password:</label>
                 <input type="password" id="pass1" required name="pass1">
