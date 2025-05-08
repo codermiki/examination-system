@@ -24,6 +24,7 @@ if (isset($_POST['logout'])) {
     header('Location: ../');
     exit();
 }
+$page = $_GET["page"] ?? "dashboard";
 ?>
 
 <!DOCTYPE html>
@@ -54,7 +55,57 @@ if (isset($_POST['logout'])) {
         <section id="main-content" class="right__panel">
             <!-- the #rightPanel content goes here -->
             <?php
-            include "dashboard.php";
+            switch ($page) {
+                case 'dashboard':
+                    include "./ui/dashboard.php";
+                    break;
+
+                    case 'create_exam':
+                        include "./ui/create_exam.php";
+                        break;
+                    case 'view_exam':
+                            include "./ui/view_exam.php";
+                            break;
+    
+                    case 'update_password':
+                        include "./ui/update_password.php";
+                        break;
+    
+                    case 'import_exam':
+                        include "./ui/import_exam.php";
+                        break;
+    
+                    case 'manage_exam':
+                        include "./ui/manage_exam.php";
+                        break;
+    
+                    case 'create_exam_submit':
+                        include "process_create_exam.php";
+                        break;
+    
+                    case 'edit_exam':
+                        include "./ui/edit_exam.php";
+                        break;
+    
+                    case 'instructor_edit_exam_submit':
+                        include "process_edit_exam.php";
+                        break;
+    
+                    case 'manage_questions':
+                        include "./ui/manage_questions.php";
+                        break;
+    
+                    case 'instructor_exam_report':
+                        echo '<h2>Exam Report</h2><p>Exam report content goes here.</p>';
+                        break;
+    
+                    case 'feedbacks':
+                        echo '<h2>Instructor Feedbacks</h2><p>Instructor feedbacks go here.</p>';
+                        break;
+                default:
+                    echo "Page Not Found";
+                    break;
+            }
             ?>
         </section>
     </main>
