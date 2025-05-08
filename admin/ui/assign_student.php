@@ -1,3 +1,7 @@
+<?php
+include __DIR__ . "/../../includes/functions/fetchCourse.php";
+?>
+
 <div class="outer-wrapper">
     <div class="form-container">
         <div class="wrap-header">
@@ -36,6 +40,12 @@
                     <label for="course">Select Course:</label>
                     <select id="course" name="course_id">
                         <option value="">-- Select Course --</option>
+                        <?php
+                        $courses = fetchCourse::fetchCourse();
+                        foreach ($courses as $course):
+                            ?>
+                            <option value=<?= htmlspecialchars($course['course_id']) ?>><?= htmlspecialchars($course['course_name']) ?></option>
+                        <?php endforeach ?>
                     </select>
 
                     <label>
@@ -60,7 +70,7 @@
     const close_student_btn = document.querySelector('#close_student_btn');
     const assign_student_toggler = document.querySelector('#assign_student_toggler');
     const studentList = document.getElementById("studentList");
-
+    let filteredStudents = [];
     // Load courses when year or semester changes
     [yearSelect, semesterSelect].forEach((select) => {
         select.addEventListener("change", () => {
@@ -68,20 +78,24 @@
             const semester = semesterSelect.value;
 
             if (year && semester) {
-                fetch("./data/get_student.json")
+                fetch("./data/students.json")
                     .then((res) => res.json())
                     .then((data) => {
+                        filteredStudents = data.filter((student) => {
+                            return (student.year == year && student.semester == semester);
+                        });
+
                         const selectAllCheckbox =
                             document.getElementById("selectAll");
-                        if (data.length === 0) {
+                        if (filteredStudents?.length === 0) {
                             studentList.innerHTML = "<p>No students available.</p>";
                             return;
                         }
                         studentList.innerHTML = "";
-                        data.forEach((student) => {
+                        filteredStudents.forEach((student) => {
                             const label = document.createElement("label");
                             label.innerHTML = `
-                <input type="checkbox" name="student_ids" value="${student.user_id}" class="student-checkbox">
+                <input type="checkbox" name="student_ids" value="${student.student_id}" class="student-checkbox">
                 ${student.name} (${student.email})
                 `;
                             studentList.appendChild(label);
@@ -98,21 +112,6 @@
             } else {
                 studentList.innerHTML = "<p>Please select Year and Semester first and student list will display Here...</p>";
             }
-
-            if (year && semester) {
-                fetch(`./data/courses.json`)
-                    .then((res) => res.json())
-                    .then((data) => {
-                        courseSelect.innerHTML =
-                            '<option value="">-- Select Course --</option>';
-                        data.forEach((course) => {
-                            const option = document.createElement("option");
-                            option.value = course.course_id;
-                            option.textContent = `${course.course_name}`;
-                            courseSelect.appendChild(option);
-                        });
-                    });
-            }
         });
     });
 
@@ -128,7 +127,10 @@
             );
 
             const student_ids = Array.from(checkedBoxes).map(
-                (cb) => cb.value
+                (cb) => {
+                    const selectStudent = filteredStudents.find((student) => student.student_id == cb.value)
+                    return selectStudent;
+                }
             );
 
             if (!course_id || student_ids.length === 0) {
@@ -142,13 +144,11 @@
                 body: JSON.stringify({ course_id, student_ids }),
             })
                 .then((res) => {
-                    console.log(res)
                     return res.json()
                 })
                 .then((response) => {
                     document.getElementById("message").textContent =
                         response.message;
-                    // console.log(response)
                     window.location.replace("index.php?page=manage_student")
                 });
         });

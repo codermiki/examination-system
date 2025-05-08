@@ -81,7 +81,19 @@ button {
    padding: 8px 14px;
    border-radius: 6px;
    cursor: pointer;
-   margin: 10px;
+}
+
+#delete_btn,
+#edit_btn {
+   background-color: white;
+   padding: 0;
+}
+
+.button_container {
+   display: flex;
+   justify-content: space-between;
+   align-items: center;
+   gap: 20px;
 }
 
 .student-list {

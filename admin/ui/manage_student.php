@@ -1,103 +1,120 @@
 <?php
+include_once __DIR__ . "/../../constants.php";
+include_once __DIR__ . "/../../includes/functions/fetchStudent.php";
+include_once __DIR__ . "/../../includes/functions/fetchCourse.php";
 $course = $_GET['course'] ?? null;
 $year = $_GET['year'] ?? null;
 $semester = $_GET['semester'] ?? null;
 
-if (!$course || !$year || !$semester):
-    ?>
-    <div class="outer-wrapper">
+$students = fetchStudent::fetchStudent();
+$courses = fetchCourse::fetchCourse();
 
-        <div class="wrap">
-            <!-- Filter form -->
-            <h2>Select Filters to Manage Students</h2>
-            <form method="GET" action="">
-                <input type="hidden" name="page" value="manage_student">
+?>
 
-                <label>Year</label>
-                <select name="year" required>
-                    <option value="2">2nd Year</option>
-                    <option value="3">3rd Year</option>
-                    <option value="4">4th Year</option>
-                    <option value="5">5th Year</option>
-                </select>
-
-                <label>Semester</label>
-                <select name="semester" required>
-                    <option value="1">1st Semester</option>
-                    <option value="2">2nd Semester</option>
-                </select>
-
-                <label>Course</label>
-                <select name="course" required>
-                    <option value="BSCRIM">BSCRIM</option>
-                    <option value="WEB DESIGN">WEB DESIGN</option>
-                    <option value="BSHRM">BSHRM</option>
-                    <option value="BSIT">BSIT</option>
-                </select>
-
-                <button type="submit">View Students</button>
-            </form>
-        </div>
-    </div>
-
-<?php else: ?>
-
-    <!-- STUDENT LIST TABLE with modal (your UI code goes here) -->
-    <?php
-    // TODO: Replace this with a real DB query
-    $students = [
-        [
-            'fullname' => 'Mikias Tadesse',
-            'gender' => 'male',
-            'course' => $course,
-            'year_level' => "$year year",
-            'email' => 'codermiki@gmail.com',
-            'status' => 'active'
-        ],
-        // add more from DB
-    ];
-    ?>
-
-    <!-- PLACE YOUR UI HTML HERE (REPLACED STATIC TRs WITH DYNAMIC ONES) -->
-    <div class="manage_instructor">
-        <div class="container">
-            <h1>MANAGE Student</h1>
-            <div class="card">
-                <h2>STUDENT LIST</h2>
-                <table>
-                    <thead>
+<!-- student list -->
+<div class="manage_instructor">
+    <div class="container">
+        <h1>MANAGE Student</h1>
+        <div class="card">
+            <h2>STUDENT LIST</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Gender</th>
+                        <th>Course</th>
+                        <th>Year</th>
+                        <th>Semester</th>
+                        <th>Email</th>
+                        <th>Status</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($students as $stu): ?>
                         <tr>
-                            <th>Fullname</th>
-                            <th>Gender</th>
-                            <th>Course</th>
-                            <th>Year level</th>
-                            <th>Email</th>
-                            <th>Status</th>
-                            <th></th>
+                            <?php
+                            $matched = array_filter($courses, function ($course) use ($stu) {
+                                return $course["course_id"] === $stu['course_id'];
+                            });
+                            $course = reset($matched);
+                            ?>
+
+                            <td><?= htmlspecialchars($stu['name']) ?></td>
+                            <td><?= htmlspecialchars($stu['gender']) ?></td>
+                            <td><?= htmlspecialchars($course['course_name']) ?></td>
+                            <td><?= htmlspecialchars($stu['year']) ?></td>
+                            <td><?= htmlspecialchars($stu['semester']) ?></td>
+                            <td><?= htmlspecialchars($stu['email']) ?></td>
+                            <td><?= htmlspecialchars($stu['status']) ?></td>
+                            <td>
+                                <div class="button_container">
+
+                                    <button id="edit_btn" class="open-update-modal-btn" data-id="<?= $stu['student_id'] ?>"
+                                        data-name="<?= htmlspecialchars($stu['name']) ?>"
+                                        data-course="<?= $stu['course_id'] ?>"
+                                        data-email="<?= htmlspecialchars($stu['email']) ?>"
+                                        data-status="<?= htmlspecialchars($stu['status']) ?>">
+                                        <img src="<?= BASE_URL ?>/assets/images/icon/edit.png" alt="update" width="28" />
+
+                                    </button>
+                                    <!-- delete button -->
+                                    <button id="delete_btn" class="delete-btn" data-sid="<?= $stu['student_id'] ?>"
+                                        data-cid="<?= $stu['course_id'] ?>">
+                                        <img src="<?= BASE_URL ?>/assets/images/icon/bin.png" alt="delete" width="30" />
+                                    </button>
+
+                                </div>
+                            </td>
+
                         </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($students as $stu): ?>
-                            <tr>
-                                <td><?= htmlspecialchars($stu['fullname']) ?></td>
-                                <td><?= htmlspecialchars($stu['gender']) ?></td>
-                                <td><?= htmlspecialchars($stu['course']) ?></td>
-                                <td><?= htmlspecialchars($stu['year_level']) ?></td>
-                                <td><?= htmlspecialchars($stu['email']) ?></td>
-                                <td><?= htmlspecialchars($stu['status']) ?></td>
-                                <td>
-                                    <button class="update-btn">Update</button>
-                                    <button class="delete-btn">Delete</button>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
         </div>
     </div>
+</div>
 
-    <!-- Modal and JS stay the same -->
-    <?php include 'student_modal.php'; ?>
+<!-- Modal and JS stay the same -->
+<?php include 'student_modal.php'; ?>
 
-<?php endif; ?>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const deleteButtons = document.querySelectorAll(".delete-btn");
+
+        deleteButtons.forEach((btn) => {
+            btn.addEventListener("click", () => {
+                const student_id = btn.getAttribute("data-sid");
+                const course_id = btn.getAttribute("data-cid");
+
+                if (confirm("Are you sure you want to delete this student?")) {
+                    fetch("/softexam/api/unassignStudent", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({
+                            student_id,
+                            course_id
+                        })
+                    })
+                        .then(res => {
+                            console.log(res);
+                            return res.json();
+                        })
+                        .then(data => {
+                            if (data?.message) {
+                                window.location.reload();
+                            } else {
+                                alert("Failed to delete student.");
+                            }
+                        })
+                        .catch(err => {
+                            console.error(err);
+                            alert("An error occurred.");
+                        });
+                }
+            });
+        });
+    });
+</script>

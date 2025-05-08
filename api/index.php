@@ -43,6 +43,31 @@ switch ("$method $path") {
         Student_controller::assignStudent($course_id, $student_ids);
         break;
 
+    case "POST /updateAssignedStudent":
+        $data = json_decode(file_get_contents("php://input"), true);
+        $course_id = $data['course_id'] ?? null;
+        $student_id = $data['student_id'] ?? null;
+        $status = $data['status'] ?? null;
+
+        if (!$course_id || !$student_id || !$status) {
+            Response_helper::json(['error' => 'All fields are required']);
+            exit;
+        }
+        Student_controller::updateAssignedStudent($course_id, $student_id, $status);
+        break;
+
+    case "POST /unassignStudent":
+        $data = json_decode(file_get_contents("php://input"), true);
+        $student_id = $data['student_id'] ?? null;
+        $course_id = $data['course_id'] ?? null;
+
+        if (!$student_id || !$course_id) {
+            Response_helper::json(['error' => 'Student id and Course id is required']);
+            exit;
+        }
+        Student_controller::unassignStudent($student_id, $course_id);
+        break;
+
     case "POST /assignInstructor":
         $data = json_decode(file_get_contents("php://input"), true);
         $instructor_id = $data['instructor_id'] ?? null;
