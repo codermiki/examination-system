@@ -82,6 +82,10 @@ $page = $_GET["page"] ?? "dashboard";
                     include "./ui/manage_schedule.php";
                     break;
 
+                case 'feed_backs':
+                    include "./ui/feedback.php";
+                    break;
+
                 default:
                     echo "Page Not Found";
                     break;

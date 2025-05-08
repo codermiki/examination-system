@@ -388,39 +388,38 @@ form select {
 
 /* exam schedule style start */
 
-.container {
+.schedule_exam .container {
    padding: 20px;
    max-width: 600px;
    margin: auto;
 }
 
-.card {
+.schedule_exam .card {
    background: #f9f9f9;
    padding: 20px;
    border-radius: 10px;
    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
-form div {
+.schedule_exam form div {
    margin-bottom: 15px;
 }
 
-label {
+.schedule_exam label {
    display: block;
    font-weight: bold;
    margin-bottom: 5px;
 }
 
-input,
-select {
+.schedule_exam input,
+.schedule_exam select {
    width: 100%;
    padding: 8px;
    font-size: 1em;
    border-radius: 5px;
    border: 1px solid #ccc;
 }
-
-button {
+.schedule_exam button {
    background-color: #4caf50;
    color: white;
    padding: 10px 15px;
@@ -429,6 +428,99 @@ button {
    cursor: pointer;
 }
 
-button:hover {
+.schedule_exam button:hover {
    background-color: #45a049;
+}
+
+.manage_schedule {
+   margin: 20px;
+}
+
+/* feedback list style start */
+.feedback {
+   margin: 20px;
+}
+
+.main-title {
+   font-size: 0.9em;
+   font-weight: 600;
+   color: #5a6a7a;
+   text-transform: uppercase;
+   letter-spacing: 0.5px;
+   margin-bottom: 15px;
+   padding-left: 5px;
+}
+
+.feedback-container {
+   background-color: #ffffff;
+   border-radius: 8px;
+   padding: 20px 25px;
+   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+   margin-bottom: 40px;
+   overflow-x: auto;
+}
+
+.list-title {
+   font-size: 0.85em;
+   font-weight: 600;
+   color: #6c757d;
+   margin-top: 0;
+   margin-bottom: 20px;
+   text-transform: uppercase;
+   letter-spacing: 0.5px;
+}
+
+.feedback table {
+   width: 100%;
+   border-collapse: collapse;
+   font-size: 0.9em;
+}
+
+.feedback th,
+.feedback td {
+   padding: 15px 10px;
+   text-align: left;
+   vertical-align: top;
+   border-bottom: 1px solid #dee2e6;
+   line-height: 1.4;
+}
+
+.feedback thead th {
+   font-weight: 600;
+   color: #495057;
+   font-size: 0.85em;
+   text-transform: capitalize;
+   border-bottom-width: 2px;
+}
+
+.feedback tbody tr:last-child td {
+   border-bottom: none;
+}
+
+.feedback th:nth-child(1),
+.feedback td:nth-child(1) {
+   width: 25%;
+   min-width: 120px;
+}
+.feedback th:nth-child(2),
+.feedback td:nth-child(2) {
+   min-width: 120px;
+}
+
+.feedback th:nth-child(4),
+.feedback td:nth-child(4) {
+   width: 50%;
+   min-width: 200px;
+}
+
+.feedback th:nth-child(5),
+.feedback td:nth-child(5) {
+   width: 25%;
+   min-width: 100px;
+   text-align: right;
+   color: #6c757d;
+}
+
+.feedback tbody tr:hover {
+   background-color: #f8f9fa;
 }

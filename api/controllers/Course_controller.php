@@ -8,6 +8,11 @@ class Course_controller
         $response = Course_service::addCourse($year, $semester, $course_ids);
         Response_helper::json($response);
     }
+    public static function updateCourse($year, $semester, $course_id): void
+    {
+        $response = Course_service::updateCourse($year, $semester, $course_id);
+        Response_helper::json($response);
+    }
     public static function assignInstructor($instructor_id, $course_id)
     {
         $result = Course_service::assignInstructor($instructor_id, $course_id);

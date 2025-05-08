@@ -2,5 +2,12 @@
    { "course_id": "CS101", "course_name": "Introduction to Programming" },
    { "course_id": "CS102", "course_name": "Data Structures" },
    { "course_id": "CS103", "course_name": "Database Systems" },
-   { "course_id": "CS104", "course_name": "Web Development" }
+   { "course_id": "CS104", "course_name": "Web Programming" },
+   { "course_id": "CS105", "course_name": "Networking" },
+   { "course_id": "CS106", "course_name": "Operating System" },
+   {
+      "course_id": "CS107",
+      "course_name": "Introduction to Software Engineering"
+   },
+   { "course_id": "CS108", "course_name": "Assembly Language" }
 ]

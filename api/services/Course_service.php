@@ -12,20 +12,21 @@ class Course_service
         }
 
         try {
-            $stmt = $conn->prepare("INSERT INTO assigned_courses (course_id, year, semester) VALUES (:course_id, :year, :semester)");
+            $stmt = $conn->prepare("INSERT INTO assigned_courses (course_id,course_name, year, semester) VALUES (:course_id,:course_name, :year, :semester)");
 
-            foreach ($course_ids as $course_id) {
+            foreach ($course_ids as $course) {
                 // Optional: Check if already assigned (prevent duplicates)
                 $checkStmt = $conn->prepare("SELECT * FROM assigned_courses WHERE course_id = :course_id AND year = :year AND semester = :semester");
                 $checkStmt->execute([
-                    ':course_id' => $course_id,
+                    ':course_id' => $course["course_id"],
                     ':year' => $year,
                     ':semester' => $semester
                 ]);
 
                 if ($checkStmt->rowCount() === 0) {
                     $stmt->execute([
-                        ':course_id' => $course_id,
+                        ':course_id' => $course["course_id"],
+                        ':course_name' => $course["course_name"],
                         ':year' => $year,
                         ':semester' => $semester
                     ]);
@@ -34,6 +35,43 @@ class Course_service
             }
 
             return ['message' => 'Courses assigned successfully.'];
+
+        } catch (PDOException $e) {
+            return ['error' => 'Database error: ' . $e->getMessage()];
+        }
+    }
+    public static function updateCourse($year, $semester, $course_id)
+    {
+        global $conn;
+
+        if (!$year || !$semester || !$course_id) {
+            return ['error' => 'Invalid input. Year, semester, and courses are required.'];
+        }
+
+        try {
+            $sql = "UPDATE assigned_courses 
+                SET year = :year, semester = :semester 
+                WHERE course_id = :course_id";
+
+            $stmt = $conn->prepare($sql);
+
+            // Optional: Check if already assigned (prevent duplicates)
+            $checkStmt = $conn->prepare("SELECT * FROM assigned_courses WHERE course_id = :course_id");
+            $checkStmt->execute([
+                ':course_id' => $course_id
+            ]);
+
+            if ($checkStmt->rowCount() > 0) {
+                $stmt->execute([
+                    ':year' => $year,
+                    ':semester' => $semester,
+                    ':course_id' => $course_id
+                ]);
+            } else {
+                return ['message' => 'Course not found.'];
+            }
+
+            return ['message' => 'Course updated successfully.'];
 
         } catch (PDOException $e) {
             return ['error' => 'Database error: ' . $e->getMessage()];

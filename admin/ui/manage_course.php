@@ -1,3 +1,7 @@
+<?php
+include_once __DIR__ . "/../../includes/functions/fetchCourse.php";
+?>
+
 <div class="manage_instructor">
     <div class="container">
         <h1>MANAGE Courses</h1>
@@ -6,7 +10,7 @@
             <table>
                 <thead>
                     <tr>
-                        <th>Course ID</th>
+                        <th>Course Name</th>
                         <th>Year Level</th>
                         <th>Semester</th>
                         <th></th>
@@ -14,16 +18,10 @@
                 </thead>
                 <tbody>
                     <?php
-                    // Sample data; replace this with DB fetch:
-                    $assigned_courses = [
-                        ['id' => 1, 'course_id' => 'BSCRIM', 'year' => 3, 'semester' => 1],
-                        ['id' => 2, 'course_id' => 'BSIT', 'year' => 2, 'semester' => 2],
-                        ['id' => 3, 'course_id' => 'WEB DESIGN', 'year' => 4, 'semester' => 1],
-                    ];
-
+                    $assigned_courses = fetchCourse::fetchCourse();
                     foreach ($assigned_courses as $course): ?>
-                        <tr data-id="<?= $course['id'] ?>">
-                            <td><?= htmlspecialchars($course['course_id']) ?></td>
+                        <tr data-id="<?= $course['course_id'] ?>">
+                            <td><?= htmlspecialchars($course['course_name']) ?></td>
                             <td><?= htmlspecialchars($course['year']) ?></td>
                             <td><?= htmlspecialchars($course['semester']) ?></td>
                             <td><button class="update-btn">Update</button></td>
@@ -40,11 +38,16 @@
         <h3>Update (<span id="modalCourseId">Course ID</span>)</h3>
         <form id="updateForm">
             <input type="hidden" id="courseRowId" />
-            <label>Course ID</label>
-            <input type="text" id="course_id" disabled />
+            <label>Course Name</label>
+            <input type="text" id="course_name" disabled />
 
             <label>Year Level</label>
-            <input type="number" id="year" min="1" max="5" />
+            <select id="year">
+                <option value="2">2nd year</option>
+                <option value="3">3rd year</option>
+                <option value="4">4th year</option>
+                <option value="5">5th year</option>
+            </select>
 
             <label>Semester</label>
             <select id="semester">
@@ -69,7 +72,7 @@
                 const rowId = btn.closest("tr").dataset.id;
 
                 document.getElementById("courseRowId").value = rowId;
-                document.getElementById("course_id").value = row[0].textContent.trim();
+                document.getElementById("course_name").value = row[0].textContent.trim();
                 document.getElementById("year").value = row[1].textContent.trim();
                 document.getElementById("semester").value = row[2].textContent.trim();
                 document.getElementById("modalCourseId").textContent = row[0].textContent.trim();
@@ -89,13 +92,24 @@
         form.onsubmit = (e) => {
             e.preventDefault();
 
-            const id = document.getElementById("courseRowId").value;
+            const course_id = document.getElementById("courseRowId").value;
             const year = document.getElementById("year").value;
             const semester = document.getElementById("semester").value;
 
-            // Simulate update (replace with real AJAX later)
-            alert(`Updated course ID ${id} to Year: ${year}, Semester: ${semester}`);
-            modal.style.display = "none";
+            // make update asynchronously using fetch 
+            fetch("/softexam/api/updateCourse", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ course_id, year, semester }),
+            })
+                .then((res) => {
+                    return res.json()
+                })
+                .then((response) => {
+                    window.location.replace("index.php?page=manage_course");
+                    modal.style.display = "none";
+                });
+
         };
     });
 </script>

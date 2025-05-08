@@ -45,7 +45,10 @@
                             <td>{$exam['time']}</td>
                             <td>{$exam['duration']} min</td>
                             <td>{$exam['status']}</td>
-                            <td><button class='update-btn'>Update</button></td>
+                            <td>
+                                <button class='update-btn'>Update</button>
+                                <button class='delete-btn'>Delete</button>
+                            </td>
                         </tr>";
                     }
                     ?>

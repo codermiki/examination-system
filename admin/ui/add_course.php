@@ -44,13 +44,14 @@
 </div>
 
 <script>
+    let courses = [];
     document.addEventListener("DOMContentLoaded", () => {
         fetch("./data/courses.json") // Path to your JSON file
             .then((res) => res.json())
             .then((data) => {
                 const courseList = document.getElementById("courseList");
                 const selectAllCheckbox = document.getElementById("selectAll");
-                console.log(data)
+                courses = data;
                 data.forEach((course) => {
                     const label = document.createElement("label");
                     label.innerHTML = `
@@ -70,25 +71,25 @@
 
     document.getElementById("courseForm").addEventListener("submit", (e) => {
         e.preventDefault();
-
         const year = document.getElementById("year").value;
         const semester = document.getElementById("semester").value;
         const selectedCourses = Array.from(
             document.querySelectorAll('input[name="course_ids"]:checked')
-        ).map((cb) => cb.value);
+        ).map((cb) => {
+            const selectCourse = courses.find((element) => element.course_id == cb.value)
+            return selectCourse;
+        });
 
         if (!year || !semester || selectedCourses.length === 0) {
             alert("Please select year, semester and at least one course.");
             return;
         }
-
         fetch("/softexam/api/addCourse", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ year, semester, course_ids: selectedCourses }),
         })
             .then((res) => {
-                console.log(res)
                 return res.json()
             })
             .then((response) => {

@@ -23,6 +23,14 @@ switch ("$method $path") {
         Course_controller::addCourse($year, $semester, $course_ids);
         break;
 
+    case "POST /updateCourse":
+        $data = json_decode(file_get_contents("php://input"), true);
+        $year = $data['year'] ?? null;
+        $semester = $data['semester'] ?? null;
+        $course_id = $data['course_id'];
+        Course_controller::updateCourse($year, $semester, $course_id);
+        break;
+
     case "POST /assignStudent":
         $data = json_decode(file_get_contents("php://input"), true);
         $course_id = $data['course_id'] ?? null;
