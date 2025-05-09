@@ -115,24 +115,46 @@ if (session_status() == PHP_SESSION_NONE) {
         ?>
         <a href="./">Dashboards</a>
 
-        <div class="role__container">
-            <p>MANAGE EXAM</p>
+                <div class="role__container">
+            <p>CREATE EXAM</p>
             <div class="drop__down">
                 <!-- <button class="collapsebtn" onclick="toggleCollapse(this);" type="button">Exam</button> -->
                 <div class="collapse">
                     <div class="v__line"></div>
                     <div class="action">
-                        <!-- <a href="/softexam/instructor/index.php?page=manage_exam">Manage Exam</a> -->
                         <a href="index.php?page=create_exam" >Create Exam</a>
                         <a href="index.php?page=import_exam" >Import Exam</a>
-                        <a href="index.php?page=manage_exam" >Manage Exam</a>
-                        <a href="index.php?page=manage_questions" >Manage Questions</a>
-                        <a href="index.php?page=view_exam" >View Exam</a>
-                        <a href="index.php?page=edit_exam" >Edit Exam</a>
                     </div>
                 </div>
             </div>
         </div>
+
+
+        <div class="role__container">
+            <p>MANAGE EXAM</p>
+            <div class="drop__down">
+                <div class="collapse">
+                    <div class="v__line"></div>
+                    <div class="action">
+                        <a href="index.php?page=view_exam" >View Exam</a>
+                        <a href="index.php?page=edit_exam" >Edit Exam</a>
+                        <a href="index.php?page=delete_exam" >Delete Exam</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    <!-- <div class="role__container">
+            <p>MANAGE Questions</p>
+            <div class="drop__down">
+                <div class="collapse">
+                    <div class="v__line"></div>
+                    <div class="action">
+                        <a href="index.php?page=manage_questions" >Manage Questions</a>
+                    </div>
+                </div>
+            </div>
+        </div> -->
 
         <div class="role__container">
             <p>REPORTS</p>
