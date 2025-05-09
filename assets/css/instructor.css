@@ -1,0 +1,169 @@
+.create-exam-container {
+        background-color: #f9f9f9;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        max-width: 800px;
+        margin: 20px auto;
+    }
+
+    .create-exam-container h2 {
+        text-align: center;
+        color: #333;
+        margin-bottom: 20px;
+    }
+
+    .form-group {
+        margin-bottom: 15px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+        color: #555;
+    }
+
+    .form-group input[type="text"],
+    .form-group input[type="number"],
+    .form-group textarea,
+    .form-group select {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
+        /* Include padding and border in element's total width and height */
+    }
+
+    textarea {
+        resize: vertical;
+        /* Allow vertical resizing */
+    }
+
+    .question-section {
+        margin-top: 30px;
+        border-top: 1px solid #eee;
+        padding-top: 20px;
+    }
+
+    .question-item {
+        background-color: #fff;
+        border: 1px solid #ddd;
+        padding: 15px;
+        margin-bottom: 15px;
+        border-radius: 4px;
+    }
+
+    .question-item h4 {
+        margin-top: 0;
+        margin-bottom: 10px;
+        color: #007bff;
+    }
+
+    .question-options {
+        margin-top: 10px;
+        padding-left: 20px;
+    }
+
+    .question-options .option-group {
+        margin-bottom: 10px;
+    }
+
+    .question-options input[type="text"] {
+        width: calc(100% - 70px);
+        /* Adjust width considering label/checkbox */
+        display: inline-block;
+        vertical-align: middle;
+        margin-right: 10px;
+    }
+
+    .question-options label {
+        display: inline-block;
+        margin-right: 10px;
+        vertical-align: middle;
+        font-weight: normal;
+    }
+
+    .add-question-button,
+    .add-option-button,
+    .remove-item-button,
+    .add-blank-button {
+        display: inline-block;
+        background-color: #28a745;
+        color: white;
+        padding: 10px 15px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 1em;
+        margin-top: 10px;
+        margin-right: 5px;
+    }
+
+    .add-option-button {
+        background-color: #007bff;
+    }
+
+    .remove-item-button {
+        background-color: #dc3545;
+    }
+
+    .add-blank-button {
+        background-color: #ffc107;
+        /* Example color for add blank */
+        color: #333;
+    }
+
+
+    .add-question-button:hover,
+    .add-option-button:hover,
+    .remove-item-button:hover,
+    .add-blank-button:hover {
+        opacity: 0.9;
+    }
+
+    button[type="submit"] {
+        display: block;
+        width: 100%;
+        background-color: #007bff;
+        color: white;
+        padding: 12px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 1.1em;
+        margin-top: 20px;
+    }
+
+    button[type="submit"]:hover {
+        background-color: #0056b3;
+    }
+
+    .question-type-select {
+        margin-bottom: 15px;
+    }
+
+    .blank-answer-group {
+        margin-bottom: 10px;
+        padding-left: 10px;
+        border-left: 2px solid #eee;
+    }
+
+    .message {
+        margin-top: 15px;
+        padding: 10px;
+        border-radius: 4px;
+    }
+
+    .success {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+
+    .error {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
