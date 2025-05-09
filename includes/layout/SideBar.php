@@ -201,15 +201,15 @@ if (session_status() == PHP_SESSION_NONE) {
         <div class="role__container">
             <p>AVAILABLE EXAMS</p>
             <div class="drop__down">
-                <button onclick="toggleCollapse(this);" type="button">Upcoming Exams</button>
+                <!-- <button onclick="toggleCollapse(this);" type="button">Upcoming Exams</button> -->
                 <div class="collapse">
                     <div class="v__line"></div>
                     <div class="action">
-                        <a href="#" class="sidebar-link" data-content="student_upcoming_exams">Upcoming Exams List</a>
-                        <a href="#" class="sidebar-link" data-content="student_exam_schedule">Exam Schedule</a>
-                        <a href="#" class="sidebar-link" data-content="student_take_exam">Take Exam</a>
-                        <a href="#" class="sidebar-link" data-content="student_taken_exams">Taken Exams</a>
-                        <a href="#" class="sidebar-link" data-content="student_view_result">View Result</a>
+                        <a href="index.php?page=upcoming_exams">Upcoming Exams List</a>
+                        <a href="index.php?page=exam_schedule">Exam Schedule</a>
+                        <a href="index.php?page=take_exam">Take Exam</a>
+                        <a href="index.php?page=taken_exams">Taken Exams</a>
+                        <a href="index.php?page=view_result">View Result</a>
                     </div>
                 </div>
             </div>
