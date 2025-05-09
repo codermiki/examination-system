@@ -16,6 +16,8 @@ if (isset($_POST['logout'])) {
     header('Location: ../');
 }
 
+
+$page = $_GET["page"] ?? "dashboard";
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -44,6 +46,50 @@ if (isset($_POST['logout'])) {
 
         <section id="main-content" class="right__panel">
             <!-- the #rightPanel content goes here -->
+             <?php
+
+            switch ($page) {
+                case 'dashboard':
+                    include "./ui/dashboard.php";
+                    break;
+
+                    case 'update_password':
+                    include "./ui/update_password.php";
+                    break;
+
+                case 'upcoming_exams':
+                    include "./ui/upcoming_exams.php";
+                    break;
+
+                case 'exam_schedule':
+                    include "./ui/exam_schedule.php";
+                    break;
+
+                case 'take_exam':
+                    include "./ui/take_exam.php";
+                    break;
+
+                case 'taken_exams':
+                    include "./ui/taken_exams.php";
+                    break;
+
+                case 'view_result':
+                    include "./ui/view_result.php";
+                    break;
+
+                case 'add_feedback':
+                    include "./ui/add_feedback.php";
+                    break;
+
+                case 'student_submit_exam':
+                    include "./ui/submit_exam.php";
+                    break;
+
+                default:
+                    echo "Page Not Found";
+                    break;
+            }
+             ?>
         </section>
     </main>
     <?php
