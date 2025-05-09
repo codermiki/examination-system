@@ -94,6 +94,17 @@ if (session_status() == PHP_SESSION_NONE) {
                 </div>
             </div>
         </div>
+        <div class="role__container">
+            <p>Profile</p>
+            <div class="drop__down">
+                <div class="non-collapse ">
+                    <div class="v__line"></div>
+                    <div class="action">
+                        <a href="#" class="sidebar-link" data-content="admin_update_password">Update Password</a>
+                    </div>
+                </div>
+            </div>
+        </div>
         <?php
     }
     ?>
@@ -107,17 +118,17 @@ if (session_status() == PHP_SESSION_NONE) {
         <div class="role__container">
             <p>MANAGE EXAM</p>
             <div class="drop__down">
-                <button class="collapsebtn" onclick="toggleCollapse(this);" type="button">Exam</button>
+                <!-- <button class="collapsebtn" onclick="toggleCollapse(this);" type="button">Exam</button> -->
                 <div class="collapse">
                     <div class="v__line"></div>
                     <div class="action">
                         <!-- <a href="/softexam/instructor/index.php?page=manage_exam">Manage Exam</a> -->
-                        <a href="#" class="sidebar-link" data-content="instructor_create_exam">Create Exam</a>
-                        <a href="#" class="sidebar-link" data-content="instructor_import_exam">Import Exam</a>
-                        <a href="#" class="sidebar-link" data-content="instructor_manage_exam">Manage Exam</a>
-                        <a href="#" class="sidebar-link" data-content="instructor_manage_questions">Manage Questions</a>
-                        <a href="#" class="sidebar-link" data-content="instructor_view_exam">View Exam</a>
-                        <a href="#" class="sidebar-link" data-content="instructor_edit_exam">Edit Exam</a>
+                        <a href="index.php?page=create_exam" >Create Exam</a>
+                        <a href="index.php?page=import_exam" >Import Exam</a>
+                        <a href="index.php?page=manage_exam" >Manage Exam</a>
+                        <a href="index.php?page=manage_questions" >Manage Questions</a>
+                        <a href="index.php?page=view_exam" >View Exam</a>
+                        <a href="index.php?page=edit_exam" >Edit Exam</a>
                     </div>
                 </div>
             </div>
@@ -129,7 +140,7 @@ if (session_status() == PHP_SESSION_NONE) {
                 <div class="non-collapse ">
                     <div class="v__line"></div>
                     <div class="action">
-                        <a href="#" class="sidebar-link" data-content="instructor_exam_report">Exam Report</a>
+                        <a href="index.php?page=exam_report">Exam Report</a>
                     </div>
                 </div>
             </div>
@@ -141,7 +152,18 @@ if (session_status() == PHP_SESSION_NONE) {
                 <div class="non-collapse ">
                     <div class="v__line"></div>
                     <div class="action">
-                        <a href="#" class="sidebar-link" data-content="instructor_feedbacks">Feedbacks</a>
+                        <a href="index.php?page=feedbacks">Feedbacks</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="role__container">
+            <p>Profile</p>
+            <div class="drop__down">
+                <div class="non-collapse ">
+                    <div class="v__line"></div>
+                    <div class="action">
+                        <a href="index.php?page=update_password">Update Password</a>
                     </div>
                 </div>
             </div>
@@ -190,6 +212,17 @@ if (session_status() == PHP_SESSION_NONE) {
                     <div class="v__line"></div>
                     <div class="action">
                         <a href="#" class="sidebar-link" data-content="student_add_feedback">Add Feedback</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="role__container">
+            <p>Profile</p>
+            <div class="drop__down">
+                <div class="non-collapse ">
+                    <div class="v__line"></div>
+                    <div class="action">
+                        <a href="#" class="sidebar-link" data-content="stud_update_password">Update Password</a>
                     </div>
                 </div>
             </div>
