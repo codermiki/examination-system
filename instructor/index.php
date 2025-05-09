@@ -77,16 +77,12 @@ $page = $_GET["page"] ?? "dashboard";
                         include "./ui/import_exam.php";
                         break;
     
-                    case 'manage_exam':
-                        include "./ui/manage_exam.php";
-                        break;
-    
                     case 'edit_exam':
                         include "./ui/edit_exam.php";
                         break;
     
-                    case 'edit_exam_submit':
-                        include "process_edit_exam.php";
+                    case 'delete_exam':
+                        include "./ui/delete_exam.php";
                         break;
     
                     case 'manage_questions':
@@ -94,11 +90,11 @@ $page = $_GET["page"] ?? "dashboard";
                         break;
     
                     case 'exam_report':
-                        include "./ui/instructor_exam_report.php";
+                        include "./ui/exam_report.php";
                         break;
     
                     case 'feedbacks':
-                        echo '<h2>Instructor Feedbacks</h2><p>Instructor feedbacks go here.</p>';
+                        include "./ui/feedbacks.php";
                         break;
                 default:
                     echo "Page Not Found";
