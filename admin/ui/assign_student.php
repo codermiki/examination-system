@@ -36,7 +36,6 @@ include __DIR__ . "/../../includes/functions/fetchCourse.php";
                 <!-- Right box: Course & Students -->
                 <div class="box right">
                     <h3>Course & Students</h3>
-
                     <label for="course">Select Course:</label>
                     <select id="course" name="course_id">
                         <option value="">-- Select Course --</option>

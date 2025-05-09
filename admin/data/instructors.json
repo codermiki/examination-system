@@ -1,17 +1,20 @@
 [
    {
-      "user_id": "INST1001",
+      "instructor_id": "INST1001",
       "name": "Dr. Alice Mekonnen",
-      "email": "alice.mekonnen@university.edu"
+      "email": "alice.mekonnen@university.edu",
+      "gender": "male"
    },
    {
-      "user_id": "INST1002",
+      "instructor_id": "INST1002",
       "name": "Mr. Samuel Bekele",
-      "email": "samuel.bekele@university.edu"
+      "email": "samuel.bekele@university.edu",
+      "gender": "male"
    },
    {
-      "user_id": "INST1003",
+      "instructor_id": "INST1003",
       "name": "Prof. Hana Tadesse",
-      "email": "hana.tadesse@university.edu"
+      "email": "hana.tadesse@university.edu",
+      "gender": "female"
    }
 ]

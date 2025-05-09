@@ -6,7 +6,7 @@ $course = $_GET['course'] ?? null;
 $year = $_GET['year'] ?? null;
 $semester = $_GET['semester'] ?? null;
 
-$students = fetchStudent::fetchStudent();
+$students = fetchStudent::fetchAssignedStudent();
 $courses = fetchCourse::fetchCourse();
 
 ?>

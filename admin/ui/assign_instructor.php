@@ -1,5 +1,8 @@
-<div class="outer-wrapper">
+<?php
+include_once __DIR__ . "/../../includes/functions/fetchCourse.php";
+?>
 
+<div class="outer-wrapper">
     <div class="wrap">
         <div class="wrap-header">
             <h2>Assign Instructor</h2>
@@ -12,7 +15,13 @@
 
             <label for="course">Course Assigned</label>
             <select id="course" required>
-                <option value="">Select course</option>
+                <option value="">-- Select Course --</option>
+                <?php
+                $courses = fetchCourse::fetchCourse();
+                foreach ($courses as $course):
+                    ?>
+                    <option value=<?= htmlspecialchars($course['course_id']) ?>><?= htmlspecialchars($course['course_name']) ?></option>
+                <?php endforeach ?>
             </select>
 
             <div class="form-actions">
@@ -39,17 +48,17 @@
             });
 
         // Load courses
-        fetch("./data/courses.json")
-            .then(res => res.json())
-            .then(data => {
-                const courseSelect = document.getElementById("course");
-                data.forEach(course => {
-                    const option = document.createElement("option");
-                    option.value = course.course_id;
-                    option.textContent = course.course_name;
-                    courseSelect.appendChild(option);
-                });
-            });
+        // fetch("./data/courses.json")
+        //     .then(res => res.json())
+        //     .then(data => {
+        //         const courseSelect = document.getElementById("course");
+        //         data.forEach(course => {
+        //             const option = document.createElement("option");
+        //             option.value = course.course_id;
+        //             option.textContent = course.course_name;
+        //             courseSelect.appendChild(option);
+        //         });
+        //     });
     });
 
     // Submit form

@@ -194,3 +194,14 @@ CREATE TABLE assigned_instructors (
     course_id VARCHAR(50)
 );
 
+-- insert query for students table 
+
+INSERT INTO students (student_id, name, gender, year, semester, email) VALUES
+('WCU1501116', 'Alice Johnson', 'Female', 2, 1, 'alice.johnson@example.com'),
+('WCU1501117', 'Bob Smith', 'Male', 3, 2, 'bob.smith@example.com'),
+('WCU1501118', 'Carol Davis', 'Female', 1, 1, 'carol.davis@example.com'),
+('WCU1501119', 'David Brown', 'Male', 4, 2, 'david.brown@example.com'),
+('WCU1501120', 'Eva White', 'Female', 2, 2, 'eva.white@example.com'),
+('WCU1501121', 'Eva Black', 'Female', 5, 1, 'eva.black@example.com'),
+('WCU1501122', 'Eva Black', 'Male', 5, 1, 'eva.red@example.com');
+
