@@ -17,7 +17,7 @@ if (isset($_POST['login'])) {
     }
     try {
         include_once "./includes/db/db.config.php";
-        $sql = "SELECT name, email, password, role,user_id FROM users WHERE email = :email AND password = :password";
+        $sql = "SELECT user_id, name, email, role FROM users WHERE email = :email AND password = :password";
         $stmt = $pdo->prepare($sql);
 
         $stmt->bindParam(":email", $_POST['email']);
@@ -30,15 +30,18 @@ if (isset($_POST['login'])) {
         // create user session if user register successfully
         if ($result) {
             foreach ($result as $user) {
-                $_SESSION['email'] = $user['email'];//asign fullname of user to $_SESSION['email']
+                $_SESSION['user_id'] = $user['user_id'];
+                $_SESSION['email'] = $user['email'];
                 $_SESSION['role'] = $user['role'];
-                $_SESSION['user_id']=$user['user_id'];
             }
+            // redirect page into home
+            header('Location: ./');
+        } else {
+            $form_error = "Email or Password is incorrect";
         }
 
 
-        header('Location: ./');
-        // redirect page into home
+
     } catch (Exception $th) {
         echo $th->getMessage();
     }
@@ -68,6 +71,12 @@ if (isset($_POST['login'])) {
                 <h1>SIGN IN</h1>
             </div>
             <form action="login.php" method="post">
+                <?php
+                if ($form_error) {
+                    echo "<p class='error-msg'>{$form_error}</p>";
+                }
+                ?>
+
                 <div class="input_container">
                     <label style="margin-left: 30px;" for="email">Email</label>
                     <input id="email" type="email" name="email" placeholder="Email">

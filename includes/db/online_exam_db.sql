@@ -13,11 +13,11 @@ CREATE TABLE users (
 
 INSERT INTO users (user_id, name, email, password, role, status)
 VALUES 
-('U001', 'Alice Johnson', 'alice@example.com', 'hashed_password_1', 'Student', 'Active'),
-('U002', 'Bob Smith', 'bob@example.com', 'hashed_password_2', 'Student', 'Active'),
-('U003', 'Dr. Emily Carter', 'emily.carter@example.com', 'hashed_password_3', 'Instructor', 'Active'),
-('U004', 'Prof. John Miller', 'john.miller@example.com', 'hashed_password_4', 'Instructor', 'Inactive'),
-('U005', 'Admin User', 'admin@example.com', 'hashed_password_5', 'Admin', 'Active');
+('U001', 'Alice Johnson', 'alice@example.com', 'alice@example.com', 'Student', 'Active'),
+('U002', 'Bob Smith', 'bob@example.com', 'bob@example.com', 'Student', 'Active'),
+('U003', 'Emily Carter', 'emily@example.com', 'emily@example.com', 'Instructor', 'Active'),
+('U004', 'John Miller', 'john@example.com', 'john@example.com', 'Instructor', 'Inactive'),
+('U005', 'Admin User', 'admin@example.com', 'admin@example.com', 'Admin', 'Active');
 
 -- course
 
@@ -181,14 +181,15 @@ CREATE TABLE student_answers (
 
 INSERT INTO student_answers (student_id, exam_id, question_id, answer_text, is_correct)
 VALUES 
-('U001', 1, 101, 'Option A', TRUE),
-('U001', 1, 102, 'True', FALSE),
-('U001', 1, 103, 'Inheritance', TRUE),
+-- Student U001 answers
+('U001', 1, 1, 'Option A', TRUE),
+('U001', 1, 2, 'True', FALSE),
+('U001', 1, 3, 'Inheritance', TRUE),
 
-('U002', 1, 101, 'Option C', FALSE),
-('U002', 1, 102, 'False', TRUE),
-('U002', 1, 103, 'Encapsulation', FALSE);
-
+-- Student U002 answers
+('U002', 1, 1, 'Option C', FALSE),
+('U002', 1, 2, 'False', TRUE),
+('U002', 1, 3, 'Encapsulation', FALSE);
 -- student exam status 
 
 CREATE TABLE student_exam_status (

@@ -93,3 +93,9 @@ form {
 .input_container .btn:hover {
    background-color: #333333 !important;
 }
+
+.error-msg {
+   text-align: center;
+   font-size: 12px;
+   color: red;
+}

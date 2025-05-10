@@ -13,13 +13,13 @@
                     <?php
                     if (isset($_SESSION['email'])) {
                         switch ($_SESSION['role']) {
-                            case 'admin':
+                            case 'Admin':
                                 echo "Admin";
                                 break;
-                            case 'instructor':
+                            case 'Instructor':
                                 echo "Instructor";
                                 break;
-                            case 'student':
+                            case 'Student':
                                 echo "Student";
                                 break;
                         }

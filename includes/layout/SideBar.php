@@ -10,7 +10,7 @@ if (session_status() == PHP_SESSION_NONE) {
 <aside class="inner__left_panel">
     <!-- admin roles -->
     <?php
-    if (isset($_SESSION['role']) && $_SESSION['role'] == 'admin') {
+    if (isset($_SESSION['role']) && $_SESSION['role'] == 'Admin') {
         ?>
         <a href="./">Dashboards</a>
         <!-- <div class="role__container">
@@ -123,12 +123,12 @@ if (session_status() == PHP_SESSION_NONE) {
                     <div class="v__line"></div>
                     <div class="action">
                         <!-- <a href="/softexam/instructor/index.php?page=manage_exam">Manage Exam</a> -->
-                        <a href="index.php?page=create_exam" >Create Exam</a>
-                        <a href="index.php?page=import_exam" >Import Exam</a>
-                        <a href="index.php?page=manage_exam" >Manage Exam</a>
-                        <a href="index.php?page=manage_questions" >Manage Questions</a>
-                        <a href="index.php?page=view_exam" >View Exam</a>
-                        <a href="index.php?page=edit_exam" >Edit Exam</a>
+                        <a href="index.php?page=create_exam">Create Exam</a>
+                        <a href="index.php?page=import_exam">Import Exam</a>
+                        <a href="index.php?page=manage_exam">Manage Exam</a>
+                        <a href="index.php?page=manage_questions">Manage Questions</a>
+                        <a href="index.php?page=view_exam">View Exam</a>
+                        <a href="index.php?page=edit_exam">Edit Exam</a>
                     </div>
                 </div>
             </div>
