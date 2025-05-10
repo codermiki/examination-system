@@ -85,17 +85,22 @@ button {
 
 #delete_btn,
 #edit_btn {
+   width: 50px;
    background-color: white;
    padding: 0;
 }
 
 .button_container {
+   height: 50px;
    display: flex;
    justify-content: center;
    align-items: center;
    gap: 20px;
 }
 
+.button_container img {
+   max-width: 100%;
+}
 .student-list {
    max-height: 250px;
    overflow-y: auto;
@@ -305,14 +310,14 @@ h1 {
 }
 
 table {
-   width: 100%;
+   max-width: 100%;
    border-collapse: collapse;
 }
 
 th,
 td {
    padding: 12px;
-   text-align: left;
+   text-align: center;
    border-bottom: 1px solid #ddd;
 }
 
@@ -482,14 +487,14 @@ form select {
    letter-spacing: 0.5px;
 }
 
-.feedback table {
+table {
    width: 100%;
    border-collapse: collapse;
    font-size: 0.9em;
 }
 
-.feedback th,
-.feedback td {
+th,
+td {
    padding: 15px 10px;
    text-align: left;
    vertical-align: top;
@@ -497,7 +502,7 @@ form select {
    line-height: 1.4;
 }
 
-.feedback thead th {
+thead th {
    font-weight: 600;
    color: #495057;
    font-size: 0.85em;
@@ -505,7 +510,7 @@ form select {
    border-bottom-width: 2px;
 }
 
-.feedback tbody tr:last-child td {
+tbody tr:last-child td {
    border-bottom: none;
 }
 
@@ -533,6 +538,6 @@ form select {
    color: #6c757d;
 }
 
-.feedback tbody tr:hover {
+tbody tr:hover {
    background-color: #f8f9fa;
 }

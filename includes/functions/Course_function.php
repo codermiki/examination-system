@@ -1,13 +1,13 @@
 <?php
 include __DIR__ . "/../db/db.config.php";
-class fetchCourse
+class Course_function
 {
-    public static function fetchCourse()
+    public static function fetchCourses()
     {
-        global $pdo;
+        global $conn;
 
-        $sql = "SELECT * FROM assigned_courses";
-        $stmt = $pdo->prepare($sql);
+        $sql = "SELECT * FROM courses";
+        $stmt = $conn->prepare($sql);
         $stmt->execute();
         $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
         if (!empty($result)) {

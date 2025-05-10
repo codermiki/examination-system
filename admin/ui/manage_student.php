@@ -1,13 +1,13 @@
 <?php
 include_once __DIR__ . "/../../constants.php";
-include_once __DIR__ . "/../../includes/functions/fetchStudent.php";
-include_once __DIR__ . "/../../includes/functions/fetchCourse.php";
+include_once __DIR__ . "/../../includes/functions/Student_function.php";
+include_once __DIR__ . "/../../includes/functions/Course_function.php";
 $course = $_GET['course'] ?? null;
 $year = $_GET['year'] ?? null;
 $semester = $_GET['semester'] ?? null;
 
-$students = fetchStudent::fetchAssignedStudent();
-$courses = fetchCourse::fetchCourse();
+$students = Student_function::fetchAssignedStudents();
+$courses = Course_function::fetchCourses();
 
 ?>
 
@@ -21,52 +21,44 @@ $courses = fetchCourse::fetchCourse();
                 <thead>
                     <tr>
                         <th>Name</th>
-                        <th>Gender</th>
                         <th>Course</th>
-                        <th>Year</th>
-                        <th>Semester</th>
                         <th>Email</th>
                         <th>Status</th>
                         <th></th>
                     </tr>
                 </thead>
                 <tbody>
-                    <?php foreach ($students as $stu): ?>
+                    <?php foreach ($students as $student): ?>
                         <tr>
-                            <?php
-                            $matched = array_filter($courses, function ($course) use ($stu) {
-                                return $course["course_id"] === $stu['course_id'];
-                            });
-                            $course = reset($matched);
-                            ?>
-
-                            <td><?= htmlspecialchars($stu['name']) ?></td>
-                            <td><?= htmlspecialchars($stu['gender']) ?></td>
-                            <td><?= htmlspecialchars($course['course_name']) ?></td>
-                            <td><?= htmlspecialchars($stu['year']) ?></td>
-                            <td><?= htmlspecialchars($stu['semester']) ?></td>
-                            <td><?= htmlspecialchars($stu['email']) ?></td>
-                            <td><?= htmlspecialchars($stu['status']) ?></td>
                             <td>
-                                <div class="button_container">
-
-                                    <button id="edit_btn" class="open-update-modal-btn" data-id="<?= $stu['student_id'] ?>"
-                                        data-name="<?= htmlspecialchars($stu['name']) ?>"
-                                        data-course="<?= $stu['course_id'] ?>"
-                                        data-email="<?= htmlspecialchars($stu['email']) ?>"
-                                        data-status="<?= htmlspecialchars($stu['status']) ?>">
-                                        <img src="<?= BASE_URL ?>/assets/images/icon/edit.png" alt="update" width="28" />
-
-                                    </button>
-                                    <!-- delete button -->
-                                    <button id="delete_btn" class="delete-btn" data-sid="<?= $stu['student_id'] ?>"
-                                        data-cid="<?= $stu['course_id'] ?>">
-                                        <img src="<?= BASE_URL ?>/assets/images/icon/bin.png" alt="delete" width="30" />
-                                    </button>
-
-                                </div>
+                                <?= htmlspecialchars($student['name']) ?>
                             </td>
+                            <td>
+                                <?= htmlspecialchars($student['course_name']) ?>
+                            </td>
+                            <td>
+                                <?= htmlspecialchars($student['email']) ?>
+                            </td>
+                            <td>
+                                <?= htmlspecialchars($student['status']) ?>
+                            </td>
+                            <td>
+                                <button id="edit_btn" class="open-update-modal-btn"
+                                    data-id="<?= htmlspecialchars($student['user_id']) ?>"
+                                    data-name="<?= htmlspecialchars($student['name']) ?>"
+                                    data-course="<?= $student['course_id'] ?>"
+                                    data-email="<?= htmlspecialchars($student['email']) ?>"
+                                    data-status="<?= htmlspecialchars($student['status']) ?>">
 
+                                    <img src="<?= BASE_URL ?>/assets/images/icon/edit.png" alt="update" width="28" />
+
+                                </button>
+                                <!-- delete button -->
+                                <button id="delete_btn" class="delete-btn" data-sid="<?= $student['user_id'] ?>"
+                                    data-cid="<?= $student['course_id'] ?>">
+                                    <img src="<?= BASE_URL ?>/assets/images/icon/bin.png" alt="delete" width="30" />
+                                </button>
+                            </td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>

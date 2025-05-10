@@ -1,56 +1,49 @@
 [
    {
-      "student_id": "WCU1501116",
+      "user_id": "WCU1501116",
       "name": "Alice Johnson",
-      "gender": "Female",
       "year": 2,
       "semester": 1,
       "email": "alice.johnson@example.com"
    },
    {
-      "student_id": "WCU1501117",
+      "user_id": "WCU1501117",
       "name": "Bob Smith",
-      "gender": "Male",
-      "year": 3,
-      "semester": 2,
+      "year": 2,
+      "semester": 1,
       "email": "bob.smith@example.com"
    },
    {
-      "student_id": "WCU1501118",
+      "user_id": "WCU1501118",
       "name": "Carol Davis",
-      "gender": "Female",
       "year": 1,
       "semester": 1,
       "email": "carol.davis@example.com"
    },
    {
-      "student_id": "WCU1501119",
+      "user_id": "WCU1501119",
       "name": "David Brown",
-      "gender": "Male",
       "year": 4,
       "semester": 2,
       "email": "david.brown@example.com"
    },
    {
-      "student_id": "WCU1501120",
+      "user_id": "WCU1501120",
       "name": "Eva White",
-      "gender": "Female",
       "year": 2,
       "semester": 2,
       "email": "eva.white@example.com"
    },
    {
-      "student_id": "WCU1501121",
+      "user_id": "WCU1501121",
       "name": "Eva Black",
-      "gender": "Female",
       "year": 5,
       "semester": 1,
       "email": "eva.black@example.com"
    },
    {
-      "student_id": "WCU1501122",
+      "user_id": "WCU1501122",
       "name": "Eva Black",
-      "gender": "Male",
       "year": 5,
       "semester": 1,
       "email": "eva.red@example.com"

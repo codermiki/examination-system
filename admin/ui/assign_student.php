@@ -1,5 +1,5 @@
 <?php
-include __DIR__ . "/../../includes/functions/fetchCourse.php";
+include __DIR__ . "/../../includes/functions/Course_function.php";
 ?>
 
 <div class="outer-wrapper">
@@ -40,7 +40,7 @@ include __DIR__ . "/../../includes/functions/fetchCourse.php";
                     <select id="course" name="course_id">
                         <option value="">-- Select Course --</option>
                         <?php
-                        $courses = fetchCourse::fetchCourse();
+                        $courses = Course_function::fetchCourses();
                         foreach ($courses as $course):
                             ?>
                             <option value=<?= htmlspecialchars($course['course_id']) ?>><?= htmlspecialchars($course['course_name']) ?></option>
@@ -93,10 +93,8 @@ include __DIR__ . "/../../includes/functions/fetchCourse.php";
                         studentList.innerHTML = "";
                         filteredStudents.forEach((student) => {
                             const label = document.createElement("label");
-                            label.innerHTML = `
-                <input type="checkbox" name="student_ids" value="${student.student_id}" class="student-checkbox">
-                ${student.name} (${student.email})
-                `;
+                            label.innerHTML = `<input type="checkbox" name="student_ids" value="${student.user_id}" class="student-checkbox">${student.name} (${student.email})`;
+
                             studentList.appendChild(label);
                         });
 
@@ -127,8 +125,13 @@ include __DIR__ . "/../../includes/functions/fetchCourse.php";
 
             const student_ids = Array.from(checkedBoxes).map(
                 (cb) => {
-                    const selectStudent = filteredStudents.find((student) => student.student_id == cb.value)
-                    return selectStudent;
+                    const selectStudent = filteredStudents.find((student) => student.user_id == cb.value)
+                    let selected = {
+                        user_id: selectStudent.user_id,
+                        name: selectStudent.name,
+                        email: selectStudent.email,
+                    }
+                    return selected;
                 }
             );
 
@@ -137,18 +140,25 @@ include __DIR__ . "/../../includes/functions/fetchCourse.php";
                 return;
             }
 
+            console.log(student_ids)
             fetch("/softexam/api/assignStudent", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ course_id, student_ids }),
             })
                 .then((res) => {
-                    return res.json()
+                    return res.json();
                 })
                 .then((response) => {
-                    document.getElementById("message").textContent =
-                        response.message;
-                    window.location.replace("index.php?page=manage_student")
+                    if (response?.error) {
+                        document.getElementById("message").textContent =
+                            response.error;
+                    }
+                    if (response?.message) {
+                        document.getElementById("message").textContent =
+                            response.message;
+                        window.location.replace("index.php?page=manage_student")
+                    }
                 });
         });
 

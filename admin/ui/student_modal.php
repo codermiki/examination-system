@@ -19,8 +19,8 @@
 
             <label>Status</label>
             <select id="status" name="status">
-                <option value="active">active</option>
-                <option value="inactive">inactive</option>
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
             </select>
 
             <button type="submit" class="update-btn">Update Now</button>

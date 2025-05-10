@@ -8,42 +8,49 @@ class Student_service
         global $conn;
 
         try {
-            $sql = "INSERT INTO assigned_students (student_id, course_id) VALUES (:student_id, :course_id)";
-
-            $assignStmt = $conn->prepare($sql);
+            $assignStmt = $conn->prepare("INSERT INTO assigned_students (student_id, course_id) VALUES (:student_id, :course_id)");
 
             foreach ($student_ids as $student) {
-                $checkUserStmt = $conn->prepare("SELECT * FROM users WHERE user_id = ? AND role = 'Student'");
-                $checkUserStmt->execute([$student_id]);
-                $student = $checkUserStmt->fetch(PDO::FETCH_ASSOC);
+                $checkUserStmt = $conn->prepare("SELECT * FROM users WHERE user_id = :user_id AND role = 'Student'");
+                $checkUserStmt->execute([
+                    ':user_id' => $student['user_id']
+                ]);
+                $isExist = $checkUserStmt->fetch(PDO::FETCH_ASSOC);
 
                 // 2. If student doesn't exist, insert new student
-                if (!$student) {
-                    $addUserStmt = $conn->prepare("INSERT INTO users (user_id, name, email, password, role) VALUES (?, ?, ?, ?, 'Student')");
-                    $addUserStmt->execute([$student_id, $name, $email, $password]);
-                }
+                if (!$isExist) {
 
+                    $addUserStmt = $conn->prepare("INSERT INTO users (user_id, name, email, password, role) VALUES (:user_id, :name, :email, :password, 'Student')");
+                    $addUserStmt->execute([
+                        ':user_id' => $student['user_id'],
+                        ':name' => $student['name'],
+                        ':email' => $student['email'],
+                        ':password' => $student['email']
+                    ]);
+                }
 
                 // Optional: check if already assigned
                 $checkAssignedStmt = $conn->prepare("SELECT * FROM assigned_students WHERE student_id = :student_id AND course_id = :course_id");
+
                 $checkAssignedStmt->execute([
-                    ':student_id' => $student["student_id"],
+                    ':student_id' => $student["user_id"],
                     ':course_id' => $course_id
                 ]);
 
                 if ($checkAssignedStmt->rowCount() === 0) {
                     $assignStmt->execute([
-                        ':student_id' => $student["student_id"],
+                        ':student_id' => $student["user_id"],
                         ':course_id' => $course_id
                     ]);
                 }
             }
 
-            return ['message' => 'Students successfully assigned to the course.'];
+            return ['message' => 'Students successfully assigned'];
         } catch (PDOException $e) {
-            return ['error' => 'Database error: ' . $e->getMessage()];
+            return ['error' => "Failed to Assign Student"];
         }
     }
+    
     public static function updateAssignedStudent($course_id, $student_id, $status)
     {
         global $conn;

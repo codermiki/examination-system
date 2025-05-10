@@ -18,7 +18,7 @@ if (isset($_POST['login'])) {
     try {
         include_once "./includes/db/db.config.php";
         $sql = "SELECT user_id, name, email, role FROM users WHERE email = :email AND password = :password";
-        $stmt = $pdo->prepare($sql);
+        $stmt = $conn->prepare($sql);
 
         $stmt->bindParam(":email", $_POST['email']);
         $stmt->bindParam(":password", $_POST['password']);
