@@ -7,7 +7,7 @@ if (!isset($_SESSION['email']) || !isset($_SESSION['role'])) {
     header('Location: ../login.php');
 }
 
-if (!($_SESSION['role'] == 'student')) {
+if (!($_SESSION['role'] == 'Student')) {
     header('Location: ../');
 }
 
@@ -46,14 +46,14 @@ $page = $_GET["page"] ?? "dashboard";
 
         <section id="main-content" class="right__panel">
             <!-- the #rightPanel content goes here -->
-             <?php
+            <?php
 
             switch ($page) {
                 case 'dashboard':
                     include "./ui/dashboard.php";
                     break;
 
-                    case 'update_password':
+                case 'update_password':
                     include "./ui/update_password.php";
                     break;
 
@@ -89,7 +89,7 @@ $page = $_GET["page"] ?? "dashboard";
                     echo "Page Not Found";
                     break;
             }
-             ?>
+            ?>
         </section>
     </main>
     <?php

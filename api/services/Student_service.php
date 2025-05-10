@@ -8,27 +8,33 @@ class Student_service
         global $conn;
 
         try {
-            $sql = "INSERT INTO assigned_students (student_id,name, gender,course_id, year, semester, email) VALUES (:student_id,:name, :gender,  :course_id, :year, :semester, :email)";
+            $sql = "INSERT INTO assigned_students (student_id, course_id) VALUES (:student_id, :course_id)";
 
-            $stmt = $conn->prepare($sql);
+            $assignStmt = $conn->prepare($sql);
 
             foreach ($student_ids as $student) {
+                $checkUserStmt = $conn->prepare("SELECT * FROM users WHERE user_id = ? AND role = 'Student'");
+                $checkUserStmt->execute([$student_id]);
+                $student = $checkUserStmt->fetch(PDO::FETCH_ASSOC);
+
+                // 2. If student doesn't exist, insert new student
+                if (!$student) {
+                    $addUserStmt = $conn->prepare("INSERT INTO users (user_id, name, email, password, role) VALUES (?, ?, ?, ?, 'Student')");
+                    $addUserStmt->execute([$student_id, $name, $email, $password]);
+                }
+
+
                 // Optional: check if already assigned
-                $checkStmt = $conn->prepare("SELECT * FROM assigned_students WHERE student_id = :student_id AND course_id = :course_id");
-                $checkStmt->execute([
+                $checkAssignedStmt = $conn->prepare("SELECT * FROM assigned_students WHERE student_id = :student_id AND course_id = :course_id");
+                $checkAssignedStmt->execute([
                     ':student_id' => $student["student_id"],
                     ':course_id' => $course_id
                 ]);
 
-                if ($checkStmt->rowCount() === 0) {
-                    $stmt->execute([
+                if ($checkAssignedStmt->rowCount() === 0) {
+                    $assignStmt->execute([
                         ':student_id' => $student["student_id"],
-                        ':name' => $student["name"],
-                        ':gender' => $student["gender"],
-                        ':course_id' => $course_id,
-                        ':year' => $student["year"],
-                        ':semester' => $student["semester"],
-                        ':email' => $student["email"]
+                        ':course_id' => $course_id
                     ]);
                 }
             }

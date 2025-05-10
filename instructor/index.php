@@ -13,7 +13,7 @@ if (!isset($_SESSION['email']) || !isset($_SESSION['role'])) {
     exit();
 }
 
-if ($_SESSION['role'] !== 'instructor') {
+if ($_SESSION['role'] !== 'Instructor') {
     header('Location: ../');
     exit();
 }
@@ -62,40 +62,40 @@ $page = $_GET["page"] ?? "dashboard";
                     include "./ui/dashboard.php";
                     break;
 
-                    case 'create_exam':
-                        include "./ui/create_exam.php";
-                        break;
-                    case 'view_exam':
-                        include "./ui/view_exam.php";
-                        break;
-    
-                    case 'update_password':
-                        include "./ui/update_password.php";
-                        break;
-    
-                    case 'import_exam':
-                        include "./ui/import_exam.php";
-                        break;
-    
-                    case 'edit_exam':
-                        include "./ui/edit_exam.php";
-                        break;
-    
-                    case 'delete_exam':
-                        include "./ui/delete_exam.php";
-                        break;
-    
-                    case 'manage_questions':
-                        include "./ui/manage_questions.php";
-                        break;
-    
-                    case 'exam_report':
-                        include "./ui/exam_report.php";
-                        break;
-    
-                    case 'feedbacks':
-                        include "./ui/feedbacks.php";
-                        break;
+                case 'create_exam':
+                    include "./ui/create_exam.php";
+                    break;
+                case 'view_exam':
+                    include "./ui/view_exam.php";
+                    break;
+
+                case 'update_password':
+                    include "./ui/update_password.php";
+                    break;
+
+                case 'import_exam':
+                    include "./ui/import_exam.php";
+                    break;
+
+                case 'edit_exam':
+                    include "./ui/edit_exam.php";
+                    break;
+
+                case 'delete_exam':
+                    include "./ui/delete_exam.php";
+                    break;
+
+                case 'manage_questions':
+                    include "./ui/manage_questions.php";
+                    break;
+
+                case 'exam_report':
+                    include "./ui/exam_report.php";
+                    break;
+
+                case 'feedbacks':
+                    include "./ui/feedbacks.php";
+                    break;
                 default:
                     echo "Page Not Found";
                     break;

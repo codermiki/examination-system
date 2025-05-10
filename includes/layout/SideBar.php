@@ -111,29 +111,22 @@ if (session_status() == PHP_SESSION_NONE) {
 
     <!-- Instructor roles -->
     <?php
-    if (isset($_SESSION['role']) && $_SESSION['role'] == 'instructor') {
+    if (isset($_SESSION['role']) && $_SESSION['role'] == 'Instructor') {
         ?>
         <a href="./">Dashboards</a>
 
-                <div class="role__container">
+        <div class="role__container">
             <p>CREATE EXAM</p>
             <div class="drop__down">
                 <!-- <button class="collapsebtn" onclick="toggleCollapse(this);" type="button">Exam</button> -->
                 <div class="collapse">
                     <div class="v__line"></div>
                     <div class="action">
-<<<<<<< HEAD
                         <!-- <a href="/softexam/instructor/index.php?page=manage_exam">Manage Exam</a> -->
                         <a href="index.php?page=create_exam">Create Exam</a>
                         <a href="index.php?page=import_exam">Import Exam</a>
-                        <a href="index.php?page=manage_exam">Manage Exam</a>
-                        <a href="index.php?page=manage_questions">Manage Questions</a>
                         <a href="index.php?page=view_exam">View Exam</a>
                         <a href="index.php?page=edit_exam">Edit Exam</a>
-=======
-                        <a href="index.php?page=create_exam" >Create Exam</a>
-                        <a href="index.php?page=import_exam" >Import Exam</a>
->>>>>>> 2d1eeb2d8de3bfbc5d9b11a47a4777a4e7721182
                     </div>
                 </div>
             </div>
@@ -146,15 +139,15 @@ if (session_status() == PHP_SESSION_NONE) {
                 <div class="collapse">
                     <div class="v__line"></div>
                     <div class="action">
-                        <a href="index.php?page=view_exam" >View Exam</a>
-                        <a href="index.php?page=edit_exam" >Edit Exam</a>
-                        <a href="index.php?page=delete_exam" >Delete Exam</a>
+                        <a href="index.php?page=view_exam">View Exam</a>
+                        <a href="index.php?page=edit_exam">Edit Exam</a>
+                        <a href="index.php?page=delete_exam">Delete Exam</a>
                     </div>
                 </div>
             </div>
         </div>
 
-    <!-- <div class="role__container">
+        <!-- <div class="role__container">
             <p>MANAGE Questions</p>
             <div class="drop__down">
                 <div class="collapse">
@@ -205,7 +198,7 @@ if (session_status() == PHP_SESSION_NONE) {
     }
     ?>
     <?php
-    if (isset($_SESSION['role']) && $_SESSION['role'] == 'student') {
+    if (isset($_SESSION['role']) && $_SESSION['role'] == 'Student') {
         ?>
 
         <div class="role__container">
