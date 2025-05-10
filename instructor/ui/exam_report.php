@@ -1,121 +1,116 @@
 <?php
 // includes/instructor/exam_report.php
 
-// This file allows instructors to first see a list of their exams in a table,
-// and then view a report for a specific exam when selected.
+// Error reporting for debugging (remove in production)
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 
-// Include necessary configuration or database files
-include_once __DIR__ . '/../../config.php';
-include_once __DIR__ . '/../../includes/db/db.config.php'; // Assuming this file sets up the $pdo database connection
+// Include configuration and database connection
+require_once __DIR__ . '/../../config.php';
+require_once __DIR__ . '/../../includes/db/db.config.php';
 
-// Start the session if it hasn't been started already
+// Start session
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
 
-// Security check: Ensure the user is logged in and is an instructor
-if (!isset($_SESSION['email']) || !isset($_SESSION['role']) || $_SESSION['role'] !== 'instructor' || !isset($_SESSION['user_id'])) {
-    // Redirect to login or show access denied message
-    header('Location: ../../login.php'); // Adjust the path as needed
+// Security check
+if (!isset($_SESSION['user_id'], $_SESSION['role']) || $_SESSION['role'] !== 'Instructor') {
+    header('Location: /login.php');
     exit();
 }
 
-$message = ''; // Variable to store feedback messages
-$exam = null; // Variable to hold the specific exam being reported on
-$studentResults = []; // Array to hold student results for this exam
-$instructorExams = []; // Array to hold the list of exams for selection
+// Initialize variables
+$message = '';
+$exam = null;
+$studentResults = [];
+$instructorExams = [];
+$stats = [
+    'average' => 0,
+    'pass_rate' => 0,
+    'high_score' => 0,
+    'attempt_count' => 0
+];
+$instructorId = $_SESSION['user_id']; // Using string ID as per your schema
 
-$instructorId = $_SESSION['user_id']; // Get the logged-in instructor's user_id
-// $instructorId = 2; // Uncomment for testing with a fixed instructor ID if needed
+// Database connection check
+if (!isset($pdo) || !($pdo instanceof PDO)) {
+    die('<div class="error">Database connection failed. Please contact administrator.</div>');
+}
 
-// --- Start: PHP Logic for Displaying Page (List or Single Exam Report) ---
+try {
+    // Check if viewing single exam report
+    $examId = filter_input(INPUT_GET, 'exam_id', FILTER_VALIDATE_INT);
+    $showReport = ($examId !== false && $examId > 0);
 
-// Determine whether to show the list or the single exam report
-$showSingleExamReport = false;
-$examIdFromGet = filter_input(INPUT_GET, 'exam_id', FILTER_VALIDATE_INT);
+    if ($showReport) {
+        // Get exam details
+        $stmt = $pdo->prepare("
+            SELECT e.*, c.course_name 
+            FROM exams e
+            JOIN courses c ON e.course_id = c.course_id
+            WHERE e.exam_id = ? AND e.instructor_id = ?
+        ");
+        $stmt->execute([$examId, $instructorId]);
+        $exam = $stmt->fetch(PDO::FETCH_ASSOC);
 
-if ($examIdFromGet) {
-    // Try to fetch the specific exam for reporting
-    try {
-        // 1. Fetch exam details, ensuring it belongs to the instructor
-        $sqlExam = "SELECT e.*, c.course_name
-                    FROM exams e
-                    JOIN courses c ON e.course_id = c.course_id
-                    WHERE e.exam_id = :exam_id AND e.instructor_id = :instructor_id";
-        $stmtExam = $pdo->prepare($sqlExam);
-        $stmtExam->bindParam(':exam_id', $examIdFromGet, PDO::PARAM_INT);
-        $stmtExam->bindParam(':instructor_id', $instructorId, PDO::PARAM_INT);
-        $stmtExam->execute();
-        $exam = $stmtExam->fetch(PDO::FETCH_ASSOC);
-
-        // If exam is found, fetch student results
         if ($exam) {
-            $showSingleExamReport = true; // Found the exam, show the report
+            // Get student results from student_exam_status
+            $stmt = $pdo->prepare("
+                SELECT u.user_id, u.name, 
+                       s.score, s.taken_on as attempt_date,
+                       CASE WHEN s.score >= (e.total_marks * 0.6) THEN 'passed' ELSE 'failed' END as status
+                FROM student_exam_status s
+                JOIN users u ON s.student_id = u.user_id
+                JOIN exams e ON s.exam_id = e.exam_id
+                WHERE s.exam_id = ? AND s.has_taken = 1
+                ORDER BY s.score DESC
+            ");
+            $stmt->execute([$examId]);
+            $studentResults = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            // 2. Fetch student results for this exam
-            // This query assumes you have a 'student_attempts' table
-            // linking students (via user_id) to exams (via exam_id)
-            // and storing the 'score' or 'marks_obtained'.
-            // Adjust table/column names based on your actual database schema.
-            $sqlResults = "SELECT u.user_id, u.first_name, u.last_name, sa.score, sa.attempt_date
-                           FROM student_attempts sa
-                           JOIN users u ON sa.user_id = u.user_id
-                           WHERE sa.exam_id = :exam_id
-                           ORDER BY sa.score DESC, u.last_name ASC"; // Order by score descending, then name
-
-            $stmtResults = $pdo->prepare($sqlResults);
-            $stmtResults->bindParam(':exam_id', $examIdFromGet, PDO::PARAM_INT);
-            $stmtResults->execute();
-            $studentResults = $stmtResults->fetchAll(PDO::FETCH_ASSOC);
-
-             // Optional: Calculate average score
-             $averageScore = 0;
-             if (!empty($studentResults)) {
-                 $totalScores = array_sum(array_column($studentResults, 'score'));
-                 $averageScore = $totalScores / count($studentResults);
-             }
-
-
+            // Calculate statistics
+            if (!empty($studentResults)) {
+                $scores = array_column($studentResults, 'score');
+                $stats['attempt_count'] = count($studentResults);
+                $stats['average'] = array_sum($scores) / $stats['attempt_count'];
+                $stats['high_score'] = max($scores);
+                $passingScore = $exam['total_marks'] * 0.6; // Assuming 60% is passing
+                $passed = count(array_filter($scores, fn($score) => $score >= $passingScore));
+                $stats['pass_rate'] = ($passed / $stats['attempt_count']) * 100;
+            }
         } else {
-            // Exam ID provided but not found or not owned by instructor
-            $message = '<p class="error">Exam not found or you do not have permission to view this report.</p>';
-             // Ensure we don't try to show the single report if exam wasn't found
-            $showSingleExamReport = false;
-        }
-    } catch (PDOException $e) {
-        error_log("Error fetching exam report data: " . $e->getMessage()); // Log the detailed error
-        $message = '<p class="error">Error loading exam report details. Please try again later.</p>';
-         // Ensure we don't try to show the single report on DB error
-        $showSingleExamReport = false;
-    }
-}
-
-// If no exam_id provided or exam not found/error, fetch the list of exams for this instructor
-if (!$showSingleExamReport) {
-     try {
-        $sql = "SELECT e.exam_id, e.title, e.description, c.course_name, e.created_at
-                FROM exams e
-                JOIN courses c ON e.course_id = c.course_id
-                WHERE e.instructor_id = :instructor_id
-                ORDER BY e.created_at DESC"; // Order exams by creation date
-
-        $stmt = $pdo->prepare($sql);
-        $stmt->bindParam(':instructor_id', $instructorId, PDO::PARAM_INT);
-        $stmt->execute();
-        $instructorExams = $stmt->fetchAll(PDO::FETCH_ASSOC); // $instructorExams will be set if exams are found
-
-    } catch (PDOException $e) {
-        error_log("Error fetching instructor's exams for list: " . $e->getMessage());
-        // Only append to message if it wasn't already set by a single exam fetch error
-        if (empty($message)) {
-             $message = '<p class="error">Error loading your exams list. Please try again later.</p>';
-        } else {
-             $message .= '<p class="error">Could not fully load your exams list.</p>';
+            $message = 'Exam not found or access denied.';
+            $showReport = false;
         }
     }
-}
-// --- End: PHP Logic for Displaying Page ---
 
+    // Get exam list if not showing single report
+    if (!$showReport) {
+        $stmt = $pdo->prepare("
+            SELECT e.exam_id, e.exam_title as title, e.exam_description as description, 
+                   c.course_name, e.created_at, 
+                   COUNT(s.exam_id) as attempt_count
+            FROM exams e
+            JOIN courses c ON e.course_id = c.course_id
+            LEFT JOIN student_exam_status s ON e.exam_id = s.exam_id AND s.has_taken = 1
+            WHERE e.instructor_id = ?
+            GROUP BY e.exam_id
+            ORDER BY e.created_at DESC
+        ");
+        $stmt->execute([$instructorId]);
+        $instructorExams = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+} catch (PDOException $e) {
+    error_log("Database Error: " . $e->getMessage());
+    $message = 'A database error occurred. Please try again later.';
+}
+
+// Helper function to safely output text
+function safe_output($text) {
+    return htmlspecialchars($text ?? '', ENT_QUOTES, 'UTF-8');
+}
 ?>
 
 <!DOCTYPE html>
@@ -123,276 +118,333 @@ if (!$showSingleExamReport) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo $exam ? 'Exam Report: ' . htmlspecialchars($exam['title']) : 'Exam Reports'; ?></title>
+    <title><?= $showReport ? "Exam Report: " . safe_output($exam['exam_title']) : 'Exam Reports' ?></title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* General Container Styling (Similar to other instructor pages) */
-        .page-container {
-            background-color: #f9f9f9;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            max-width: 900px;
-            margin: 30px auto;
-            font-family: sans-serif;
-            color: #333;
+        :root {
+            --primary: #4f46e5;
+            --primary-light: #6366f1;
+            --secondary: #10b981;
+            --danger: #ef4444;
+            --light: #f9fafb;
+            --dark: #111827;
+            --gray: #6b7280;
+            --border: #e5e7eb;
         }
-
-        .page-container h1, .page-container h2 {
-             color: #0056b3;
-             text-align: center;
-             margin-bottom: 25px;
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-
-        .page-container h2 {
-            border-bottom: 2px solid #eee;
-            padding-bottom: 10px;
-        }
-
-        /* Message Styling */
-        .message {
-            padding: 12px;
-            margin-bottom: 20px;
-            border-radius: 5px;
-            font-size: 1em;
-            line-height: 1.4;
-        }
-
-        .success {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-
-         /* Exam Details Section Styling */
-         .exam-details {
-            margin-bottom: 30px; /* More space below details */
-            padding: 20px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            background-color: #fff;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-         }
-
-        .exam-details p {
-            margin-bottom: 10px;
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            color: var(--dark);
             line-height: 1.5;
         }
-
-        .exam-details strong {
-            color: #555;
-            display: inline-block;
-            min-width: 150px; /* Give labels more width */
+        
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
         }
-
-        /* Student Results Table Styling (Similar to exam list table) */
-        .results-table {
+        
+        .card {
+            background: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        h1, h2, h3 {
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+        }
+        
+        h1 {
+            font-size: 1.75rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 1rem;
+        }
+        
+        .alert {
+            padding: 1rem;
+            border-radius: 0.375rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .alert-error {
+            background-color: #fee2e2;
+            color: var(--danger);
+            border: 1px solid #fecaca;
+        }
+        
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--primary-light);
+            transform: translateY(-1px);
+        }
+        
+        .btn-outline {
+            border: 1px solid var(--border);
+            color: var(--gray);
+        }
+        
+        .btn-outline:hover {
+            background-color: var(--light);
+        }
+        
+        .grid {
+            display: grid;
+            gap: 1.5rem;
+        }
+        
+        .grid-cols-4 {
+            grid-template-columns: repeat(4, 1fr);
+        }
+        
+        .stat-card {
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            background: white;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border);
+        }
+        
+        .stat-card h3 {
+            font-size: 0.875rem;
+            color: var(--gray);
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-card p {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--dark);
+        }
+        
+        table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-            background-color: #fff;
-            border-radius: 5px;
+            background: white;
+            border-radius: 0.5rem;
             overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
-
-        .results-table th, .results-table td {
-            padding: 12px;
+        
+        th, td {
+            padding: 1rem;
             text-align: left;
-            border-bottom: 1px solid #ddd;
+            border-bottom: 1px solid var(--border);
         }
-
-        .results-table th {
-            background-color: #f2f2f2;
-            font-weight: bold;
-            color: #555;
+        
+        th {
+            background-color: var(--primary);
+            color: white;
+            font-weight: 500;
         }
-
-        .results-table tbody tr:hover {
-            background-color: #f9f9f9;
+        
+        tr:nth-child(even) {
+            background-color: var(--light);
         }
-
-        .results-table td {
-            color: #333;
+        
+        tr:hover {
+            background-color: #f0f0ff;
         }
-
-        /* Styling for score column */
-        .results-table td:nth-child(3) { /* Assuming score is the 3rd column */
-            font-weight: bold;
+        
+        .text-success {
+            color: var(--secondary);
         }
-
-        /* Optional: Styling for average score */
-        .average-score {
-            margin-top: 20px;
-            padding: 15px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            background-color: #e9e9e9;
-            font-weight: bold;
+        
+        .text-danger {
+            color: var(--danger);
         }
-
-         /* Exam List Table Styling (Copied from edit_exam.php for consistency) */
-        .exam-table {
-            width: 100%;
-            border-collapse: collapse; /* Collapse borders */
-            margin-top: 20px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08); /* Subtle shadow for the table */
-            background-color: #fff; /* White background */
-            border-radius: 5px; /* Rounded corners for the table */
-            overflow: hidden; /* Hide overflowing content for rounded corners */
+        
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--gray);
+            background: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
         }
-
-        .exam-table th, .exam-table td {
-            padding: 12px; /* Increased padding */
-            text-align: left;
-            border-bottom: 1px solid #ddd; /* Lighter border */
+        
+        .exam-details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            background: white;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border);
         }
-
-        .exam-table th {
-            background-color: #f2f2f2; /* Light grey background for headers */
-            font-weight: bold;
-            color: #555;
+        
+        .exam-detail-item strong {
+            display: block;
+            color: var(--gray);
+            font-size: 0.875rem;
+            margin-bottom: 0.25rem;
         }
-
-        .exam-table tbody tr:hover {
-            background-color: #f9f9f9; /* Subtle hover effect */
+        
+        @media (max-width: 768px) {
+            .grid-cols-4 {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .container {
+                padding: 0 0.5rem;
+            }
+            
+            .card {
+                padding: 1rem;
+            }
         }
-
-        .exam-table td a {
-            font-weight: bold;
-            text-decoration: none;
-            color: #007bff; /* Blue link color */
-        }
-
-        .exam-table td a:hover {
-            text-decoration: underline;
-        }
-
-        .exam-table td small {
-            color: #666; /* Slightly darker grey for description */
-        }
-
-        /* Back link styling */
-         .back-link {
-             display: inline-block;
-             margin-bottom: 20px;
-             color: #007bff;
-             text-decoration: none;
-             font-size: 1em;
-         }
-         .back-link:hover {
-             text-decoration: underline;
-         }
-
-
     </style>
 </head>
 <body>
-
-    <?php // include_once '../includes/layout/InstructorSidebar.php'; // Example ?>
-
-    <main>
-        <div class="page-container">
-
-            <h1>Exam Reports</h1>
-
-            <?php
-            // Display feedback message if any
-            if (!empty($message)) {
-                echo '<div class="message ' . (strpos($message, 'Error') !== false ? 'error' : 'success') . '">' . $message . '</div>';
-            }
-            ?>
-
-            <?php if ($showSingleExamReport && $exam): // If a specific exam report was successfully loaded ?>
-
-                <a href="exam_report.php" class="back-link">&larr; Back to Exam List</a>
-
-                <h2>Report for Exam: <?php echo htmlspecialchars($exam['title']); ?></h2>
-
-                <div class="exam-details">
-                    <p><strong>Course:</strong> <?php echo htmlspecialchars($exam['course_name']); ?></p>
-                    <p><strong>Description:</strong> <?php echo nl2br(htmlspecialchars($exam['description'])); ?></p>
-                    <p><strong>Duration:</strong> <?php echo htmlspecialchars($exam['time_limit']); ?> minutes</p>
-                    <p><strong>Total Possible Marks:</strong> <?php echo htmlspecialchars($exam['total_marks']); ?></p>
-                    <p><strong>Created At:</strong> <?php echo htmlspecialchars($exam['created_at']); ?></p>
+    <div class="container">
+        <div class="card">
+            <h1><?= $showReport ? "Exam Report: " . safe_output($exam['exam_title']) : 'Your Exams' ?></h1>
+            
+            <?php if ($message): ?>
+                <div class="alert alert-error"><?= safe_output($message) ?></div>
+            <?php endif; ?>
+            
+            <?php if ($showReport && $exam): ?>
+                <a href="exam_report.php" class="btn btn-outline" style="margin-bottom: 1.5rem;">
+                    &larr; Back to Exams
+                </a>
+                
+                <div style="margin-bottom: 2rem;">
+                    <h2>Exam Details</h2>
+                    <div class="exam-details-grid">
+                        <div class="exam-detail-item">
+                            <strong>Course</strong>
+                            <p><?= safe_output($exam['course_name']) ?></p>
+                        </div>
+                        <div class="exam-detail-item">
+                            <strong>Description</strong>
+                            <p><?= !empty($exam['exam_description']) ? nl2br(safe_output($exam['exam_description'])) : 'No description provided' ?></p>
+                        </div>
+                        <div class="exam-detail-item">
+                            <strong>Total Marks</strong>
+                            <p><?= safe_output($exam['total_marks']) ?></p>
+                        </div>
+                        <div class="exam-detail-item">
+                            <strong>Duration</strong>
+                            <p><?= safe_output($exam['duration_minutes']) ?> minutes</p>
+                        </div>
+                    </div>
                 </div>
-
-                <div class="student-results-section">
-                    <h3>Student Results (<?php echo count($studentResults); ?> students)</h3>
-
-                    <?php if (!empty($studentResults)): ?>
-
-                        <?php if (isset($averageScore)): ?>
-                            <div class="average-score">
-                                Average Score: <?php echo htmlspecialchars(number_format($averageScore, 2)); ?> / <?php echo htmlspecialchars($exam['total_marks']); ?>
+                
+                <?php if (!empty($studentResults)): ?>
+                    <div style="margin-bottom: 2rem;">
+                        <h2>Performance Overview</h2>
+                        <div class="grid grid-cols-4">
+                            <div class="stat-card">
+                                <h3>Students Attempted</h3>
+                                <p><?= $stats['attempt_count'] ?></p>
                             </div>
-                        <?php endif; ?>
-
-                        <table class="results-table">
+                            <div class="stat-card">
+                                <h3>Average Score</h3>
+                                <p><?= number_format($stats['average'], 1) ?></p>
+                            </div>
+                            <div class="stat-card">
+                                <h3>Pass Rate</h3>
+                                <p><?= number_format($stats['pass_rate'], 1) ?>%</p>
+                            </div>
+                            <div class="stat-card">
+                                <h3>Highest Score</h3>
+                                <p><?= $stats['high_score'] ?></p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h2>Student Results</h2>
+                        <table>
                             <thead>
                                 <tr>
-                                    <th>Student Name</th>
+                                    <th>Student</th>
                                     <th>Attempt Date</th>
                                     <th>Score</th>
-                                    </tr>
+                                    <th>Status</th>
+                                </tr>
                             </thead>
                             <tbody>
                                 <?php foreach ($studentResults as $result): ?>
                                     <tr>
-                                        <td><?php echo htmlspecialchars($result['first_name'] . ' ' . $result['last_name']); ?></td>
-                                        <td><?php echo htmlspecialchars(date('M d, Y H:i', strtotime($result['attempt_date']))); ?></td>
-                                        <td><?php echo htmlspecialchars($result['score']); ?> / <?php echo htmlspecialchars($exam['total_marks']); ?></td>
-                                        </tr>
+                                        <td><?= safe_output($result['name']) ?></td>
+                                        <td><?= date('M j, Y g:i a', strtotime($result['attempt_date'])) ?></td>
+                                        <td><?= safe_output($result['score']) ?> / <?= safe_output($exam['total_marks']) ?></td>
+                                        <td class="<?= $result['status'] === 'passed' ? 'text-success' : 'text-danger' ?>">
+                                            <?= ucfirst(safe_output($result['status'])) ?>
+                                        </td>
+                                    </tr>
                                 <?php endforeach; ?>
                             </tbody>
                         </table>
-                    <?php else: ?>
-                        <p>No students have taken this exam yet.</p>
-                    <?php endif; ?>
-                </div>
-
-            <?php else: // If no specific exam is being reported on (or wasn't found), show the list ?>
-
-
+                    </div>
+                <?php else: ?>
+                    <div class="empty-state">
+                        <p>No students have attempted this exam yet.</p>
+                    </div>
+                <?php endif; ?>
+                
+            <?php else: ?>
                 <?php if (!empty($instructorExams)): ?>
-                    <table class="exam-table">
+                    <table>
                         <thead>
                             <tr>
                                 <th>Exam Title</th>
                                 <th>Course</th>
-                                <th>Created At</th>
+                                <th>Created</th>
+                                <th>Attempts</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <?php foreach ($instructorExams as $instExam): ?>
+                            <?php foreach ($instructorExams as $exam): ?>
                                 <tr>
-                                    <td><?php echo htmlspecialchars($instExam['title']); ?></td>
-                                    <td><?php echo htmlspecialchars($instExam['course_name']); ?></td>
-                                    <td><?php echo htmlspecialchars(date('M d, Y', strtotime($instExam['created_at']))); ?></td>
+                                    <td><?= safe_output($exam['title']) ?></td>
+                                    <td><?= safe_output($exam['course_name']) ?></td>
+                                    <td><?= date('M j, Y', strtotime($exam['created_at'])) ?></td>
+                                    <td><?= safe_output($exam['attempt_count']) ?></td>
                                     <td>
-                                        <a href="ui/exam_report.php?exam_id=<?php echo htmlspecialchars($instExam['exam_id']); ?>">View Report</a>
+                                        <a href="ui/exam_report.php?exam_id=<?= safe_output($exam['exam_id']) ?>" class="btn btn-primary">
+                                            View Report
+                                        </a>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>
                     </table>
-                <?php elseif (empty($message)): // Avoid showing this if there was an error loading the list ?>
-                    <p>You have not created any exams yet.</p>
-
+                <?php else: ?>
+                    <div class="empty-state">
+                        <p>You haven't created any exams yet.</p>
+                    </div>
                 <?php endif; ?>
-
             <?php endif; ?>
-
         </div>
-    </main>
-
-    <?php // include_once '../includes/layout/footer.php'; // Example ?>
-
+    </div>
 </body>
 </html>

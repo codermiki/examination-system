@@ -1,108 +1,86 @@
 <?php
 include_once __DIR__ . '/../../config.php';
-include_once __DIR__ . '/../../includes/db/db.config.php'; // Assuming this file sets up the $pdo database connection
+include_once __DIR__ . '/../../includes/db/db.config.php';
 
-// Start the session if it hasn't been started already
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
 
-// Security check: Ensure the user is logged in and is an instructor
-if (!isset($_SESSION['email']) || !isset($_SESSION['role']) || $_SESSION['role'] !== 'instructor' || !isset($_SESSION['user_id'])) {
-    // Redirect to login or show access denied message
-    header('Location: ../../login.php'); // Adjust the path as needed
+// Security check
+if (!isset($_SESSION['email']) || !isset($_SESSION['role']) || $_SESSION['role'] !== 'Instructor' || !isset($_SESSION['user_id'])) {
+    header('Location: ../../login.php');
     exit();
 }
 
-$message = ''; // Variable to store feedback messages
-$exam = null; // Variable to hold the specific exam being viewed
-$questions = []; // Array to hold questions for the specific exam
-$instructorExams = []; // Array to hold the list of exams for selection
+$message = '';
+$exam = null;
+$questions = [];
+$instructorExams = [];
+$instructorId = $_SESSION['user_id'];
 
-$instructorId = $_SESSION['user_id']; // Get the logged-in instructor's user_id
-// $instructorId = 2; // Uncomment for testing with a fixed instructor ID if needed
-
-// --- Start: PHP Logic for Displaying Page (List or Single Exam View) ---
-
-// Determine whether to show the list or the single exam view
+// Check if viewing single exam
 $showSingleExamView = false;
 $examIdFromGet = filter_input(INPUT_GET, 'exam_id', FILTER_VALIDATE_INT);
 
 if ($examIdFromGet) {
-    // Try to fetch the specific exam for viewing
     try {
-        $sql = "SELECT e.*, c.course_name
+        $sql = "SELECT e.*, c.course_name 
                 FROM exams e
                 JOIN courses c ON e.course_id = c.course_id
                 WHERE e.exam_id = :exam_id AND e.instructor_id = :instructor_id";
         $stmt = $pdo->prepare($sql);
         $stmt->bindParam(':exam_id', $examIdFromGet, PDO::PARAM_INT);
-        $stmt->bindParam(':instructor_id', $instructorId, PDO::PARAM_INT);
+        $stmt->bindParam(':instructor_id', $instructorId, PDO::PARAM_STR);
         $stmt->execute();
         $exam = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if ($exam) {
-            $showSingleExamView = true; // Found the exam, show the details
-            // Fetch its questions
+            $showSingleExamView = true;
+            // Get questions
             $sql_q = "SELECT * FROM questions WHERE exam_id = :exam_id ORDER BY question_id ASC";
             $stmt_q = $pdo->prepare($sql_q);
             $stmt_q->bindParam(':exam_id', $examIdFromGet, PDO::PARAM_INT);
             $stmt_q->execute();
             $questions = $stmt_q->fetchAll(PDO::FETCH_ASSOC);
 
-            // Fetch choices for multiple-choice questions
-            foreach ($questions as &$question) { // Use & to modify the original array elements
+            // Get choices for MC questions
+            foreach ($questions as &$question) {
                 if ($question['question_type'] === 'multiple_choice') {
-                    $sql_c = "SELECT * FROM choices WHERE question_id = :question_id ORDER BY choice_id ASC";
+                    $sql_c = "SELECT * FROM question_options WHERE question_id = :question_id ORDER BY option_id ASC";
                     $stmt_c = $pdo->prepare($sql_c);
                     $stmt_c->bindParam(':question_id', $question['question_id'], PDO::PARAM_INT);
                     $stmt_c->execute();
-                    // Store choices within the question array
                     $question['choices'] = $stmt_c->fetchAll(PDO::FETCH_ASSOC);
                 }
             }
-            unset($question); // Break reference
-
+            unset($question);
         } else {
-            // Exam ID provided but not found or not owned by instructor
-            $message = '<p class="error">Exam not found or you do not have permission to view it.</p>';
-             // Ensure we don't try to show the single view if exam wasn't found
-            $showSingleExamView = false;
+            $message = '<div class="alert error"><i class="fas fa-exclamation-circle"></i> Exam not found or access denied.</div>';
         }
     } catch (PDOException $e) {
-        error_log("Error fetching exam details for viewing: " . $e->getMessage());
-        $message = '<p class="error">Error loading exam details. Please try again later.</p>';
-         // Ensure we don't try to show the single view on DB error
-        $showSingleExamView = false;
+        error_log("Error fetching exam: " . $e->getMessage());
+        $message = '<div class="alert error"><i class="fas fa-exclamation-circle"></i> Error loading exam details.</div>';
     }
 }
 
-// If no exam_id provided or exam not found/error, fetch the list of exams for this instructor
+// Get exam list if not viewing single exam
 if (!$showSingleExamView) {
-     try {
-        $sql = "SELECT e.exam_id, e.title, e.description, c.course_name, e.created_at
+    try {
+        $sql = "SELECT e.exam_id, e.exam_title as title, e.exam_description as description, 
+                       c.course_name, e.created_at, e.status
                 FROM exams e
                 JOIN courses c ON e.course_id = c.course_id
                 WHERE e.instructor_id = :instructor_id
-                ORDER BY e.created_at DESC"; // Order exams by creation date
-
+                ORDER BY e.created_at DESC";
         $stmt = $pdo->prepare($sql);
-        $stmt->bindParam(':instructor_id', $instructorId, PDO::PARAM_INT);
+        $stmt->bindParam(':instructor_id', $instructorId, PDO::PARAM_STR);
         $stmt->execute();
-        $instructorExams = $stmt->fetchAll(PDO::FETCH_ASSOC); // $instructorExams will be set if exams are found
-
+        $instructorExams = $stmt->fetchAll(PDO::FETCH_ASSOC);
     } catch (PDOException $e) {
-        error_log("Error fetching instructor's exams for list: " . $e->getMessage());
-        // Only append to message if it wasn't already set by a single exam fetch error
-        if (empty($message)) {
-             $message = '<p class="error">Error loading your exams list. Please try again later.</p>';
-        } else {
-             $message .= '<p class="error">Could not fully load your exams list.</p>';
-        }
+        error_log("Error fetching exams: " . $e->getMessage());
+        $message = '<div class="alert error"><i class="fas fa-exclamation-circle"></i> Error loading exam list.</div>';
     }
 }
-// --- End: PHP Logic for Displaying Page ---
-
 ?>
 
 <!DOCTYPE html>
@@ -110,293 +88,497 @@ if (!$showSingleExamView) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo $showSingleExamView ? 'View Exam Details' : 'View Exams'; ?></title>
+    <title><?= $showSingleExamView ? 'Exam Details' : 'My Exams' ?></title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* General Container Styling */
-        .page-container {
-            background-color: #f9f9f9;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            max-width: 900px;
-            margin: 30px auto;
-            font-family: sans-serif;
-            color: #333;
+        :root {
+            --primary: #4361ee;
+            --primary-dark: #3a56d4;
+            --secondary: #3f37c9;
+            --accent: #4cc9f0;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --gray: #6c757d;
+            --light-gray: #e9ecef;
+            --success: #28a745;
+            --danger: #dc3545;
+            --warning: #ffc107;
+            --info: #17a2b8;
         }
 
-        .page-container h1, .page-container h2, .page-container h3 {
-             color: #0056b3;
-             text-align: center;
-             margin-bottom: 25px;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
-        .page-container h2 {
-            border-bottom: 2px solid #eee;
-            padding-bottom: 10px;
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f5f7fb;
+            color: var(--dark);
+            line-height: 1.6;
         }
 
-        /* Message Styling */
-        .message {
-            padding: 12px;
-            margin-bottom: 20px;
-            border-radius: 5px;
-            font-size: 1em;
-            line-height: 1.4;
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
         }
 
-        .success {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-
-        /* Exam List Table Styling */
-        .exam-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-            background-color: #fff;
-            border-radius: 5px;
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
             overflow: hidden;
+            margin-bottom: 2rem;
         }
 
-        .exam-table th, .exam-table td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
+        .card-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--light-gray);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
-        .exam-table th {
-            background-color: #f2f2f2;
-            font-weight: bold;
-            color: #555;
+        .card-header h2 {
+            font-size: 1.5rem;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
         }
 
-        .exam-table tbody tr:hover {
-            background-color: #f9f9f9;
+        .card-body {
+            padding: 1.5rem;
         }
 
-        .exam-table td a {
-            font-weight: bold;
+        .alert {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .alert.error {
+            background-color: rgba(220, 53, 69, 0.1);
+            color: var(--danger);
+            border-left: 4px solid var(--danger);
+        }
+
+        .alert.success {
+            background-color: rgba(40, 167, 69, 0.1);
+            color: var(--success);
+            border-left: 4px solid var(--success);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.25rem;
+            border-radius: 8px;
+            font-weight: 500;
             text-decoration: none;
-            color: #007bff; /* Blue link color */
+            transition: all 0.2s ease;
+            cursor: pointer;
+            border: none;
         }
 
-        .exam-table td a:hover {
-            text-decoration: underline;
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
         }
 
-        .exam-table td small {
-            color: #666; /* Slightly darker grey for description */
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
         }
 
-         /* Single Exam View Styling */
-         .exam-details {
-            margin-bottom: 20px;
-            padding: 20px; /* Increased padding */
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            background-color: #fff;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-         }
-
-        .exam-details p {
-            margin-bottom: 10px; /* More space below paragraphs */
-            line-height: 1.5;
+        .btn-outline {
+            background: transparent;
+            color: var(--primary);
+            border: 1px solid var(--primary);
         }
 
-        .exam-details strong {
-            color: #555;
-            display: inline-block; /* Align strong text nicely */
-            min-width: 120px; /* Give labels a minimum width */
+        .btn-outline:hover {
+            background-color: rgba(67, 97, 238, 0.1);
+        }
+        
+        .btn-warning {
+            background-color: var(--warning);
+            color: white;
+            border: 1px solid var(--warning);
+        }
+        .btn-warning:hover {
+            background-color: #e0a800; /* Darken warning color on hover */
+            border-color: #e0a800;
+        }
+
+        .btn-danger {
+            background-color: var(--danger);
+            color: white;
+            border: 1px solid var(--danger);
+        }
+        .btn-danger:hover {
+            background-color: #c82333; /* Darken danger color on hover */
+            border-color: #bd2130;
+        }
+
+
+        .btn-sm {
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .table th {
+            background-color: var(--primary);
+            color: white;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 500;
+        }
+
+        .table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--light-gray);
+            vertical-align: middle;
+        }
+
+        .table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .table tr:hover td {
+            background-color: rgba(67, 97, 238, 0.03);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.35rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge-success {
+            background-color: rgba(40, 167, 69, 0.15);
+            color: var(--success);
+        }
+
+        .badge-danger {
+            background-color: rgba(220, 53, 69, 0.15);
+            color: var(--danger);
+        }
+
+        .exam-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .detail-card {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            border-left: 4px solid var(--primary);
+        }
+
+        .detail-card h4 {
+            font-size: 0.875rem;
+            color: var(--gray);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .detail-card p {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--dark);
         }
 
         .question-list {
-            margin-top: 30px; /* More space above question list */
-            border-top: 1px solid #eee;
-            padding-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
         }
 
-        .question-item {
-            margin-bottom: 25px;
-            padding: 20px; /* Increased padding */
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            background-color: #f2f2f2; /* Light grey background */
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+        .question-card {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            border-left: 4px solid var(--accent);
         }
 
-        .question-item h4 {
-            margin-top: 0;
-            margin-bottom: 15px;
-            color: #007bff;
-            border-bottom: none; /* Remove border from h4 */
-            padding-bottom: 0;
+        .question-card h3 {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            color: var(--dark);
+            display: flex;
+            gap: 0.5rem;
         }
 
-        .question-item .question-text {
-            font-weight: bold;
-            margin-bottom: 10px;
-            line-height: 1.5;
-        }
-
-        .question-item .question-type {
-            font-style: italic;
-            color: #666;
-            margin-bottom: 10px;
-            font-size: 0.9em;
+        .question-card .question-type {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            background-color: rgba(67, 97, 238, 0.1);
+            color: var(--primary);
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
         }
 
         .options-list {
             list-style: none;
-            padding: 0;
-            margin-top: 10px;
+            margin-top: 1rem;
         }
 
         .options-list li {
-            margin-bottom: 8px; /* More space between list items */
-            padding: 8px;
-            border-bottom: 1px solid #eee;
-            background-color: #fff; /* White background for options */
-            border-radius: 3px;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            background-color: var(--light);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
         }
 
-        .options-list li strong {
-            color: #333;
-             min-width: auto; /* Reset min-width for options */
-             display: inline;
+        .options-list li::before {
+            content: '○';
+            color: var(--primary);
+            font-size: 0.75rem;
         }
 
         .correct-answer {
-            color: #28a745;
-            font-weight: bold;
+            color: var(--success);
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-left: auto;
         }
 
-        /* Back link styling */
-         .back-link {
-             display: inline-block;
-             margin-bottom: 20px;
-             color: #007bff;
-             text-decoration: none;
-             font-size: 1em;
-         }
-         .back-link:hover {
-             text-decoration: underline;
-         }
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--gray);
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            color: var(--light-gray);
+            margin-bottom: 1rem;
+        }
+
+        .empty-state p {
+            font-size: 1.1rem;
+        }
+        
+        .actions-cell {
+            white-space: nowrap; /* Prevents buttons from wrapping to the next line */
+        }
+
+        .actions-cell .btn {
+            margin-right: 5px; /* Adds a small space between buttons */
+        }
+        .actions-cell .btn:last-child {
+            margin-right: 0; /* No margin for the last button */
+        }
 
 
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 0.75rem;
+            }
+            
+            .exam-details {
+                grid-template-columns: 1fr;
+            }
+            
+            .table {
+                display: block;
+                overflow-x: auto; /* Allows horizontal scrolling for the table on small screens */
+            }
+            .actions-cell {
+                white-space: normal; /* Allow buttons to wrap on smaller screens if necessary */
+            }
+            .actions-cell .btn {
+                margin-bottom: 5px; /* Add some space below buttons if they wrap */
+                display: block; /* Make buttons take full width if they wrap */
+                width: 100%;
+                text-align: center;
+            }
+            .actions-cell .btn:last-child {
+                 margin-bottom: 0;
+            }
+        }
     </style>
 </head>
 <body>
+    <div class="container">
+        <?php if (!empty($message)) echo $message; ?>
 
-    <?php // include_once '../includes/layout/InstructorSidebar.php'; // Example ?>
-
-    <main>
-        <div class="page-container">
-
-            <h1>View Exams</h1>
-
-            <?php
-            // Display feedback message if any
-            if (!empty($message)) {
-                echo '<div class="message ' . (strpos($message, 'Error') !== false ? 'error' : 'success') . '">' . $message . '</div>';
-            }
-            ?>
-
-            <?php if ($showSingleExamView && $exam): // If a specific exam was successfully loaded for viewing ?>
-
-                <a href="view_exam.php" class="back-link">&larr; Back to Exam List</a>
-
-                <h2>Exam Details: <?php echo htmlspecialchars($exam['title']); ?></h2>
-
-                <div class="exam-details">
-                    <p><strong>Course:</strong> <?php echo htmlspecialchars($exam['course_name']); ?></p>
-                    <p><strong>Description:</strong> <?php echo nl2br(htmlspecialchars($exam['description'])); ?></p>
-                    <p><strong>Duration:</strong> <?php echo htmlspecialchars($exam['time_limit']); ?> minutes</p>
-                    <p><strong>Total Marks:</strong> <?php echo htmlspecialchars($exam['total_marks']); ?></p>
-                    <p><strong>Status:</strong> <?php echo htmlspecialchars(ucfirst($exam['status'])); ?></p>
-                    <p><strong>Created At:</strong> <?php echo htmlspecialchars($exam['created_at']); ?></p>
+        <?php if ($showSingleExamView && $exam): ?>
+            <div class="card">
+                <div class="card-header">
+                    <h2><i class="fas fa-clipboard-list"></i> Exam Details</h2>
+                    <a href="view_exam.php" class="btn btn-outline btn-sm">
+                        <i class="fas fa-arrow-left"></i> Back to Exams
+                    </a>
                 </div>
+                <div class="card-body">
+                    <div class="exam-details">
+                        <div class="detail-card">
+                            <h4><i class="fas fa-book"></i> Course</h4>
+                            <p><?= htmlspecialchars($exam['course_name']) ?></p>
+                        </div>
+                        <div class="detail-card">
+                            <h4><i class="fas fa-clock"></i> Duration</h4>
+                            <p><?= htmlspecialchars($exam['duration_minutes']) ?> minutes</p>
+                        </div>
+                        <div class="detail-card">
+                            <h4><i class="fas fa-star"></i> Total Marks</h4>
+                            <p><?= htmlspecialchars($exam['total_marks']) ?></p>
+                        </div>
+                        <div class="detail-card">
+                            <h4><i class="fas fa-power-off"></i> Status</h4>
+                            <p>
+                                <span class="badge <?= $exam['status'] === 'Active' ? 'badge-success' : 'badge-danger' ?>">
+                                    <?= htmlspecialchars(ucfirst($exam['status'])) ?>
+                                </span>
+                            </p>
+                        </div>
+                    </div>
 
-                <div class="question-list">
-                    <h3>Questions (<?php echo count($questions); ?>)</h3>
+                    <div class="detail-card" style="margin-bottom: 2rem;">
+                        <h4><i class="fas fa-align-left"></i> Description</h4>
+                        <p><?= nl2br(htmlspecialchars($exam['exam_description'])) ?></p>
+                    </div>
+
+                    <h3 style="margin: 2rem 0 1rem;"><i class="fas fa-question-circle"></i> Questions (<?= count($questions) ?>)</h3>
+
                     <?php if (empty($questions)): ?>
-                        <p>No questions found for this exam.</p>
+                        <div class="empty-state">
+                            <i class="fas fa-question"></i>
+                            <p>No questions found for this exam.</p>
+                        </div>
                     <?php else: ?>
-                        <?php $questionNumber = 1; ?>
-                        <?php foreach ($questions as $question): ?>
-                            <div class="question-item">
-                                <h4>Question <?php echo $questionNumber++; ?></h4>
-                                <p class="question-text"><?php echo nl2br(htmlspecialchars($question['question_text'])); ?></p>
-                                <p class="question-type">Type: <?php echo htmlspecialchars(ucwords(str_replace('_', ' ', $question['question_type']))); ?></p>
+                        <div class="question-list">
+                            <?php foreach ($questions as $i => $question): ?>
+                                <div class="question-card">
+                                    <h3>Q<?= $i + 1 ?>: <?= htmlspecialchars($question['question_text']) ?></h3>
+                                    <span class="question-type">
+                                        <?= htmlspecialchars(ucwords(str_replace('_', ' ', $question['question_type']))) ?>
+                                    </span>
+                                    <p><strong>Marks:</strong> <?= htmlspecialchars($question['marks']) ?></p>
 
-                                <?php if ($question['question_type'] === 'multiple_choice' && isset($question['choices'])): ?>
-                                    <p>Options:</p>
-                                    <ul class="options-list">
-                                        <?php foreach ($question['choices'] as $choice): ?>
-                                            <li>
-                                                <?php if ($choice['is_correct']): ?>
-                                                    <span class="correct-answer">Correct:</span>
-                                                <?php endif; ?>
-                                                <?php echo htmlspecialchars($choice['choice_text']); ?>
-                                            </li>
-                                        <?php endforeach; ?>
-                                    </ul>
-                                <?php elseif ($question['question_type'] === 'true_false'): ?>
-                                    <p><strong>Correct Answer:</strong> <span class="correct-answer"><?php echo htmlspecialchars(ucfirst($question['correct_answer'])); ?></span></p>
-                                <?php elseif ($question['question_type'] === 'blank_space'): ?>
-                                     <p><strong>Correct Answer(s):</strong> <span class="correct-answer"><?php echo nl2br(htmlspecialchars(str_replace('|', ', ', $question['correct_answer']))); ?></span></p>
-                                     <p><small>Blank answers are separated by commas. In the question text, <code>[BLANK]</code> indicates a blank space.</small></p>
-                                <?php endif; ?>
-
-                            </div>
-                        <?php endforeach; ?>
+                                    <?php if ($question['question_type'] === 'multiple_choice' && isset($question['choices'])): ?>
+                                        <p><strong>Options:</strong></p>
+                                        <ul class="options-list">
+                                            <?php foreach ($question['choices'] as $choice): ?>
+                                                <li>
+                                                    <?= htmlspecialchars($choice['option_text']) ?>
+                                                    <?php if (strtolower($choice['option_text']) === strtolower($question['correct_answer'])): ?>
+                                                        <span class="correct-answer">
+                                                            <i class="fas fa-check"></i> Correct
+                                                        </span>
+                                                    <?php endif; ?>
+                                                </li>
+                                            <?php endforeach; ?>
+                                        </ul>
+                                    <?php elseif ($question['question_type'] === 'true_false'): ?>
+                                        <p><strong>Correct Answer:</strong> 
+                                            <span class="correct-answer">
+                                                <?= htmlspecialchars(ucfirst($question['correct_answer'])) ?>
+                                            </span>
+                                        </p>
+                                    <?php elseif ($question['question_type'] === 'fill_blank'): ?>
+                                        <p><strong>Correct Answer:</strong> 
+                                            <span class="correct-answer">
+                                                <?= htmlspecialchars($question['correct_answer']) ?>
+                                            </span>
+                                        </p>
+                                    <?php endif; ?>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
                     <?php endif; ?>
                 </div>
-
-            <?php else: // If no specific exam is being viewed (or wasn't found), show the list ?>
-
-
-                <?php if (!empty($instructorExams)): ?>
-                    <table class="exam-table">
-                        <thead>
-                            <tr>
-                                <th>Exam Title</th>
-                                <th>Course</th>
-                                <th>Created At</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($instructorExams as $instExam): ?>
+            </div>
+        <?php else: ?>
+            <div class="card">
+                <!-- <div class="card-header">
+                    <h2><i class="fas fa-clipboard-list"></i> My Exams</h2>
+                </div> -->
+                <div class="card-body">
+                    <?php if (!empty($instructorExams)): ?>
+                        <table class="table">
+                            <thead>
                                 <tr>
-                                    <td><?php echo htmlspecialchars($instExam['title']); ?></td>
-                                    <td><?php echo htmlspecialchars($instExam['course_name']); ?></td>
-                                    <td><?php echo htmlspecialchars(date('M d, Y', strtotime($instExam['created_at']))); ?></td>
-                                    <td>
-                                        <a href="ui/view_exam.php?exam_id=<?php echo htmlspecialchars($instExam['exam_id']); ?>">View Details</a>
-                                    </td>
+                                    <th>Exam Title</th>
+                                    <th>Course</th>
+                                    <th>Created</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
                                 </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                <?php elseif (empty($message)): // Avoid showing this if there was an error loading the list ?>
-                    <p>You have not created any exams yet.</p>
-                <?php endif; ?>
-
-            <?php endif; ?>
-
-        </div>
-    </main>
-
-    <?php // include_once '../includes/layout/footer.php'; // Example ?>
-
+                            </thead>
+                            <tbody>
+                                <?php foreach ($instructorExams as $exam): ?>
+                                    <tr>
+                                        <td>
+                                            <strong><?= htmlspecialchars($exam['title']) ?></strong>
+                                            <p style="color: var(--gray); font-size: 0.875rem; margin-top: 0.25rem;">
+                                                <?= htmlspecialchars(substr($exam['description'], 0, 60)) . (strlen($exam['description']) > 60 ? '...' : '') ?>
+                                            </p>
+                                        </td>
+                                        <td><?= htmlspecialchars($exam['course_name']) ?></td>
+                                        <td><?= htmlspecialchars(date('M j, Y', strtotime($exam['created_at']))) ?></td>
+                                        <td>
+                                            <span class="badge <?= $exam['status'] === 'Active' ? 'badge-success' : 'badge-danger' ?>">
+                                                <?= htmlspecialchars(ucfirst($exam['status'])) ?>
+                                            </span>
+                                        </td>
+                                        
+                                        <td class="actions-cell"> 
+                                            <a href="ui/view_exam.php?exam_id=<?= htmlspecialchars($exam['exam_id']) ?>" class="btn btn-outline btn-sm">
+                                                <i class="fas fa-eye"></i> View
+                                            </a>
+                                            <a href="ui/edit_exam.php?exam_id=<?= htmlspecialchars($exam['exam_id']) ?>" class="btn btn-warning btn-sm">
+                                                <i class="fas fa-edit"></i> Edit
+                                            </a>
+                                            <a href="ui/delete_exam.php?exam_id=<?= htmlspecialchars($exam['exam_id']) ?>" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this exam? This action cannot be undone.');">
+                                                <i class="fas fa-trash"></i> Delete
+                                            </a>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    <?php else: ?>
+                        <div class="empty-state">
+                            <i class="fas fa-clipboard"></i>
+                            <p>You haven't created any exams yet.</p>
+                            <p style="margin-top:1rem;"><a href="create_exam.php" class="btn btn-primary">Create New Exam</a></p> 
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+        <?php endif; ?>
+    </div>
 </body>
 </html>
