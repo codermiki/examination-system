@@ -1,21 +1,13 @@
 <?php
-// includes/instructor/import_exam.php
 
-// This file handles the functionality for importing exams from a file
-// and inserting the data into the database based on the provided schema.
-
-// Include necessary configuration or database files
-// Assuming config.php establishes a $pdo database connection
 include_once '../config.php';
 include_once '../includes/db/db.config.php';
 
-// Start the session if it hasn't been started already
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
 
-// Security check: Ensure the user is logged in and is an instructor
-// Also check if user_id is set in the session
+
 if (!isset($_SESSION['email']) || !isset($_SESSION['role']) || $_SESSION['role'] !== 'instructor' || !isset($_SESSION['user_id'])) {
     echo '<p>Access denied. You must be a logged-in instructor to import exams.</p>';
     exit();
@@ -315,8 +307,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['examFile'])) {
 
     <p><small>Accepted file formats: CSV, JSON, XML. Maximum file size: 5MB.</small></p>
     <p><small>Please ensure your file is correctly formatted. Refer to documentation for required file structure.</small></p>
-    <p><small><strong>JSON Example Structure:</strong></small></p>
-    <pre><code class="language-json">{
+   <!-- <p><small><strong>JSON Example Structure:</strong></small></p>
+     <pre><code class="language-json">{
   "title": "Sample Exam",
   "description": "A brief description.",
   "time_limit": 60,
@@ -346,7 +338,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['examFile'])) {
     // Add more questions here
   ]
 }
-</code></pre>
+</code></pre> -->
 </div>
 
 <?php

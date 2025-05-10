@@ -1,7 +1,12 @@
 <?php
-// include_once __DIR__ . '/../../config.php'; 
-// include_once '../../includes/db/db.config.php'; // include_once __DIR__ . 
-include_once __DIR__ . '/../../includes/db/db.config.php';
+// includes/instructor/edit_exam.php
+
+// This file handles the functionality for instructors to first select an exam
+// from a list (displayed in a table) and then edit the details and questions of the selected exam.
+
+// Include necessary configuration or database files
+include_once __DIR__ . '/../../config.php';
+include_once __DIR__ . '/../../includes/db/db.config.php'; // Assuming this file sets up the $pdo connection
 
 // Start the session if it hasn't been started already
 if (session_status() == PHP_SESSION_NONE) {
@@ -10,8 +15,6 @@ if (session_status() == PHP_SESSION_NONE) {
 
 // Security check: Ensure the user is logged in and is an instructor
 if (!isset($_SESSION['email']) || !isset($_SESSION['role']) || $_SESSION['role'] !== 'instructor' || !isset($_SESSION['user_id'])) {
-    // Redirect to login or show error
-    // For example: header('Location: /login.php'); exit();
     echo '<p>Access denied. You must be a logged-in instructor.</p>';
     exit();
 }
@@ -23,6 +26,7 @@ $courses = []; // Array to hold courses for the dropdown
 $instructorExams = []; // Array to hold the list of exams for selection
 
 $instructorId = $_SESSION['user_id']; // Get the logged-in instructor's user_id
+// $instructorId = 2; // Uncomment for testing with a fixed instructor ID if needed
 
 // --- Start: PHP Logic for Handling Form Submission (Updating Exam) ---
 // This block executes ONLY when the form is submitted (POST request)
@@ -47,8 +51,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['exam_id'])) {
             $pdo->beginTransaction();
 
             // 1. Update exams table
+            // Ensure the exam belongs to the instructor
             $stmt = $pdo->prepare("UPDATE exams SET course_id = :course_id, title = :title, description = :description, time_limit = :time_limit, total_marks = :total_marks WHERE exam_id = :exam_id AND instructor_id = :instructor_id");
-            // Bind parameters... (same as your original code)
             $stmt->bindParam(':course_id', $courseId, PDO::PARAM_INT);
             $stmt->bindParam(':title', $examTitle, PDO::PARAM_STR);
             $stmt->bindParam(':description', $examDescription, PDO::PARAM_STR);
@@ -61,106 +65,241 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['exam_id'])) {
                  throw new Exception("Error updating exam details: " . implode(" ", $stmt->errorInfo()));
             }
 
-            // 2. Manage Questions and Choices (Delete and Re-insert Approach)
-            // WARNING: This approach deletes existing questions/choices/answers.
-            // Consider implications if students have already taken the exam.
+            // --- Start: Manage Questions and Choices (Update/Insert/Delete) ---
 
-            // Delete existing student answers related to this exam's questions
-            $stmt = $pdo->prepare("DELETE sa FROM student_answers sa JOIN questions q ON sa.question_id = q.question_id WHERE q.exam_id = :exam_id");
-            $stmt->bindParam(':exam_id', $examIdToUpdate, PDO::PARAM_INT);
-            $stmt->execute();
+            // Fetch current questions for this exam from the database
+            $currentQuestionsStmt = $pdo->prepare("SELECT question_id FROM questions WHERE exam_id = :exam_id");
+            $currentQuestionsStmt->bindParam(':exam_id', $examIdToUpdate, PDO::PARAM_INT);
+            $currentQuestionsStmt->execute();
+            $currentQuestionIds = $currentQuestionsStmt->fetchAll(PDO::FETCH_COLUMN); // Get an array of current question IDs
 
-            // Delete existing choices for this exam's questions
-            $stmt = $pdo->prepare("DELETE c FROM choices c JOIN questions q ON c.question_id = q.question_id WHERE q.exam_id = :exam_id");
-            $stmt->bindParam(':exam_id', $examIdToUpdate, PDO::PARAM_INT);
-            $stmt->execute();
+            // Get submitted question IDs
+            $submittedQuestionIds = [];
+            foreach ($questionsData as $qData) {
+                // Only consider questions that have an existing question_id (not new ones)
+                if (!empty($qData['question_id'])) {
+                    $submittedQuestionIds[] = (int)$qData['question_id'];
+                }
+            }
 
-            // Delete existing questions for this exam
-            $stmt = $pdo->prepare("DELETE FROM questions WHERE exam_id = :exam_id");
-            $stmt->bindParam(':exam_id', $examIdToUpdate, PDO::PARAM_INT);
-            $stmt->execute();
+            // Determine questions to delete (present in DB but not in submitted data)
+            $questionIdsToDelete = array_diff($currentQuestionIds, $submittedQuestionIds);
 
-            // Now, insert the questions and choices from the submitted form data
+            // Delete removed questions and their associated data
+            if (!empty($questionIdsToDelete)) {
+                 $placeholders = implode(',', array_fill(0, count($questionIdsToDelete), '?'));
+
+                 // Delete student answers related to these questions FIRST
+                 // FIX: Changed to use only positional parameters
+                 $deleteStudentAnswersStmt = $pdo->prepare("DELETE sa FROM student_answers sa JOIN questions q ON sa.question_id = q.question_id WHERE q.exam_id = ? AND sa.question_id IN ($placeholders)");
+                 $bindParamsSA = [$examIdToUpdate]; // Start with exam_id
+                 $bindParamsSA = array_merge($bindParamsSA, $questionIdsToDelete); // Add question IDs
+                 $deleteStudentAnswersStmt->execute($bindParamsSA);
+
+
+                 // Delete choices related to these questions
+                 // FIX: Changed to use only positional parameters
+                 $deleteChoicesStmt = $pdo->prepare("DELETE c FROM choices c JOIN questions q ON c.question_id = q.question_id WHERE q.exam_id = ? AND c.question_id IN ($placeholders)");
+                 $bindParamsC = [$examIdToUpdate]; // Start with exam_id
+                 $bindParamsC = array_merge($bindParamsC, $questionIdsToDelete); // Add question IDs
+                 $deleteChoicesStmt->execute($bindParamsC);
+
+                 // Delete the questions themselves
+                 // FIX: Changed to use only positional parameters
+                 $deleteQuestionsStmt = $pdo->prepare("DELETE FROM questions WHERE exam_id = ? AND question_id IN ($placeholders)");
+                 $bindParamsQ = [$examIdToUpdate]; // Start with exam_id
+                 $bindParamsQ = array_merge($bindParamsQ, $questionIdsToDelete); // Add question IDs
+                 $deleteQuestionsStmt->execute($bindParamsQ);
+            }
+
+
+            // Process submitted questions (Update existing, Insert new)
             $allowedQuestionTypes = ['true_false', 'multiple_choice', 'blank_space'];
-            foreach ($questionsData as $qIndex => $question) { // Use index for unique IDs if needed
+            foreach ($questionsData as $question) {
+                $questionId = filter_var($question['question_id'] ?? 0, FILTER_VALIDATE_INT);
                 $questionText = trim($question['text'] ?? '');
                 $questionType = $question['type'] ?? '';
-                $correctAnswer = null;
+                $correctAnswer = null; // Will store correct answer for applicable types
 
+                // Validate question data
                 if (empty($questionText) || empty($questionType) || !in_array($questionType, $allowedQuestionTypes)) {
-                    error_log("Invalid question data during update for exam ID " . $examIdToUpdate . ": " . json_encode($question));
-                    continue; // Skip invalid question
+                     error_log("Invalid question data submitted for exam ID " . $examIdToUpdate . ": " . json_encode($question));
+                    continue; // Skip this invalid question
                 }
 
-                // Determine correct answer string based on type (same logic as your original code)
+                // Determine correct answer based on type
                 if ($questionType === 'true_false') {
                     $correctAnswer = $question['correct_answer'] ?? null;
-                    if (!in_array($correctAnswer, ['true', 'false'])) continue;
+                    if (!in_array($correctAnswer, ['true', 'false'])) {
+                         error_log("Invalid correct answer for True/False question submitted for exam ID " . $examIdToUpdate);
+                         continue;
+                    }
                 } elseif ($questionType === 'blank_space') {
-                     if (isset($question['answers']) && is_array($question['answers'])) {
-                         $validAnswers = array_filter(array_map('trim', $question['answers']));
-                         if (count($validAnswers) > 0) $correctAnswer = implode('|', $validAnswers);
-                         // else continue; // Decide if blank answers are mandatory
-                     } // else continue;
-                } elseif ($questionType === 'multiple_choice') {
-                    // Correct answer for MC is stored with the choice (is_correct=1)
-                    // The 'correct_answer' field in the questions table can be NULL for MC
-                    // or store the *value* of the correct radio button if needed for reference
-                    // $correctAnswer = $question['correct_answer'] ?? null; // Optional reference
-                }
-
-
-                // Insert into questions table
-                $stmt = $pdo->prepare("INSERT INTO questions (exam_id, question_text, question_type, correct_answer) VALUES (:exam_id, :question_text, :question_type, :correct_answer)");
-                // Bind parameters...
-                 $stmt->bindParam(':exam_id', $examIdToUpdate, PDO::PARAM_INT);
-                 $stmt->bindParam(':question_text', $questionText, PDO::PARAM_STR);
-                 $stmt->bindParam(':question_type', $questionType, PDO::PARAM_STR);
-                 $stmt->bindParam(':correct_answer', $correctAnswer, PDO::PARAM_STR); // Might be NULL for MC
-
-                if (!$stmt->execute()) {
-                    throw new Exception("Error inserting question during update: " . implode(" ", $stmt->errorInfo()));
-                }
-                $questionId = $pdo->lastInsertId();
-
-                // Handle choices for multiple choice questions
-                if ($questionType === 'multiple_choice') {
-                    if (!isset($question['options']) || !is_array($question['options']) || count($question['options']) < 1 || !isset($question['correct_answer'])) {
-                         error_log("MC question missing options/correct answer during update for exam ID " . $examIdToUpdate);
-                         continue; // Skip incomplete MC question
+                    if (isset($question['answers']) && is_array($question['answers']) && count($question['answers']) > 0) {
+                         $validAnswers = array_filter($question['answers'], 'trim');
+                         if (count($validAnswers) > 0) {
+                             $correctAnswer = implode('|', $validAnswers);
+                         }
                     }
-                    $correctOptionValue = $question['correct_answer']; // e.g., 'option_1'
+                }
 
-                    foreach ($question['options'] as $optionKey => $optionText) { // $optionKey is e.g., 'option_1'
-                        $optionText = trim($optionText);
-                        if (empty($optionText)) continue;
+                if (!empty($questionId) && in_array($questionId, $currentQuestionIds)) {
+                    // This is an existing question - UPDATE it
+                    $stmt = $pdo->prepare("UPDATE questions SET question_text = :question_text, question_type = :question_type, correct_answer = :correct_answer WHERE question_id = :question_id AND exam_id = :exam_id");
+                    $stmt->bindParam(':question_text', $questionText, PDO::PARAM_STR);
+                    $stmt->bindParam(':question_type', $questionType, PDO::PARAM_STR);
+                    $stmt->bindParam(':correct_answer', $correctAnswer, PDO::PARAM_STR);
+                    $stmt->bindParam(':question_id', $questionId, PDO::PARAM_INT);
+                    $stmt->bindParam(':exam_id', $examIdToUpdate, PDO::PARAM_INT);
 
-                        $isCorrect = ($optionKey === $correctOptionValue);
+                    if (!$stmt->execute()) {
+                        throw new Exception("Error updating question ID " . $questionId . ": " . implode(" ", $stmt->errorInfo()));
+                    }
 
-                        $stmt = $pdo->prepare("INSERT INTO choices (question_id, choice_text, is_correct) VALUES (:question_id, :choice_text, :is_correct)");
-                        // Bind parameters...
-                        $stmt->bindParam(':question_id', $questionId, PDO::PARAM_INT);
-                        $stmt->bindParam(':choice_text', $optionText, PDO::PARAM_STR);
-                        $stmt->bindParam(':is_correct', $isCorrect, PDO::PARAM_BOOL);
-
-                        if (!$stmt->execute()) {
-                            throw new Exception("Error inserting choice during update: " . implode(" ", $stmt->errorInfo()));
+                    // Manage choices for existing multiple choice questions
+                    if ($questionType === 'multiple_choice') {
+                        if (!isset($question['options']) || !is_array($question['options']) || count($question['options']) < 2) {
+                             error_log("Existing MC question ID " . $questionId . " missing options during update.");
+                             continue;
                         }
+                         if (!isset($question['correct_answer'])) {
+                             error_log("Existing MC question ID " . $questionId . " missing correct_answer selection during update.");
+                             continue;
+                        }
+                        $correctOptionValue = $question['correct_answer']; // The value indicating the correct option
+
+                        // Fetch current choices for this question
+                        $currentChoicesStmt = $pdo->prepare("SELECT choice_id FROM choices WHERE question_id = :question_id");
+                        $currentChoicesStmt->bindParam(':question_id', $questionId, PDO::PARAM_INT);
+                        $currentChoicesStmt->execute();
+                        $currentChoiceIds = $currentChoicesStmt->fetchAll(PDO::FETCH_COLUMN);
+
+                        // Get submitted choice IDs
+                        $submittedChoiceIds = [];
+                        if (isset($question['options']) && is_array($question['options'])) {
+                             foreach ($question['options'] as $optionData) {
+                                 // Assuming optionData is an array with 'choice_id' and 'text'
+                                 if (isset($optionData['choice_id']) && !empty($optionData['choice_id'])) {
+                                     $submittedChoiceIds[] = (int)$optionData['choice_id'];
+                                 }
+                             }
+                        }
+
+
+                        // Determine choices to delete
+                        $choiceIdsToDelete = array_diff($currentChoiceIds, $submittedChoiceIds);
+
+                        // Delete removed choices
+                        if (!empty($choiceIdsToDelete)) {
+                             $placeholders = implode(',', array_fill(0, count($choiceIdsToDelete), '?'));
+                             // FIX: Changed to use only positional parameters
+                             $deleteChoicesStmt = $pdo->prepare("DELETE FROM choices WHERE question_id = ? AND choice_id IN ($placeholders)");
+                             $bindParamsC = [$questionId]; // Start with question_id
+                             $bindParamsC = array_merge($bindParamsC, $choiceIdsToDelete); // Add choice IDs
+                             $deleteChoicesStmt->execute($bindParamsC);
+                        }
+
+                        // Process submitted options (Update existing, Insert new)
+                         if (isset($question['options']) && is_array($question['options'])) {
+                             foreach ($question['options'] as $optionData) {
+                                 $choiceId = filter_var($optionData['choice_id'] ?? 0, FILTER_VALIDATE_INT);
+                                 $optionText = trim($optionData['text'] ?? '');
+                                 $isCorrect = ($optionData['value'] ?? null) === $correctOptionValue; // Determine correctness based on submitted value vs correct value
+
+                                 if (empty($optionText)) {
+                                     continue; // Skip empty options
+                                 }
+
+                                 if (!empty($choiceId) && in_array($choiceId, $currentChoiceIds)) {
+                                     // Existing choice - UPDATE it
+                                     $stmt = $pdo->prepare("UPDATE choices SET choice_text = :choice_text, is_correct = :is_correct WHERE choice_id = :choice_id AND question_id = :question_id");
+                                     $stmt->bindParam(':choice_text', $optionText, PDO::PARAM_STR);
+                                     $stmt->bindParam(':is_correct', $isCorrect, PDO::PARAM_BOOL);
+                                     $stmt->bindParam(':choice_id', $choiceId, PDO::PARAM_INT);
+                                     $stmt->bindParam(':question_id', $questionId, PDO::PARAM_INT);
+                                     if (!$stmt->execute()) {
+                                         throw new Exception("Error updating choice ID " . $choiceId . " for question " . $questionId . ": " . implode(" ", $stmt->errorInfo()));
+                                     }
+                                 } else {
+                                     // New choice - INSERT it
+                                     $stmt = $pdo->prepare("INSERT INTO choices (question_id, choice_text, is_correct) VALUES (:question_id, :choice_text, :is_correct)");
+                                     $stmt->bindParam(':question_id', $questionId, PDO::PARAM_INT);
+                                     $stmt->bindParam(':choice_text', $optionText, PDO::PARAM_STR);
+                                     $stmt->bindParam(':is_correct', $isCorrect, PDO::PARAM_BOOL);
+                                     if (!$stmt->execute()) { // Corrected variable name here//InsertChoice
+                                         throw new Exception("Error inserting new choice for question " . $questionId . ": " . implode(" ", $stmtInsertChoice->errorInfo()));
+                                     }
+                                 }
+                             }
+                         }
+
+
+                    } else {
+                         // If the question type changed from multiple_choice, delete its old choices
+                         $deleteOldChoicesStmt = $pdo->prepare("DELETE FROM choices WHERE question_id = :question_id");
+                         $deleteOldChoicesStmt->bindParam(':question_id', $questionId, PDO::PARAM_INT);
+                         $deleteOldChoicesStmt->execute();
+                    }
+
+                } else {
+                    // This is a new question - INSERT it
+                    $stmt = $pdo->prepare("INSERT INTO questions (exam_id, question_text, question_type, correct_answer) VALUES (:exam_id, :question_text, :question_type, :correct_answer)");
+                    $stmt->bindParam(':exam_id', $examIdToUpdate, PDO::PARAM_INT);
+                    $stmt->bindParam(':question_text', $questionText, PDO::PARAM_STR);
+                    $stmt->bindParam(':question_type', $questionType, PDO::PARAM_STR);
+                    $stmt->bindParam(':correct_answer', $correctAnswer, PDO::PARAM_STR);
+
+                    if (!$stmt->execute()) {
+                        throw new Exception("Error inserting new question for exam " . $examIdToUpdate . ": " . implode(" ", $stmt->errorInfo()));
+                    }
+                    $newQuestionId = $pdo->lastInsertId(); // Get the ID of the newly inserted question
+
+                    // Handle choices for new multiple choice questions
+                    if ($questionType === 'multiple_choice') {
+                         if (!isset($question['options']) || !is_array($question['options']) || count($question['options']) < 2) {
+                             error_log("New MC question missing options during insert for exam ID " . $examIdToUpdate);
+                             continue;
+                        }
+                         if (!isset($question['correct_answer'])) {
+                             error_log("New MC question missing correct_answer selection during insert for exam ID " . $examIdToUpdate);
+                             continue;
+                        }
+                        $correctOptionValue = $question['correct_answer'];
+
+                         if (isset($question['options']) && is_array($question['options'])) {
+                             $stmtInsertChoice = $pdo->prepare("INSERT INTO choices (question_id, choice_text, is_correct) VALUES (:question_id, :choice_text, :is_correct)");
+                             foreach ($question['options'] as $optionData) {
+                                 $optionText = trim($optionData['text'] ?? '');
+                                 $isCorrect = ($optionData['value'] ?? null) === $correctOptionValue;
+
+                                 if (empty($optionText)) {
+                                     continue;
+                                 }
+
+                                 $stmtInsertChoice->bindParam(':question_id', $newQuestionId, PDO::PARAM_INT);
+                                 $stmtInsertChoice->bindParam(':choice_text', $optionText, PDO::PARAM_STR);
+                                 $stmtInsertChoice->bindParam(':is_correct', $isCorrect, PDO::PARAM_BOOL);
+                                 if (!$stmtInsertChoice->execute()) {
+                                     throw new Exception("Error inserting choice for new question " . $newQuestionId . ": " . implode(" ", $stmtInsertChoice->errorInfo()));
+                                 }
+                             }
+                         }
                     }
                 }
-            } // End foreach question
+            }
 
-            $pdo->commit();
-            $message = '<p class="success">Exam updated successfully.</p>';
-            // Optional: Redirect after successful update
-            // header('Location: manage_exams.php'); // Or back to edit page with success message
-            // exit();
+            // --- End: Manage Questions and Choices ---
+
+
+            $pdo->commit(); // Commit the transaction if all updates/inserts/deletes were successful
+            $message = '<p class="success">Exam "' . htmlspecialchars($examTitle) . '" updated successfully.</p>';
 
         } catch (Exception $e) {
+            // Rollback the transaction if any error occurred
             if ($pdo->inTransaction()) {
                 $pdo->rollBack();
             }
-            error_log("Exam update error: " . $e->getMessage());
+            error_log("Exam update error: " . $e->getMessage()); // Log the detailed error
             $message = '<p class="error">Error updating exam. Please check the details and try again. Details: ' . htmlspecialchars($e->getMessage()) . '</p>';
             // To show the form again with errors, we need to re-fetch the exam data
             // This part is added below in the GET logic section
@@ -168,7 +307,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['exam_id'])) {
     }
     // If validation failed or DB error occurred, we need to ensure $examId is set
     // so the page tries to reload the form below.
-    $examId = $examIdToUpdate; // Keep examId for reloading form on error
+    $examIdToLoad = $examIdToUpdate; // Keep examId for reloading form on error
 }
 // --- End: PHP Logic for Handling Form Submission ---
 
@@ -195,7 +334,7 @@ try {
 $showEditForm = false;
 $examIdFromGet = filter_input(INPUT_GET, 'exam_id', FILTER_VALIDATE_INT);
 // Use $examId set from POST error handling OR from GET request
-$examIdToLoad = $examId ?? $examIdFromGet;
+$examIdToLoad = $examIdToLoad ?? $examIdFromGet; // Use the one from POST if set, otherwise from GET
 
 if ($examIdToLoad) {
     // Try to fetch the specific exam for editing
@@ -230,13 +369,15 @@ if ($examIdToLoad) {
                     $question['choices'] = $stmt_c->fetchAll(PDO::FETCH_ASSOC);
                     // Find the correct choice's value (e.g., 'option_1') to pre-select radio
                     $correctChoiceValue = null;
-                    foreach($question['choices'] as $choiceIndex => $choice) {
+                    // Assign a temporary 'value' key to choices for JS to reference
+                    foreach($question['choices'] as $choiceIndex => &$choice) {
+                         $choice['value'] = 'option_' . ($choiceIndex + 1); // Assign value like 'option_1'
                         if ($choice['is_correct']) {
-                            // Generate the value used in the form (e.g., 'option_1', 'option_2')
-                            $correctChoiceValue = 'option_' . ($choiceIndex + 1);
-                            break;
+                            $correctChoiceValue = $choice['value']; // Store the value of the correct one
                         }
                     }
+                    unset($choice); // Break reference
+
                     // Add this value to the question data for easier JS access
                     $question['correct_choice_form_value'] = $correctChoiceValue;
                 }
@@ -248,16 +389,22 @@ if ($examIdToLoad) {
             if (empty($message)) { // Avoid overwriting POST error messages
                  $message = '<p class="error">Exam not found or you do not have permission to edit it.</p>';
             }
+             // Ensure we don't try to show the form if exam wasn't found
+            $showEditForm = false;
         }
     } catch (PDOException $e) {
         error_log("Error fetching exam details for editing: " . $e->getMessage());
         if (empty($message)) {
             $message = '<p class="error">Error loading exam details. Please try again later.</p>';
         }
+         // Ensure we don't try to show the form on DB error
+        $showEditForm = false;
     }
-} else {
-    // No exam_id provided (or invalid), fetch the list of exams for this instructor
-    try {
+}
+
+// If no exam_id provided or exam not found, fetch the list of exams for this instructor
+if (!$showEditForm) {
+     try {
         $sql = "SELECT exam_id, title, description, created_at
                 FROM exams
                 WHERE instructor_id = :instructor_id
@@ -265,7 +412,8 @@ if ($examIdToLoad) {
         $stmt = $pdo->prepare($sql);
         $stmt->bindParam(':instructor_id', $instructorId, PDO::PARAM_INT);
         $stmt->execute();
-        $instructorExams = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $instructorExams = $stmt->fetchAll(PDO::FETCH_ASSOC); // $instructorExams will be set if exams are found
+
     } catch (PDOException $e) {
         error_log("Error fetching instructor exams list: " . $e->getMessage());
         $message .= '<p class="error">Could not load your exams list.</p>'; // Append error
@@ -281,42 +429,272 @@ if ($examIdToLoad) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $showEditForm ? 'Edit Exam' : 'Select Exam to Edit'; ?></title>
-    <link rel="stylesheet" href="../assets/css/instructor_style.css"> <style>
-        /* Basic styling for clarity */
-        .edit-exam-container, .select-exam-container { padding: 20px; max-width: 900px; margin: auto; }
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+    <style>
+        /* General Container Styling */
+        .page-container {
+            background-color: #f9f9f9;
+            padding: 30px; /* Increased padding */
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Softer, larger shadow */
+            max-width: 900px;
+            margin: 30px auto; /* Increased margin */
+            font-family: sans-serif; /* Use a common sans-serif font */
+            color: #333;
+        }
+
+        .page-container h1, .page-container h2, .page-container h3 {
+             color: #0056b3; /* A consistent blue for headings */
+             text-align: center;
+             margin-bottom: 25px; /* More space below headings */
+        }
+
+        .page-container h2 {
+            border-bottom: 2px solid #eee; /* Subtle separator */
+            padding-bottom: 10px;
+        }
+
+
+        /* Form Group Styling */
+        .form-group {
+            margin-bottom: 20px; /* Increased space between form groups */
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px; /* More space below label */
+            font-weight: bold;
+            color: #555;
+        }
+
         .form-group input[type="text"],
         .form-group input[type="number"],
         .form-group textarea,
-        .form-group select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        .question-item { border: 1px solid #eee; padding: 15px; margin-bottom: 20px; border-radius: 5px; background-color: #f9f9f9; }
-        .question-item h4 { margin-top: 0; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
-        .question-options { margin-top: 10px; padding-left: 20px; border-left: 3px solid #eee; }
-        .option-group, .blank-answer-group { margin-bottom: 10px; display: flex; align-items: center; gap: 10px; }
-        .option-group input[type="radio"] { margin-right: 5px; }
-        .option-group input[type="text"], .blank-answer-group input[type="text"] { flex-grow: 1; } /* Allow text input to take available space */
-        .add-question-button, .add-option-button, .add-blank-button, button[type="submit"] {
-            background-color: #007bff; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; margin-top: 10px;
+        .form-group select {
+            width: 100%;
+            padding: 12px; /* Increased padding */
+            border: 1px solid #ccc;
+            border-radius: 5px; /* Slightly more rounded corners */
+            box-sizing: border-box;
+            font-size: 1em; /* Standard font size */
         }
-        .add-question-button:hover, .add-option-button:hover, .add-blank-button:hover, button[type="submit"]:hover { background-color: #0056b3; }
-        .remove-item-button { background-color: #dc3545; color: white; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8em; }
-        .remove-item-button:hover { background-color: #c82333; }
-        .message { padding: 10px; margin-bottom: 15px; border-radius: 4px; }
-        .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-        .exam-list { list-style: none; padding: 0; }
-        .exam-list li { border: 1px solid #ddd; margin-bottom: 10px; padding: 15px; border-radius: 4px; }
-        .exam-list li a { font-weight: bold; text-decoration: none; color: #007bff; }
-        .exam-list li a:hover { text-decoration: underline; }
-        .exam-list li p { margin: 5px 0 0 0; color: #555; }
+
+         textarea {
+             resize: vertical; /* Allow vertical resizing */
+         }
+
+
+        /* Question Section Styling */
+        .question-section {
+            margin-top: 30px; /* Space above the question section */
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+
+        .question-item {
+            background-color: #fff; /* White background for question items */
+            border: 1px solid #ddd; /* Lighter border */
+            padding: 20px; /* Increased padding */
+            margin-bottom: 20px; /* Space between questions */
+            border-radius: 5px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08); /* Subtle shadow for items */
+        }
+
+        .question-item h4 {
+            margin-top: 0;
+            margin-bottom: 15px; /* Space below question title */
+            color: #007bff; /* Blue for question title */
+            border-bottom: none; /* Remove border from h4 */
+            padding-bottom: 0;
+            display: flex; /* Use flexbox for title and remove button */
+            justify-content: space-between;
+            align-items: center;
+        }
+
+         .question-item h4 .remove-item-button {
+             margin-left: 15px; /* Space between title and remove button */
+         }
+
+
+        .question-options {
+            margin-top: 15px; /* Space above options */
+            padding-left: 25px; /* Increased padding */
+            border-left: 3px solid #007bff; /* Blue left border */
+        }
+
+        .option-group, .blank-answer-group {
+            margin-bottom: 12px; /* Space between options/blanks */
+            display: flex;
+            align-items: center;
+            gap: 10px; /* Space between elements in the group */
+        }
+
+        .option-group input[type="radio"] {
+            margin-right: 5px;
+        }
+
+        .option-group label {
+             margin-bottom: 0; /* Remove bottom margin for inline labels */
+             font-weight: normal; /* Normal weight for option labels */
+             color: #333;
+             min-width: 60px; /* Give "Correct:" label a minimum width */
+        }
+
+        .option-group input[type="text"],
+        .blank-answer-group input[type="text"] {
+            flex-grow: 1;
+            padding: 8px; /* Slightly less padding than main inputs */
+            border-radius: 4px;
+        }
+
+         .blank-answer-group label {
+             min-width: 120px; /* Give blank answer label a minimum width */
+              margin-bottom: 0;
+              font-weight: normal;
+              color: #333;
+         }
+
+
+        /* Buttons Styling */
+        .add-question-button, .add-option-button, .add-blank-button, button[type="submit"] {
+            display: inline-block; /* For add buttons */
+            background-color: #28a745; /* Green for add buttons */
+            color: white;
+            padding: 10px 20px; /* Increased padding */
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            margin-top: 15px; /* Space above buttons */
+            margin-right: 10px; /* Space between add buttons */
+            transition: background-color 0.3s ease; /* Smooth hover effect */
+        }
+
+         .add-option-button {
+             background-color: #007bff; /* Blue for add option */
+         }
+
+         .add-blank-button {
+             background-color: #ffc107; /* Yellow for add blank */
+             color: #333;
+         }
+
+
+        .add-question-button:hover, .add-option-button:hover, .add-blank-button:hover {
+            opacity: 0.9;
+        }
+
+        button[type="submit"] {
+            display: block; /* Make submit button full width */
+            width: 100%;
+            background-color: #007bff; /* Blue for submit button */
+             margin-top: 30px; /* More space above submit button */
+             font-size: 1.1em;
+        }
+
+        button[type="submit"]:hover {
+            background-color: #0056b3;
+        }
+
+        .remove-item-button {
+            background-color: #dc3545; /* Red for remove buttons */
+            color: white;
+            padding: 6px 12px; /* Adjusted padding */
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background-color 0.3s ease;
+            flex-shrink: 0; /* Prevent button from shrinking in flex container */
+        }
+
+        .remove-item-button:hover {
+            background-color: #c82333;
+        }
+
+        /* Message Styling */
+        .message {
+            padding: 12px; /* Increased padding */
+            margin-bottom: 20px; /* More space below messages */
+            border-radius: 5px;
+            font-size: 1em;
+            line-height: 1.4;
+        }
+
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        /* Exam List Table Styling */
+        .exam-table {
+            width: 100%;
+            border-collapse: collapse; /* Collapse borders */
+            margin-top: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08); /* Subtle shadow for the table */
+            background-color: #fff; /* White background */
+            border-radius: 5px; /* Rounded corners for the table */
+            overflow: hidden; /* Hide overflowing content for rounded corners */
+        }
+
+        .exam-table th, .exam-table td {
+            padding: 12px; /* Increased padding */
+            text-align: left;
+            border-bottom: 1px solid #ddd; /* Lighter border */
+        }
+
+        .exam-table th {
+            background-color: #f2f2f2; /* Light grey background for headers */
+            font-weight: bold;
+            color: #555;
+        }
+
+        .exam-table tbody tr:hover {
+            background-color: #f9f9f9; /* Subtle hover effect */
+        }
+
+        .exam-table td a {
+            font-weight: bold;
+            text-decoration: none;
+            color: #007bff; /* Blue link color */
+        }
+
+        .exam-table td a:hover {
+            text-decoration: underline;
+        }
+
+        .exam-table td small {
+            color: #666; /* Slightly darker grey for description */
+        }
+
+
+         /* Back link styling */
+         .back-link {
+             display: inline-block;
+             margin-bottom: 20px;
+             color: #007bff;
+             text-decoration: none;
+             font-size: 1em;
+         }
+         .back-link:hover {
+             text-decoration: underline;
+         }
+
+
     </style>
 </head>
 <body>
 
     <?php // include_once '../includes/layout/InstructorSidebar.php'; // Example ?>
 
-    <main> <div class="<?php echo $showEditForm ? 'edit-exam-container' : 'select-exam-container'; ?>">
+    <main>
+        <div class="page-container">
 
             <h1><?php echo $showEditForm ? 'Edit Exam' : 'Select Exam to Edit'; ?></h1>
 
@@ -329,7 +707,10 @@ if ($examIdToLoad) {
 
             <?php if ($showEditForm && $exam): // If a specific exam was successfully loaded for editing ?>
 
-                <form id="editExamForm" method="POST" action="edit_exam.php"> <input type="hidden" name="exam_id" value="<?php echo htmlspecialchars($exam['exam_id']); ?>">
+                <a href="edit_exam.php" class="back-link">&larr; Back to Exam List</a>
+
+                <form id="editExamForm" method="POST" action="edit_exam.php">
+                    <input type="hidden" name="exam_id" value="<?php echo htmlspecialchars($exam['exam_id']); ?>">
 
                     <div class="form-group">
                         <label for="examTitle">Exam Title:</label>
@@ -425,8 +806,12 @@ if ($examIdToLoad) {
                         questionItem.setAttribute('data-question-index', questionCounter);
 
                         questionItem.innerHTML = `
-                            <h4>New Question ${questionCounter}</h4>
-                            <input type="hidden" name="questions[${questionCounter}][question_id]" value=""> <div class="form-group">
+                            <h4>
+                                New Question ${questionCounter}
+                                <button type="button" class="remove-item-button" onclick="removeQuestion('${questionItemId}')">Remove</button>
+                            </h4>
+                            <input type="hidden" name="questions[${questionCounter}][question_id]" value="">
+                            <div class="form-group">
                                 <label for="question_text_${questionCounter}">Question Text:</label>
                                 <input type="text" id="question_text_${questionCounter}" name="questions[${questionCounter}][text]" required>
                             </div>
@@ -441,10 +826,10 @@ if ($examIdToLoad) {
                             </div>
 
                             <div class="question-options" id="options_container_${questionCounter}">
-                                ${generateOptionsHtml('multiple_choice', questionCounter, null)} </div>
+                                ${generateOptionsHtml('multiple_choice', questionCounter, null)}
+                            </div>
+                        `; // Removed the remove button from here to place it in the h4
 
-                            <button type="button" class="remove-item-button" onclick="removeQuestion('${questionItemId}')">Remove Question</button>
-                        `;
                         questionsContainer.appendChild(questionItem);
                     }
 
@@ -460,8 +845,12 @@ if ($examIdToLoad) {
                         questionItem.setAttribute('data-question-index', questionCounter); // Use counter for form names
 
                         questionItem.innerHTML = `
-                            <h4>Question ${questionCounter}</h4>
-                            <input type="hidden" name="questions[${questionCounter}][question_id]" value="${questionData.question_id}"> <div class="form-group">
+                            <h4>
+                                Question ${questionCounter}
+                                <button type="button" class="remove-item-button" onclick="removeQuestion('${questionItemId}')">Remove</button>
+                            </h4>
+                            <input type="hidden" name="questions[${questionCounter}][question_id]" value="${questionData.question_id}">
+                            <div class="form-group">
                                 <label for="question_text_${questionCounter}">Question Text:</label>
                                 <input type="text" id="question_text_${questionCounter}" name="questions[${questionCounter}][text]" value="${htmlspecialchars(questionData.question_text)}" required>
                             </div>
@@ -478,9 +867,7 @@ if ($examIdToLoad) {
                             <div class="question-options" id="options_container_${questionCounter}">
                                 ${generateOptionsHtml(questionData.question_type, questionCounter, questionData)}
                             </div>
-
-                            <button type="button" class="remove-item-button" onclick="removeQuestion('${questionItemId}')">Remove Question</button>
-                        `;
+                        `; // Removed the remove button from here to place it in the h4
                         questionsContainer.appendChild(questionItem);
                     }
 
@@ -542,7 +929,8 @@ if ($examIdToLoad) {
                         } else {
                             choices.forEach((choice) => {
                                 optionCounter++;
-                                const optionValue = `option_${optionCounter}`; // Generate value based on position
+                                // Use the 'value' key assigned in PHP for existing choices
+                                const optionValue = choice.value; // e.g., 'option_1'
                                 const isChecked = (optionValue === correctChoiceFormValue);
                                 html += generateSingleMCOptionHtml(questionIndex, optionCounter, choice.choice_text, isChecked);
                             });
@@ -552,13 +940,13 @@ if ($examIdToLoad) {
 
                     // Helper for a single MC option row
                     function generateSingleMCOptionHtml(questionIndex, optionIndex, text, isChecked) {
-                         const optionValue = `option_${optionIndex}`;
+                         const optionValue = `option_${optionIndex}`; // Generate value based on position for new options
                          return `
                             <div class="option-group">
                                 <input type="radio" name="questions[${questionIndex}][correct_answer]" value="${optionValue}" id="mc_${questionIndex}_${optionValue}" ${isChecked ? 'checked' : ''} required>
                                 <label for="mc_${questionIndex}_${optionValue}">Correct:</label>
-                                <input type="text" name="questions[${questionIndex}][options][${optionValue}]" value="${htmlspecialchars(text)}" placeholder="Option ${optionIndex} Text" required>
-                                <button type="button" class="remove-item-button" onclick="removeOption(this)">Remove</button>
+                                <input type="text" name="questions[${questionIndex}][options][${optionValue}][text]" value="${htmlspecialchars(text)}" placeholder="Option ${optionIndex} Text" required>
+                                <input type="hidden" name="questions[${questionIndex}][options][${optionValue}][value]" value="${optionValue}"> <button type="button" class="remove-item-button" onclick="removeOption(this)">Remove</button>
                             </div>`;
                     }
 
@@ -586,6 +974,7 @@ if ($examIdToLoad) {
                                 <button type="button" class="remove-item-button" onclick="removeOption(this)">Remove</button>
                             </div>`;
                     }
+
 
                     // Function called when question type dropdown changes
                     function changeQuestionType(questionIndex, type) {
@@ -629,27 +1018,44 @@ if ($examIdToLoad) {
 
             <?php else: // If no specific exam is being edited (or wasn't found), show the list ?>
 
+                <!-- <h2>Select an Exam to Edit</h2>  -->
+
                 <?php if (!empty($instructorExams)): ?>
-                    <ul class="exam-list">
-                        <?php foreach ($instructorExams as $instExam): ?>
-                            <li>
-                                <a href="ui/edit_exam.php?exam_id=<?php echo htmlspecialchars($instExam['exam_id']); ?>">
-                                    <?php echo htmlspecialchars($instExam['title']); ?>
-                                </a>
-                                (Created: <?php echo htmlspecialchars(date('M d, Y', strtotime($instExam['created_at']))); ?>)
-                                <?php if (!empty($instExam['description'])): ?>
-                                    <p><small><?php echo htmlspecialchars(substr($instExam['description'], 0, 150)) . (strlen($instExam['description']) > 150 ? '...' : ''); ?></small></p>
-                                <?php endif; ?>
-                            </li>
-                        <?php endforeach; ?>
-                    </ul>
+                    <table class="exam-table">
+                        <thead>
+                            <tr>
+                                <th>Exam Title</th>
+                                <th>Description</th>
+                                <th>Created At</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($instructorExams as $instExam): ?>
+                                <tr>
+                                    <td><?php echo htmlspecialchars($instExam['title']); ?></td>
+                                    <td>
+                                        <?php if (!empty($instExam['description'])): ?>
+                                            <small><?php echo htmlspecialchars(substr($instExam['description'], 0, 100)) . (strlen($instExam['description']) > 100 ? '...' : ''); ?></small>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td><?php echo htmlspecialchars(date('M d, Y', strtotime($instExam['created_at']))); ?></td>
+                                    <td>
+                                        <a href="ui/edit_exam.php?exam_id=<?php echo htmlspecialchars($instExam['exam_id']); ?>">Edit Exam</a>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
                 <?php elseif (empty($message)): // Avoid showing this if there was an error loading the list ?>
                     <p>You have not created any exams yet.</p>
+                    <a href="ui/create_exam.php">Create Exam</a>
                     <?php endif; ?>
 
             <?php endif; ?>
 
-        </div> </main>
+        </div>
+    </main>
 
     <?php // include_once '../includes/layout/footer.php'; // Example ?>
 

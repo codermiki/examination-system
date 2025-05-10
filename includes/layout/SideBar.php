@@ -115,13 +115,14 @@ if (session_status() == PHP_SESSION_NONE) {
         ?>
         <a href="./">Dashboards</a>
 
-        <div class="role__container">
-            <p>MANAGE EXAM</p>
+                <div class="role__container">
+            <p>CREATE EXAM</p>
             <div class="drop__down">
                 <!-- <button class="collapsebtn" onclick="toggleCollapse(this);" type="button">Exam</button> -->
                 <div class="collapse">
                     <div class="v__line"></div>
                     <div class="action">
+<<<<<<< HEAD
                         <!-- <a href="/softexam/instructor/index.php?page=manage_exam">Manage Exam</a> -->
                         <a href="index.php?page=create_exam">Create Exam</a>
                         <a href="index.php?page=import_exam">Import Exam</a>
@@ -129,10 +130,41 @@ if (session_status() == PHP_SESSION_NONE) {
                         <a href="index.php?page=manage_questions">Manage Questions</a>
                         <a href="index.php?page=view_exam">View Exam</a>
                         <a href="index.php?page=edit_exam">Edit Exam</a>
+=======
+                        <a href="index.php?page=create_exam" >Create Exam</a>
+                        <a href="index.php?page=import_exam" >Import Exam</a>
+>>>>>>> 2d1eeb2d8de3bfbc5d9b11a47a4777a4e7721182
                     </div>
                 </div>
             </div>
         </div>
+
+
+        <div class="role__container">
+            <p>MANAGE EXAM</p>
+            <div class="drop__down">
+                <div class="collapse">
+                    <div class="v__line"></div>
+                    <div class="action">
+                        <a href="index.php?page=view_exam" >View Exam</a>
+                        <a href="index.php?page=edit_exam" >Edit Exam</a>
+                        <a href="index.php?page=delete_exam" >Delete Exam</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    <!-- <div class="role__container">
+            <p>MANAGE Questions</p>
+            <div class="drop__down">
+                <div class="collapse">
+                    <div class="v__line"></div>
+                    <div class="action">
+                        <a href="index.php?page=manage_questions" >Manage Questions</a>
+                    </div>
+                </div>
+            </div>
+        </div> -->
 
         <div class="role__container">
             <p>REPORTS</p>
@@ -179,15 +211,15 @@ if (session_status() == PHP_SESSION_NONE) {
         <div class="role__container">
             <p>AVAILABLE EXAMS</p>
             <div class="drop__down">
-                <button onclick="toggleCollapse(this);" type="button">Upcoming Exams</button>
+                <!-- <button onclick="toggleCollapse(this);" type="button">Upcoming Exams</button> -->
                 <div class="collapse">
                     <div class="v__line"></div>
                     <div class="action">
-                        <a href="#" class="sidebar-link" data-content="student_upcoming_exams">Upcoming Exams List</a>
-                        <a href="#" class="sidebar-link" data-content="student_exam_schedule">Exam Schedule</a>
-                        <a href="#" class="sidebar-link" data-content="student_take_exam">Take Exam</a>
-                        <a href="#" class="sidebar-link" data-content="student_taken_exams">Taken Exams</a>
-                        <a href="#" class="sidebar-link" data-content="student_view_result">View Result</a>
+                        <a href="index.php?page=upcoming_exams">Upcoming Exams List</a>
+                        <a href="index.php?page=exam_schedule">Exam Schedule</a>
+                        <a href="index.php?page=take_exam">Take Exam</a>
+                        <a href="index.php?page=taken_exams">Taken Exams</a>
+                        <a href="index.php?page=view_result">View Result</a>
                     </div>
                 </div>
             </div>
