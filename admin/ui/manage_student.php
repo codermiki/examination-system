@@ -2,9 +2,6 @@
 include_once __DIR__ . "/../../constants.php";
 include_once __DIR__ . "/../../includes/functions/Student_function.php";
 include_once __DIR__ . "/../../includes/functions/Course_function.php";
-$course = $_GET['course'] ?? null;
-$year = $_GET['year'] ?? null;
-$semester = $_GET['semester'] ?? null;
 
 $students = Student_function::fetchAssignedStudents();
 $courses = Course_function::fetchCourses();

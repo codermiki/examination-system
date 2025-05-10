@@ -161,7 +161,4 @@ include __DIR__ . "/../../includes/functions/Course_function.php";
                     }
                 });
         });
-
-
-
 </script>

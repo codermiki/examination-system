@@ -1,5 +1,5 @@
 <?php
-include_once __DIR__ . "/../../includes/functions/fetchCourse.php";
+include_once __DIR__ . "/../../includes/functions/Course_function.php";
 ?>
 
 <div class="outer-wrapper">
@@ -11,13 +11,14 @@ include_once __DIR__ . "/../../includes/functions/fetchCourse.php";
             <label for="instructor">Instructor</label>
             <select id="instructor" required>
                 <option value="">Select instructor</option>
+                <!-- instructors list goes here -->
             </select>
 
             <label for="course">Course Assigned</label>
             <select id="course" required>
                 <option value="">-- Select Course --</option>
                 <?php
-                $courses = fetchCourse::fetchCourse();
+                $courses = Course_function::fetchCourses();
                 foreach ($courses as $course):
                     ?>
                     <option value=<?= htmlspecialchars($course['course_id']) ?>><?= htmlspecialchars($course['course_name']) ?></option>
@@ -39,50 +40,50 @@ include_once __DIR__ . "/../../includes/functions/fetchCourse.php";
             .then(res => res.json())
             .then(data => {
                 const instructorSelect = document.getElementById("instructor");
-                data.forEach(inst => {
+                data.forEach(instructor => {
                     const option = document.createElement("option");
-                    option.value = inst.user_id;
-                    option.textContent = `${inst.name} (${inst.email})`;
+                    option.value = instructor.user_id;
+                    option.textContent = `${instructor.name} (${instructor.email})`;
                     instructorSelect.appendChild(option);
                 });
             });
-
-        // Load courses
-        // fetch("./data/courses.json")
-        //     .then(res => res.json())
-        //     .then(data => {
-        //         const courseSelect = document.getElementById("course");
-        //         data.forEach(course => {
-        //             const option = document.createElement("option");
-        //             option.value = course.course_id;
-        //             option.textContent = course.course_name;
-        //             courseSelect.appendChild(option);
-        //         });
-        //     });
     });
 
     // Submit form
     document.getElementById("assignInstructorForm").addEventListener("submit", function (e) {
         e.preventDefault();
-        const instructor_id = document.getElementById("instructor").value;
+        const user_id = document.getElementById("instructor").value;
         const course_id = document.getElementById("course").value;
 
-        if (!instructor_id || !course_id) {
+        if (!user_id || !course_id) {
             alert("Please select both instructor and course.");
             return;
         }
 
-        fetch("/softexam/api/assignInstructor", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ instructor_id, course_id })
-        })
+        fetch("./data/instructors.json")
             .then(res => res.json())
-            .then(response => {
-                document.getElementById("message").textContent = response.message || response.error;
-                window.location.replace("index.php?page=manage_instructor")
+            .then(data => {
+                let instructor = data.filter((instructor) => instructor.user_id == user_id);
+
+                fetch("/softexam/api/assignInstructor", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ instructor, course_id })
+                })
+                    .then(res => res.json())
+                    .then(response => {
+                        if (response?.error) {
+                            document.getElementById("message").textContent = response?.error;
+                            return;
+                        }
+                        document.getElementById("message").textContent = response?.message;
+                        window.location.replace("index.php?page=manage_instructor")
+
+                    }).catch(err => {
+                        document.getElementById("message").textContent = "Failed to assign"
+                    })
             }).catch(err => {
-                console.log(err.message)
-            })
+                document.getElementById("message").textContent = "Failed to assign"
+            });
     });
 </script>

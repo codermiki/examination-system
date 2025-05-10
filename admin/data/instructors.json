@@ -1,17 +1,22 @@
 [
    {
       "user_id": "INST1001",
-      "name": "Dr. Alice Mekonnen",
+      "name": "Alice Mekonnen",
       "email": "alice.mekonnen@university.edu"
    },
    {
       "user_id": "INST1002",
-      "name": "Mr. Samuel Bekele",
+      "name": "Samuel Bekele",
       "email": "samuel.bekele@university.edu"
    },
    {
       "user_id": "INST1003",
-      "name": "Prof. Hana Tadesse",
+      "name": "Hana Tadesse",
       "email": "hana.tadesse@university.edu"
+   },
+   {
+      "user_id": "INST1004",
+      "name": "Abel Tadesse",
+      "email": "abel@university.edu"
    }
 ]

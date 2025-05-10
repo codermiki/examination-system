@@ -70,9 +70,9 @@ switch ("$method $path") {
 
     case "POST /assignInstructor":
         $data = json_decode(file_get_contents("php://input"), true);
-        $instructor_id = $data['instructor_id'] ?? null;
+        $instructor = $data['instructor'] ?? null;
         $course_id = $data['course_id'] ?? null;
-        Course_controller::assignInstructor($instructor_id, $course_id);
+        Instructor_controller::assignInstructor($instructor, $course_id);
         break;
 
     default:

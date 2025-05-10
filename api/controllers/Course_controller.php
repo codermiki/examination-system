@@ -13,13 +13,4 @@ class Course_controller
         $response = Course_service::updateCourse($year, $semester, $course_id);
         Response_helper::json($response);
     }
-    public static function assignInstructor($instructor_id, $course_id)
-    {
-        $result = Course_service::assignInstructor($instructor_id, $course_id);
-        if (isset($result['error'])) {
-            Response_helper::json($result, 400);
-        } else {
-            Response_helper::json($result, 200);
-        }
-    }
 }
