@@ -23,40 +23,40 @@ if (isset($_GET['exam_id']) && isset($_GET['confirm_delete']) && $_GET['confirm_
         $message = '<p class="error">Invalid exam ID provided for deletion.</p>';
     } else {
         try {
-            $pdo->beginTransaction();
+            $conn->beginTransaction();
 
-            $stmtCheckOwner = $pdo->prepare("SELECT exam_id FROM exams WHERE exam_id = :exam_id AND instructor_id = :instructor_id");
+            $stmtCheckOwner = $conn->prepare("SELECT exam_id FROM exams WHERE exam_id = :exam_id AND instructor_id = :instructor_id");
             $stmtCheckOwner->bindParam(':exam_id', $examIdToDelete, PDO::PARAM_INT);
             $stmtCheckOwner->bindParam(':instructor_id', $instructorId, PDO::PARAM_INT);
             $stmtCheckOwner->execute();
 
             if ($stmtCheckOwner->rowCount() === 0) {
                 $message = '<p class="error">Exam not found or you do not have permission to delete this exam.</p>';
-                $pdo->rollBack();
+                $conn->rollBack();
             } else {
-                $stmtDeleteAnswers = $pdo->prepare("DELETE sa FROM student_answers sa JOIN questions q ON sa.question_id = q.question_id WHERE q.exam_id = :exam_id");
+                $stmtDeleteAnswers = $conn->prepare("DELETE sa FROM student_answers sa JOIN questions q ON sa.question_id = q.question_id WHERE q.exam_id = :exam_id");
                 $stmtDeleteAnswers->bindParam(':exam_id', $examIdToDelete, PDO::PARAM_INT);
                 $stmtDeleteAnswers->execute();
 
-                $stmtDeleteChoices = $pdo->prepare("DELETE c FROM choices c JOIN questions q ON c.question_id = q.question_id WHERE q.exam_id = :exam_id");
+                $stmtDeleteChoices = $conn->prepare("DELETE c FROM choices c JOIN questions q ON c.question_id = q.question_id WHERE q.exam_id = :exam_id");
                 $stmtDeleteChoices->bindParam(':exam_id', $examIdToDelete, PDO::PARAM_INT);
                 $stmtDeleteChoices->execute();
 
-                $stmtDeleteQuestions = $pdo->prepare("DELETE FROM questions WHERE exam_id = :exam_id");
+                $stmtDeleteQuestions = $conn->prepare("DELETE FROM questions WHERE exam_id = :exam_id");
                 $stmtDeleteQuestions->bindParam(':exam_id', $examIdToDelete, PDO::PARAM_INT);
                 $stmtDeleteQuestions->execute();
 
-                $stmtDeleteExam = $pdo->prepare("DELETE FROM exams WHERE exam_id = :exam_id");
+                $stmtDeleteExam = $conn->prepare("DELETE FROM exams WHERE exam_id = :exam_id");
                 $stmtDeleteExam->bindParam(':exam_id', $examIdToDelete, PDO::PARAM_INT);
                 $stmtDeleteExam->execute();
 
-                $pdo->commit();
+                $conn->commit();
                 $message = '<p class="success">Exam deleted successfully.</p>';
             }
 
         } catch (PDOException $e) {
-            if ($pdo->inTransaction()) {
-                $pdo->rollBack();
+            if ($conn->inTransaction()) {
+                $conn->rollBack();
             }
             error_log("Error deleting exam: " . $e->getMessage());
             $message = '<p class="error">An error occurred while trying to delete the exam. Please try again.</p>';
@@ -71,7 +71,7 @@ try {
             WHERE e.instructor_id = :instructor_id
             ORDER BY e.created_at DESC";
 
-    $stmt = $pdo->prepare($sql);
+    $stmt = $conn->prepare($sql);
     $stmt->bindParam(':instructor_id', $instructorId, PDO::PARAM_INT);
     $stmt->execute();
     $instructorExams = $stmt->fetchAll(PDO::FETCH_ASSOC);

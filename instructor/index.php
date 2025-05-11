@@ -40,6 +40,13 @@ $page = $_GET["page"] ?? "dashboard";
     <link rel="stylesheet" href="../assets/css/sideBar.css">
     <link rel="stylesheet" href="../assets/css/edit_exam.css">
     <link rel="stylesheet" href="../assets/css/instructor.css">
+    <link rel="stylesheet" href="../assets/css/create_exam.css">
+    <link rel="stylesheet" href="../assets/css/view_exam.css">
+    <link rel="stylesheet" href="../assets/css/exam_report.css">
+    <link rel="stylesheet" href="../assets/css/edit_exam.css">
+    <link rel="stylesheet" href="../assets/css/feedbacks.css">
+    <link rel="stylesheet" href="../assets/css/updatePass.css">
+
 </head>
 
 <body>
@@ -108,7 +115,6 @@ $page = $_GET["page"] ?? "dashboard";
     include "../includes/layout/footer.php";
     ?>
     <script>
-
         // run the script on the page loaded
         document.addEventListener('DOMContentLoaded', () => {
             // Select all links in the sidebar with the class 'sidebar-link'
@@ -170,7 +176,6 @@ $page = $_GET["page"] ?? "dashboard";
                 });
             });
         });
-
     </script>
 
 

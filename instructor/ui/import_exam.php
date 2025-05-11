@@ -72,7 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['examFile'])) {
                     }
 
                     // Insert into exams table
-                    $stmt = $pdo->prepare("INSERT INTO exams (course_id, instructor_id, title, description, time_limit, total_marks, status) VALUES (:course_id, :instructor_id, :title, :description, :time_limit, :total_marks, 'inactive')");
+                    $stmt = $conn->prepare("INSERT INTO exams (course_id, instructor_id, title, description, time_limit, total_marks, status) VALUES (:course_id, :instructor_id, :title, :description, :time_limit, :total_marks, 'inactive')");
                     $stmt->bindParam(':course_id', $examData['course_id'], PDO::PARAM_INT);
                     $stmt->bindParam(':instructor_id', $instructorId, PDO::PARAM_INT);
                     $stmt->bindParam(':title', $examData['title'], PDO::PARAM_STR);
@@ -83,7 +83,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['examFile'])) {
                     if (!$stmt->execute()) {
                         throw new Exception("Error inserting exam data: " . implode(" ", $stmt->errorInfo()));
                     }
-                    $examId = $pdo->lastInsertId(); // Get the ID of the newly inserted exam
+                    $examId = $conn->lastInsertId(); // Get the ID of the newly inserted exam
 
                     // Insert questions and choices
                     if (is_array($examData['questions'])) {
@@ -101,7 +101,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['examFile'])) {
                             $correctAnswer = $question['correct_answer'] ?? null; // Correct answer is optional for some types
 
                             // Insert into questions table
-                            $stmt = $pdo->prepare("INSERT INTO questions (exam_id, question_text, question_type, correct_answer) VALUES (:exam_id, :question_text, :question_type, :correct_answer)");
+                            $stmt = $conn->prepare("INSERT INTO questions (exam_id, question_text, question_type, correct_answer) VALUES (:exam_id, :question_text, :question_type, :correct_answer)");
                             $stmt->bindParam(':exam_id', $examId, PDO::PARAM_INT);
                             $stmt->bindParam(':question_text', $question['question_text'], PDO::PARAM_STR);
                             $stmt->bindParam(':question_type', $question['question_type'], PDO::PARAM_STR);
@@ -123,7 +123,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['examFile'])) {
                                     // Determine if this choice is the correct one
                                     $isCorrect = ($optionValue === $correctOptionValue);
 
-                                    $stmt = $pdo->prepare("INSERT INTO choices (question_id, choice_text, is_correct) VALUES (:question_id, :choice_text, :is_correct)");
+                                    $stmt = $conn->prepare("INSERT INTO choices (question_id, choice_text, is_correct) VALUES (:question_id, :choice_text, :is_correct)");
                                     $stmt->bindParam(':question_id', $questionId, PDO::PARAM_INT);
                                     $stmt->bindParam(':choice_text', $optionText, PDO::PARAM_STR);
                                     $stmt->bindParam(':is_correct', $isCorrect, PDO::PARAM_BOOL);
@@ -156,7 +156,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['examFile'])) {
                         }
                     }
 
-                    $pdo->commit(); // Commit the transaction if all insertions were successful
+                    $conn->commit(); // Commit the transaction if all insertions were successful
                     $message = '<p class="success">Exam "' . htmlspecialchars($examData['title']) . '" imported successfully with ' . count($examData['questions']) . ' questions.</p>';
                     $importSuccess = true;
 
@@ -172,7 +172,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['examFile'])) {
                     //     fclose($handle);
                     // }
                     // --- End Placeholder ---
-                     $pdo->rollBack(); // Rollback if not fully implemented
+                     $conn->rollBack(); // Rollback if not fully implemented
                      $message = '<p class="error">CSV import is not fully implemented yet.</p>'; // Indicate not fully implemented
                 } elseif ($fileType === 'application/xml' || $fileType === 'text/xml') {
                      // --- Placeholder for XML parsing ---
@@ -183,7 +183,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['examFile'])) {
                     //     // Process XML data and insert into DB
                     // }
                     // --- End Placeholder ---
-                     $pdo->rollBack(); // Rollback if not fully implemented
+                     $conn->rollBack(); // Rollback if not fully implemented
                      $message = '<p class="error">XML import is not fully implemented yet.</p>'; // Indicate not fully implemented
                 } else {
                     // Should not happen due to file type validation, but as a fallback
@@ -192,8 +192,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['examFile'])) {
 
             } catch (Exception $e) {
                 // Rollback the transaction if any error occurred
-                if ($pdo->inTransaction()) {
-                    $pdo->rollBack();
+                if ($conn->inTransaction()) {
+                    $conn->rollBack();
                 }
                 error_log("Exam import error: " . $e->getMessage()); // Log the detailed error
                 $message = '<p class="error">Error processing exam file: ' . htmlspecialchars($e->getMessage()) . '</p>';

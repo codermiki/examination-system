@@ -1,0 +1,283 @@
+/* Global styles */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+.container {
+  max-width: 950px;
+  margin: 40px auto;
+  padding: 0 15px; /* Basic padding */
+}
+
+/* Form layout utilities (replacing Bootstrap grid) */
+.form-row {
+  display: flex;
+  flex-wrap: wrap;
+  margin-left: -10px; /* Gutter simulation */
+  margin-right: -10px; /* Gutter simulation */
+  margin-bottom: 1rem; /* Spacing between rows */
+}
+.form-col {
+  flex: 1 0 0%; /* Grow and shrink */
+  padding-left: 10px; /* Gutter simulation */
+  padding-right: 10px; /* Gutter simulation */
+  margin-bottom: 1rem; /* Spacing for stacked columns on small screens or single elements */
+}
+.form-col-md-6 {
+  /* For two columns on medium screens and up */
+  flex-basis: 50%;
+  max-width: 50%;
+}
+@media (max-width: 768px) {
+  /* Stack columns on smaller screens */
+  .form-col-md-6 {
+    flex-basis: 100%;
+    max-width: 100%;
+  }
+}
+
+/* General form element styling */
+input[type="text"],
+input[type="number"],
+textarea,
+select {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ced4da;
+  border-radius: 8px;
+  font-size: 1rem;
+  line-height: 1.5;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+input[type="text"]:focus,
+input[type="number"]:focus,
+textarea:focus,
+select:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 0 0.25rem rgba(0, 123, 255, 0.25);
+  outline: none;
+}
+textarea {
+  resize: vertical;
+}
+label.form-label {
+  display: block;
+  font-weight: 600;
+  color: #495057;
+  margin-bottom: 0.5rem;
+}
+.form-text-muted {
+  font-size: 0.875em;
+  color: #6c757d;
+}
+.text-danger {
+  color: #dc3545 !important;
+}
+.text-center {
+  text-align: center !important;
+}
+
+/* Specific component styling */
+.create-exam-container {
+  background-color: #ffffff;
+  border-radius: 15px;
+  box-shadow: 0 6px 25px rgba(0, 0, 0, 0.1);
+  padding: 40px;
+  /* margin: 40px auto; No longer needed if .container handles this */
+  /* max-width: 950px; No longer needed if .container handles this */
+}
+.form-header {
+  color: #1c2333;
+  border-bottom: 3px solid #007bff;
+  padding-bottom: 20px;
+  margin-bottom: 35px;
+  text-align: center;
+}
+.form-header h2 {
+  font-weight: 600;
+  font-size: 2.2rem;
+  margin: 0;
+}
+
+.question-section {
+  background-color: #f8f9fc;
+  border-radius: 10px;
+  padding: 25px;
+  margin-top: 30px;
+  border-left: 5px solid #007bff;
+}
+.question-section-header {
+  /* Replaces d-flex justify-content-between align-items-center */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+.question-section h4 {
+  margin: 0; /* Remove default margin */
+  display: flex; /* For icon alignment */
+  align-items: center; /* For icon alignment */
+}
+.question-section h4 .fas {
+  /* For icon spacing */
+  margin-right: 0.5rem;
+}
+
+.question-item {
+  background-color: white;
+  border-radius: 10px;
+  padding: 25px;
+  margin-bottom: 25px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e9ecef;
+  transition: all 0.3s ease-in-out;
+}
+.question-item:hover {
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+  transform: translateY(-3px);
+}
+.question-item-header {
+  /* Replaces d-flex justify-content-between align-items-center */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+.question-item h5 {
+  color: #007bff;
+  margin: 0; /* Remove default margin */
+  font-weight: 600;
+}
+.question-options {
+  margin-top: 18px;
+  padding-left: 15px;
+}
+.option-group,
+.blank-answer-group {
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.blank-answer-group {
+  border-left: 2px solid #dee2e6;
+  padding-left: 15px;
+}
+
+/* Buttons */
+.btn {
+  /* Base button style */
+  display: inline-block;
+  font-weight: 500;
+  line-height: 1.5;
+  color: #212529;
+  text-align: center;
+  text-decoration: none;
+  vertical-align: middle;
+  cursor: pointer;
+  user-select: none;
+  background-color: transparent;
+  border: 1px solid transparent;
+  padding: 8px 18px;
+  font-size: 1rem;
+  border-radius: 25px; /* Consistent rounded buttons */
+  transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out,
+    border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+.btn .fas {
+  /* Icon spacing */
+  margin-right: 0.35rem;
+}
+
+.btn-add-question,
+.btn-add-option,
+.btn-add-blank {
+  background-color: #007bff;
+  color: white;
+}
+.btn-add-question:hover,
+.btn-add-option:hover,
+.btn-add-blank:hover {
+  background-color: #0056b3;
+}
+.btn-remove-question,
+.btn-remove-option {
+  background-color: #dc3545;
+  color: white;
+}
+.btn-remove-question:hover,
+.btn-remove-option:hover {
+  background-color: #c82333;
+}
+.btn-submit-exam {
+  background-color: #28a745;
+  color: white;
+  font-weight: 600;
+  font-size: 1.1rem;
+  padding: 12px 35px;
+  margin-top: 30px;
+  /* width: auto; Removed, let it size by content or use display:block for full width */
+  display: block; /* To allow margin auto for centering */
+  margin-left: auto;
+  margin-right: auto;
+  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.4);
+}
+.btn-submit-exam:hover {
+  background-color: #218838;
+  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.5);
+}
+.btn-sm {
+  /* For smaller buttons like remove option */
+  padding: 6px 10px;
+  font-size: 0.9rem;
+}
+/* .btn-icon might not be strictly needed if .btn-sm covers it */
+
+.message-area {
+  padding: 15px 20px;
+  border-radius: 8px;
+  margin-bottom: 25px;
+  font-size: 1rem;
+}
+.message-area.success {
+  background-color: #d1e7dd;
+  color: #0f5132;
+  border: 1px solid #badbcc;
+}
+.message-area.error {
+  background-color: #f8d7da;
+  color: #842029;
+  border: 1px solid #f5c2c7;
+}
+
+.badge-question-type {
+  background-color: #6c757d;
+  font-size: 0.85rem;
+  padding: 6px 12px;
+  border-radius: 15px;
+  color: white;
+  display: inline-block; /* Ensure it behaves like a badge */
+}
+.question-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 1rem;
+}
+.form-check-input {
+  /* Basic styling for radio buttons */
+  margin-top: 0.3rem; /* Align with text */
+  margin-left: 0; /* Reset some defaults */
+}
+.form-check-label {
+  margin-left: 0.25rem;
+}
+/* Margin utilities replacements (use sparingly or apply directly) */
+.mb-3 {
+  margin-bottom: 1rem !important;
+}
+.mb-4 {
+  margin-bottom: 1.5rem !important;
+}
+/* Add other utilities as needed or apply styles directly */
