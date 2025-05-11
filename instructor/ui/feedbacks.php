@@ -1,69 +1,69 @@
 <?php
 // includes/instructor/feedbacks.php
 
-// This file displays a list of student feedbacks for the instructor.
-
 // Include necessary configuration or database files
 include_once __DIR__ . '/../../config.php';
-include_once __DIR__ . '/../../includes/db/db.config.php'; // Assuming this file sets up the $pdo database connection
+include_once __DIR__ . '/../../includes/db/db.config.php';
 
 // Start the session if it hasn't been started already
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
 
-// Security check: Ensure the user is logged in and is an instructor
-if (!isset($_SESSION['email']) || !isset($_SESSION['role']) || $_SESSION['role'] !== 'instructor' || !isset($_SESSION['user_id'])) {
-    // Redirect to login or show access denied message
-    header('Location: ../../login.php'); // Adjust the path as needed
+// Security check
+if (!isset($_SESSION['email'])) {
+    header('Location: ../../login.php');
     exit();
 }
 
-$message = ''; // Variable to store feedback messages
-$feedbacks = []; // Array to hold feedbacks fetched from DB
+// Check if user is instructor
+$stmt = $pdo->prepare("SELECT role FROM users WHERE email = :email");
+$stmt->bindParam(':email', $_SESSION['email']);
+$stmt->execute();
+$user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-$instructorId = $_SESSION['user_id']; // Get the logged-in instructor's user_id
-// $instructorId = 2; // Uncomment for testing with a fixed instructor ID if needed
+if (!$user || $user['role'] !== 'Instructor') {
+    header('Location: ../../login.php');
+    exit();
+}
 
-// --- Start: PHP Logic for Fetching Feedbacks ---
+$message = '';
+$feedbacks = [];
+
+// Get instructor ID from email
+$stmt = $pdo->prepare("SELECT user_id FROM users WHERE email = :email");
+$stmt->bindParam(':email', $_SESSION['email']);
+$stmt->execute();
+$user = $stmt->fetch(PDO::FETCH_ASSOC);
+$instructorId = $user['user_id'];
 
 try {
-    // Fetch feedbacks submitted by students for exams/courses
-    // that belong to this instructor.
-    // Joins feedbacks with users (for student name), courses (for course name),
-    // and exams (to link feedbacks to exams owned by the instructor).
     $sql = "SELECT
-                f.feedback_id,
+                f.id AS feedback_id,
                 f.student_id,
-                f.course_id,
                 f.exam_id,
-                f.message,
-                f.rating,
+                f.feedback_text,
+                f.rate,
                 f.created_at,
-                u.first_name,
-                u.last_name,
+                u.name AS student_name,
                 c.course_name,
-                e.title AS exam_title
+                e.exam_title
             FROM feedbacks f
             JOIN users u ON f.student_id = u.user_id
-            JOIN courses c ON f.course_id = c.course_id
             JOIN exams e ON f.exam_id = e.exam_id
-            WHERE e.instructor_id = :instructor_id -- Filter feedbacks for exams created by this instructor
-            ORDER BY f.created_at DESC"; 
-            // -- Order by newest feedback first
+            JOIN courses c ON e.course_id = c.course_id 
+            WHERE e.instructor_id = :instructor_id
+            ORDER BY f.created_at DESC";
 
     $stmt = $pdo->prepare($sql);
-    $stmt->bindParam(':instructor_id', $instructorId, PDO::PARAM_INT);
+    $stmt->bindParam(':instructor_id', $instructorId, PDO::PARAM_STR);
     $stmt->execute();
-    $feedbacks = $stmt->fetchAll(PDO::FETCH_ASSOC); // $feedbacks will be set if feedbacks are found
+    $feedbacks = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 } catch (PDOException $e) {
-    // Log error and display a user-friendly message
-    error_log("Error fetching instructor's feedbacks: " . $e->getMessage()); // Log the detailed error
-    $message = '<p class="error">Error loading feedbacks. Please try again later.</p>';
+    error_log("Error fetching instructor's feedbacks: " . $e->getMessage());
+    $message = '<div class="message error">Error loading feedbacks. Please try again later.</div>';
 }
-// --- End: PHP Logic for Fetching Feedbacks ---
-
 ?>
 
 <!DOCTYPE html>
@@ -73,146 +73,260 @@ try {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Feedbacks</title>
     <style>
-        /* General Container Styling (Consistent with other instructor pages) */
-        .page-container {
-            background-color: #f9f9f9;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            max-width: 1000px; /* Slightly wider for feedback table */
-            margin: 30px auto;
-            font-family: sans-serif;
-            color: #333;
+        :root {
+            --primary-color: #4a6baf;
+            --primary-light: #6a8fd8;
+            --primary-dark: #2c4a8a;
+            --secondary-color: #f5f7fa;
+            --accent-color: #ff7043;
+            --text-color: #333;
+            --light-gray: #e9ecef;
+            --medium-gray: #ced4da;
+            --dark-gray: #495057;
+            --success-color: #4caf50;
+            --error-color: #f44336;
+            --warning-color: #ff9800;
+            --border-radius: 8px;
+            --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
         }
 
-        .page-container h1, .page-container h2 {
-             color: #0056b3;
-             text-align: center;
-             margin-bottom: 25px;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
-        .page-container h2 {
-            border-bottom: 2px solid #eee;
-            padding-bottom: 10px;
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--secondary-color);
+            padding: 20px;
         }
 
-        /* Message Styling */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--light-gray);
+        }
+
+        .page-title {
+            color: var(--primary-color);
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+        }
+
         .message {
-            padding: 12px;
-            margin-bottom: 20px;
-            border-radius: 5px;
-            font-size: 1em;
-            line-height: 1.4;
+            padding: 15px;
+            margin-bottom: 25px;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            text-align: center;
         }
 
-        .success {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
+        .message.success {
+            background-color: rgba(76, 175, 80, 0.1);
+            color: var(--success-color);
+            border: 1px solid rgba(76, 175, 80, 0.3);
         }
 
-        .error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
+        .message.error {
+            background-color: rgba(244, 67, 54, 0.1);
+            color: var(--error-color);
+            border: 1px solid rgba(244, 67, 54, 0.3);
         }
 
-        /* Feedbacks Table Styling (Similar to other tables) */
-        .feedbacks-table {
+        .card {
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .feedback-table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-            background-color: #fff;
-            border-radius: 5px;
-            overflow: hidden;
         }
 
-        .feedbacks-table th, .feedbacks-table td {
-            padding: 12px;
+        .feedback-table th, 
+        .feedback-table td {
+            padding: 15px;
             text-align: left;
-            border-bottom: 1px solid #ddd;
-            vertical-align: top; /* Align content to top in cells */
+            border-bottom: 1px solid var(--light-gray);
         }
 
-        .feedbacks-table th {
-            background-color: #f2f2f2;
+        .feedback-table th {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+        }
+
+        .feedback-table tr:nth-child(even) {
+            background-color: rgba(74, 107, 175, 0.05);
+        }
+
+        .feedback-table tr:hover {
+            background-color: rgba(74, 107, 175, 0.1);
+        }
+
+        .feedback-table td:last-child {
+            text-align: center;
+        }
+
+        .rating {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
             font-weight: bold;
-            color: #555;
+            color: white;
         }
 
-        .feedbacks-table tbody tr:hover {
-            background-color: #f9f9f9;
+        .rating-5 { background-color: var(--success-color); }
+        .rating-4 { background-color: #8bc34a; }
+        .rating-3 { background-color: var(--warning-color); }
+        .rating-2 { background-color: #ff5722; }
+        .rating-1 { background-color: var(--error-color); }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--dark-gray);
         }
 
-        .feedbacks-table td {
-            color: #333;
+        .empty-state-icon {
+            font-size: 3rem;
+            color: var(--medium-gray);
+            margin-bottom: 15px;
         }
 
-        /* Styling for rating column */
-        .feedbacks-table td:nth-child(6) { /* Assuming rating is the 6th column */
-            font-weight: bold;
-            text-align: center; /* Center the rating */
+        .empty-state-text {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
         }
 
-        /* Styling for feedback message - allow wrapping */
-        .feedbacks-table td:nth-child(5) { /* Assuming message is the 5th column */
-            white-space: pre-wrap; /* Preserve whitespace and wrap text */
-            word-wrap: break-word; /* Break long words */
+        /* Responsive styles */
+        @media (max-width: 768px) {
+            .feedback-table {
+                display: block;
+                overflow-x: auto;
+            }
+            
+            .page-title {
+                font-size: 1.8rem;
+            }
+            
+            .card {
+                padding: 20px;
+            }
         }
 
+        @media (max-width: 576px) {
+            .feedback-table thead {
+                display: none;
+            }
+            
+            .feedback-table tr {
+                display: block;
+                margin-bottom: 20px;
+                border: 1px solid var(--light-gray);
+                border-radius: var(--border-radius);
+                padding: 10px;
+            }
+            
+            .feedback-table td {
+                display: flex;
+                justify-content: space-between;
+                padding: 10px;
+                border-bottom: 1px dotted var(--medium-gray);
+            }
+            
+            .feedback-table td:before {
+                content: attr(data-label);
+                font-weight: 600;
+                color: var(--primary-color);
+                margin-right: 10px;
+            }
+            
+            .feedback-table td:last-child {
+                justify-content: flex-end;
+            }
+        }
     </style>
 </head>
 <body>
+    <div class="container">
+        <header class="page-header">
+            <h1 class="page-title">Student Feedbacks</h1>
+        </header>
 
-    <?php // include_once '../includes/layout/InstructorSidebar.php'; // Example ?>
+        <?php if (!empty($message)): ?>
+            <div class="message <?php echo strpos($message, 'Error') !== false ? 'error' : 'success'; ?>">
+                <?php echo $message; ?>
+            </div>
+        <?php endif; ?>
 
-    <main>
-        <div class="page-container">
-
-            <h1>Student Feedbacks</h1>
-
-            <?php
-            // Display feedback message if any
-            if (!empty($message)) {
-                echo '<div class="message ' . (strpos($message, 'Error') !== false ? 'error' : 'success') . '">' . $message . '</div>';
-            }
-            ?>
-
-
+        <div class="card">
             <?php if (!empty($feedbacks)): ?>
-                <table class="feedbacks-table">
+                <table class="feedback-table">
                     <thead>
                         <tr>
                             <th>Student</th>
                             <th>Course</th>
                             <th>Exam</th>
+                            <th>Feedback</th>
                             <th>Date</th>
-                            <th>Message</th>
-                            <th>Rating (1-5)</th>
+                            <th>Rating</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php foreach ($feedbacks as $feedback): ?>
                             <tr>
-                                <td><?php echo htmlspecialchars($feedback['first_name'] . ' ' . $feedback['last_name']); ?></td>
-                                <td><?php echo htmlspecialchars($feedback['course_name']); ?></td>
-                                <td><?php echo htmlspecialchars($feedback['exam_title']); ?></td>
-                                <td><?php echo htmlspecialchars(date('M d, Y H:i', strtotime($feedback['created_at']))); ?></td>
-                                <td><?php echo nl2br(htmlspecialchars($feedback['message'])); ?></td>
-                                <td><?php echo htmlspecialchars($feedback['rating']); ?></td>
+                                <td data-label="Student"><?php echo htmlspecialchars($feedback['student_name']); ?></td>
+                                <td data-label="Course"><?php echo htmlspecialchars($feedback['course_name']); ?></td>
+                                <td data-label="Exam"><?php echo htmlspecialchars($feedback['exam_title']); ?></td>
+                                <td data-label="Feedback">
+                                    <?php if (!empty($feedback['feedback_text'])): ?>
+                                        <?php echo nl2br(htmlspecialchars($feedback['feedback_text'])); ?>
+                                    <?php else: ?>
+                                        <span style="color: var(--medium-gray);">No feedback text</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td data-label="Date"><?php echo date('M j, Y g:i A', strtotime($feedback['created_at'])); ?></td>
+                                <td data-label="Rating">
+                                    <?php if (!empty($feedback['rate'])): ?>
+                                        <span class="rating rating-<?php echo $feedback['rate']; ?>">
+                                            <?php echo $feedback['rate']; ?>
+                                        </span>
+                                    <?php else: ?>
+                                        <span style="color: var(--medium-gray);">-</span>
+                                    <?php endif; ?>
+                                </td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>
                 </table>
             <?php else: ?>
-                <p>No feedbacks have been submitted for your exams yet.</p>
+                <div class="empty-state">
+                    <div class="empty-state-icon">📭</div>
+                    <h3 class="empty-state-text">No feedbacks received yet</h3>
+                    <p>Student feedbacks will appear here once they submit their evaluations.</p>
+                </div>
             <?php endif; ?>
-
         </div>
-    </main>
-
-    <?php // include_once '../includes/layout/footer.php'; // Example ?>
-
+    </div>
 </body>
 </html>

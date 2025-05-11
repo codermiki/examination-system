@@ -1,617 +1,860 @@
 <?php
-include_once __DIR__ . '/../../config.php'; 
+include_once __DIR__ . '/../../config.php';
 include_once __DIR__ . '/../../includes/db/db.config.php';
 
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
 
-if (!isset($_SESSION['email']) || !isset($_SESSION['role']) || $_SESSION['role'] !== 'instructor' || !isset($_SESSION['user_id'])) {
-    echo '<p>Access denied. You must be a logged-in instructor to create exams.</p>';
+if (!isset($_SESSION['email']) || !isset($_SESSION['role']) || $_SESSION['role'] !== 'Instructor' || !isset($_SESSION['user_id'])) {
+    // Redirect to login page or show an error message
+    // For now, just outputting an error and exiting.
+    echo '<p class="text-danger text-center" style="margin-top: 5rem;">Access denied. You must be a logged-in instructor to create exams. Please <a href="login.php">login</a>.</p>';
     exit();
 }
 
 $message = ''; // Variable to store feedback messages
+$message_type = ''; // 'success' or 'error'
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $instructorId = $_SESSION['user_id']; 
+    $instructorId = $_SESSION['user_id'];
 
     $examTitle = trim($_POST['examTitle'] ?? '');
     $examDescription = trim($_POST['examDescription'] ?? '');
     $examDuration = filter_var($_POST['examDuration'] ?? 0, FILTER_VALIDATE_INT);
-
-    $courseId = filter_var($_POST['course_id'] ?? 0, FILTER_VALIDATE_INT);
-
+    $courseId = $_POST['course_id'] ?? '';
+    // total_marks will be calculated based on sum of question marks if dynamic calculation is implemented
+    // For now, keeping it as a manual input or could be dynamically calculated before submission via JS
     $totalMarks = filter_var($_POST['total_marks'] ?? 0, FILTER_VALIDATE_INT);
 
 
     // Basic validation
-    if (empty($examTitle) || $examDuration === false || $examDuration <= 0 || $courseId === false || $courseId <= 0 || $totalMarks === false || $totalMarks < 0) {
-        $message = '<p class="error">Error: Please fill in all required exam details correctly.</p>';
+    if (empty($examTitle)) {
+        $message = 'Error: Exam title is required.';
+        $message_type = 'error';
+    } elseif ($examDuration === false || $examDuration <= 0) {
+        $message = 'Error: Exam duration must be a positive number.';
+        $message_type = 'error';
+    } elseif (empty($courseId)) {
+        $message = 'Error: Please select a course.';
+        $message_type = 'error';
+    } elseif ($totalMarks === false || $totalMarks <= 0) { // This validation might change if marks are auto-calculated
+        $message = 'Error: Total marks must be a positive number.';
+        $message_type = 'error';
     } elseif (!isset($_POST['questions']) || !is_array($_POST['questions']) || count($_POST['questions']) === 0) {
-        $message = '<p class="error">Error: Please add at least one question.</p>';
+        $message = 'Error: Please add at least one question.';
+        $message_type = 'error';
     } else {
-        // Data seems valid, proceed with database insertion
-        try {
-            // Start a database transaction
-            $pdo->beginTransaction();
-
-            // 1. Insert into exams table
-            $stmt = $pdo->prepare("INSERT INTO exams (course_id, instructor_id, title, description, time_limit, total_marks, status) VALUES (:course_id, :instructor_id, :title, :description, :time_limit, :total_marks, 'inactive')");
-            $stmt->bindParam(':course_id', $courseId, PDO::PARAM_INT);
-            $stmt->bindParam(':instructor_id', $instructorId, PDO::PARAM_INT);
-            $stmt->bindParam(':title', $examTitle, PDO::PARAM_STR);
-            $stmt->bindParam(':description', $examDescription, PDO::PARAM_STR);
-            $stmt->bindParam(':time_limit', $examDuration, PDO::PARAM_INT);
-            $stmt->bindParam(':total_marks', $totalMarks, PDO::PARAM_INT);
-
-            if (!$stmt->execute()) {
-                throw new Exception("Error inserting exam data: " . implode(" ", $stmt->errorInfo()));
+        // Further validation for each question
+        $current_total_marks = 0;
+        foreach ($_POST['questions'] as $index => $question) {
+            if (empty(trim($question['text'] ?? ''))) {
+                $message = "Error: Question text for Question " . ($index + 1) . " cannot be empty.";
+                $message_type = 'error';
+                break;
             }
-            $examId = $pdo->lastInsertId(); // Get the ID of the newly inserted exam
+            $q_marks = filter_var($question['marks'] ?? 0, FILTER_VALIDATE_INT);
+            if ($q_marks === false || $q_marks <= 0) {
+                $message = "Error: Marks for Question " . ($index + 1) . " must be a positive number.";
+                $message_type = 'error';
+                break;
+            }
+            $current_total_marks += $q_marks;
 
-            // 2. Insert questions and choices
-            $allowedQuestionTypes = ['true_false', 'multiple_choice', 'blank_space'];
-            foreach ($_POST['questions'] as $question) {
-                $questionText = trim($question['text'] ?? '');
-                $questionType = $question['type'] ?? '';
-                $correctAnswer = null; // Will store correct answer for applicable types
-
-                // Validate question data
-                if (empty($questionText) || empty($questionType) || !in_array($questionType, $allowedQuestionTypes)) {
-                    throw new Exception("Invalid question data provided.");
+            $questionType = $question['type'] ?? '';
+            if ($questionType === 'multiple_choice') {
+                if (!isset($question['options']) || count($question['options']) < 2) {
+                    $message = "Error: Multiple choice Question " . ($index + 1) . " must have at least two options.";
+                    $message_type = 'error';
+                    break;
                 }
-
-                // Determine correct answer based on type
-                if ($questionType === 'true_false') {
-                    $correctAnswer = $question['correct_answer'] ?? null;
-                    if (!in_array($correctAnswer, ['true', 'false'])) {
-                        throw new Exception("Invalid correct answer for True/False question.");
-                    }
-                } elseif ($questionType === 'blank_space') {
-                    // For blank space, collect all submitted answers and store them as a delimited string
-                    if (isset($question['answers']) && is_array($question['answers']) && count($question['answers']) > 0) {
-                        // Filter out empty answers
-                        $validAnswers = array_filter($question['answers'], 'trim');
-                        if (count($validAnswers) > 0) {
-                            $correctAnswer = implode('|', $validAnswers); // Store as pipe-separated string
-                        } else {
-                            // Depending on your design, you might require at least one answer for blanks
-                            // throw new Exception("Blank space question requires at least one answer.");
-                        }
-                    } else {
-                        // Depending on your design, you might require answers for blanks
-                        // throw new Exception("Blank space question missing answers.");
+                if (!isset($question['correct_answer']) || $question['correct_answer'] === '') {
+                     $message = "Error: Please select a correct answer for multiple choice Question " . ($index + 1) . ".";
+                     $message_type = 'error';
+                     break;
+                }
+                foreach ($question['options'] as $opt_idx => $optionText) {
+                    if (empty(trim($optionText))) {
+                        $message = "Error: Option " . ($opt_idx + 1) . " for Question " . ($index + 1) . " cannot be empty.";
+                        $message_type = 'error';
+                        break 2; // Break out of both loops
                     }
                 }
+            } elseif ($questionType === 'true_false') {
+                if (!isset($question['correct_answer']) || !in_array($question['correct_answer'], ['true', 'false'])) {
+                    $message = "Error: Invalid correct answer for True/False Question " . ($index + 1) . ".";
+                    $message_type = 'error';
+                    break;
+                }
+            } elseif ($questionType === 'fill_blank') {
+                 if (!isset($question['answers']) || count($question['answers']) === 0) {
+                    $message = "Error: Fill in the Blank Question " . ($index + 1) . " must have at least one answer.";
+                    $message_type = 'error';
+                    break;
+                }
+                foreach ($question['answers'] as $ans_idx => $ansText) {
+                     if (empty(trim($ansText))) {
+                        $message = "Error: Blank answer " . ($ans_idx + 1) . " for Question " . ($index + 1) . " cannot be empty.";
+                        $message_type = 'error';
+                        break 2; // Break out of both loops
+                    }
+                }
+            }
+        }
+        // Optional: Validate if sum of question marks matches total_marks if total_marks is manually entered
+        // if ($message_type !== 'error' && $current_total_marks !== $totalMarks) {
+        // $message = "Error: Sum of marks for all questions ($current_total_marks) does not match the Total Marks for the exam ($totalMarks).";
+        // $message_type = 'error';
+        // }
 
-                // Insert into questions table
-                $stmt = $pdo->prepare("INSERT INTO questions (exam_id, question_text, question_type, correct_answer) VALUES (:exam_id, :question_text, :question_type, :correct_answer)");
-                $stmt->bindParam(':exam_id', $examId, PDO::PARAM_INT);
-                $stmt->bindParam(':question_text', $questionText, PDO::PARAM_STR);
-                $stmt->bindParam(':question_type', $questionType, PDO::PARAM_STR);
-                $stmt->bindParam(':correct_answer', $correctAnswer, PDO::PARAM_STR);
+
+        if ($message_type !== 'error') {
+            try {
+                $pdo->beginTransaction();
+
+                $stmt = $pdo->prepare("INSERT INTO exams (course_id, instructor_id, exam_title, exam_description, duration_minutes, total_marks, status)
+                                     VALUES (:course_id, :instructor_id, :title, :description, :duration, :total_marks, 'Inactive')");
+                $stmt->bindParam(':course_id', $courseId, PDO::PARAM_STR);
+                $stmt->bindParam(':instructor_id', $instructorId, PDO::PARAM_STR);
+                $stmt->bindParam(':title', $examTitle, PDO::PARAM_STR);
+                $stmt->bindParam(':description', $examDescription, PDO::PARAM_STR);
+                $stmt->bindParam(':duration', $examDuration, PDO::PARAM_INT);
+                $stmt->bindParam(':total_marks', $totalMarks, PDO::PARAM_INT); // Or $current_total_marks if dynamically calculated
 
                 if (!$stmt->execute()) {
-                    throw new Exception("Error inserting question: " . implode(" ", $stmt->errorInfo()));
+                    throw new Exception("Error inserting exam data: " . implode(" ", $stmt->errorInfo()));
                 }
-                $questionId = $pdo->lastInsertId(); // Get the ID of the newly inserted question
+                $examId = $pdo->lastInsertId();
 
-                if ($questionType === 'multiple_choice') {
-                    if (!isset($question['options']) || !is_array($question['options']) || count($question['options']) < 2) {
-                        throw new Exception("Multiple choice question requires at least two options.");
-                    }
-                    if (!isset($question['correct_answer'])) {
-                        throw new Exception("Multiple choice question missing correct_answer selection.");
-                    }
-                    $correctOptionValue = $question['correct_answer']; // The value that indicates the correct option
+                foreach ($_POST['questions'] as $question_data) {
+                    $questionText = trim($question_data['text'] ?? '');
+                    $questionType = $question_data['type'] ?? '';
+                    $marks = filter_var($question_data['marks'] ?? 0, FILTER_VALIDATE_INT);
+                    $correctAnswer = '';
 
-                    foreach ($question['options'] as $optionValue => $optionText) {
-                        $optionText = trim($optionText);
-                        if (empty($optionText)) {
-                            // Skip empty options or throw an error
-                            continue; // Or throw new Exception("Empty option text provided for multiple choice question.");
+                    if ($questionType === 'true_false') {
+                        $correctAnswer = $question_data['correct_answer'] ?? '';
+                    } elseif ($questionType === 'fill_blank') {
+                        if (isset($question_data['answers']) && is_array($question_data['answers'])) {
+                            $correctAnswer = implode('|', array_map('trim', array_filter($question_data['answers'], 'trim')));
                         }
-
-                        // Determine if this choice is the correct one
-                        $isCorrect = ($optionValue === $correctOptionValue);
-
-                        $stmt = $pdo->prepare("INSERT INTO choices (question_id, choice_text, is_correct) VALUES (:question_id, :choice_text, :is_correct)");
-                        $stmt->bindParam(':question_id', $questionId, PDO::PARAM_INT);
-                        $stmt->bindParam(':choice_text', $optionText, PDO::PARAM_STR);
-                        $stmt->bindParam(':is_correct', $isCorrect, PDO::PARAM_BOOL);
-
-                        if (!$stmt->execute()) {
-                            throw new Exception("Error inserting choice: " . implode(" ", $stmt->errorInfo()));
+                    } elseif ($questionType === 'multiple_choice') {
+                        // Correct answer for MC is the index of the correct option
+                        $correctOptionIndex = $question_data['correct_answer'] ?? null;
+                        if ($correctOptionIndex !== null && isset($question_data['options'][$correctOptionIndex])) {
+                            // Storing the text of the correct option.
+                            // Alternatively, store the index or a reference. DB stores text.
+                            $correctAnswer = trim($question_data['options'][$correctOptionIndex]);
+                        } else {
+                             throw new Exception("Correct answer not properly set for a multiple-choice question.");
                         }
                     }
+
+                    $stmtQ = $pdo->prepare("INSERT INTO questions (exam_id, question_text, question_type, correct_answer, marks)
+                                          VALUES (:exam_id, :question_text, :question_type, :correct_answer, :marks)");
+                    $stmtQ->bindParam(':exam_id', $examId, PDO::PARAM_INT);
+                    $stmtQ->bindParam(':question_text', $questionText, PDO::PARAM_STR);
+                    $stmtQ->bindParam(':question_type', $questionType, PDO::PARAM_STR);
+                    $stmtQ->bindParam(':correct_answer', $correctAnswer, PDO::PARAM_STR);
+                    $stmtQ->bindParam(':marks', $marks, PDO::PARAM_INT);
+
+                    if (!$stmtQ->execute()) {
+                        throw new Exception("Error inserting question: " . implode(" ", $stmtQ->errorInfo()));
+                    }
+                    $questionId = $pdo->lastInsertId();
+
+                    if ($questionType === 'multiple_choice' && isset($question_data['options']) && is_array($question_data['options'])) {
+                        foreach ($question_data['options'] as $optionText) {
+                            $trimmedOptionText = trim($optionText);
+                            if (!empty($trimmedOptionText)) {
+                                $stmtOpt = $pdo->prepare("INSERT INTO question_options (question_id, option_text)
+                                                      VALUES (:question_id, :option_text)");
+                                $stmtOpt->bindParam(':question_id', $questionId, PDO::PARAM_INT);
+                                $stmtOpt->bindParam(':option_text', $trimmedOptionText, PDO::PARAM_STR);
+                                if (!$stmtOpt->execute()) {
+                                    throw new Exception("Error inserting option: " . implode(" ", $stmtOpt->errorInfo()));
+                                }
+                            }
+                        }
+                    }
                 }
-            }
 
-            $pdo->commit(); // Commit the transaction if all insertions were successful
-            $message = '<p class="success">Exam "' . htmlspecialchars($examTitle) . '" created successfully.</p>';
+                $pdo->commit();
+                $message = 'Exam "' . htmlspecialchars($examTitle) . '" created successfully!';
+                $message_type = 'success';
+                 // Clear form data after successful submission by redirecting or clearing POST
+                $_POST = array(); // Simple way to clear POST data to prevent re-submission issues
+                                  // A redirect is often better: header('Location: create_exam.php?status=success'); exit();
 
-        } catch (Exception $e) {
-            // Rollback the transaction if any error occurred
-            if ($pdo->inTransaction()) {
-                $pdo->rollBack();
+
+            } catch (Exception $e) {
+                if ($pdo->inTransaction()) {
+                    $pdo->rollBack();
+                }
+                error_log("Exam creation error: " . $e->getMessage());
+                $message = 'Error creating exam: ' . htmlspecialchars($e->getMessage());
+                $message_type = 'error';
             }
-            error_log("Exam creation error: " . $e->getMessage()); // Log the detailed error
-            $message = '<p class="error">Error creating exam: ' . htmlspecialchars($e->getMessage()) . '</p>';
         }
     }
 }
-// --- End: PHP Logic for Handling Form Submission ---
 
-// --- Start: PHP Logic for Fetching Courses (for dropdown) ---
+// Fetch courses assigned to this instructor
 $courses = [];
 try {
-    // Fetch courses assigned to this instructor
-    $instructorId = $_SESSION['user_id'];
+    $instructorId = $_SESSION['user_id']; // Ensure user_id is set in session
     $sql = "SELECT c.course_id, c.course_name
             FROM courses c
-            JOIN instructor_courses ic ON c.course_id = ic.course_id
-            WHERE ic.instructor_id = :instructor_id
+            JOIN assigned_instructors ai ON c.course_id = ai.course_id
+            WHERE ai.instructor_id = :instructor_id AND ai.status = 'Active'
             ORDER BY c.course_name";
     $stmt = $pdo->prepare($sql);
-    $stmt->bindParam(':instructor_id', $instructorId, PDO::PARAM_INT);
+    $stmt->bindParam(':instructor_id', $instructorId, PDO::PARAM_STR);
     $stmt->execute();
     $courses = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
     error_log("Error fetching instructor courses: " . $e->getMessage());
-    // Display an error or handle appropriately
-    $message .= '<p class="error">Could not load courses. Please try again.</p>';
+    $message = ($message ? $message . "<br>" : "") . 'Could not load courses. Please try again.';
+    $message_type = 'error';
 }
-// --- End: PHP Logic for Fetching Courses ---
-
 ?>
 
-<style>
-    .create-exam-container {
-        background-color: #f9f9f9;
-        padding: 20px;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        max-width: 800px;
-        margin: 20px auto;
-    }
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create New Exam - Online Exam System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Global styles */
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+        body {
+            background-color: #f0f2f5;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            color: #333;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 950px;
+            margin: 40px auto;
+            padding: 0 15px; /* Basic padding */
+        }
 
-    .create-exam-container h2 {
-        text-align: center;
-        color: #333;
-        margin-bottom: 20px;
-    }
-
-    .form-group {
-        margin-bottom: 15px;
-    }
-
-    .form-group label {
-        display: block;
-        margin-bottom: 5px;
-        font-weight: bold;
-        color: #555;
-    }
-
-    .form-group input[type="text"],
-    .form-group input[type="number"],
-    .form-group textarea,
-    .form-group select {
-        width: 100%;
-        padding: 10px;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        box-sizing: border-box;
-        /* Include padding and border in element's total width and height */
-    }
-
-    textarea {
-        resize: vertical;
-        /* Allow vertical resizing */
-    }
-
-    .question-section {
-        margin-top: 30px;
-        border-top: 1px solid #eee;
-        padding-top: 20px;
-    }
-
-    .question-item {
-        background-color: #fff;
-        border: 1px solid #ddd;
-        padding: 15px;
-        margin-bottom: 15px;
-        border-radius: 4px;
-    }
-
-    .question-item h4 {
-        margin-top: 0;
-        margin-bottom: 10px;
-        color: #007bff;
-    }
-
-    .question-options {
-        margin-top: 10px;
-        padding-left: 20px;
-    }
-
-    .question-options .option-group {
-        margin-bottom: 10px;
-    }
-
-    .question-options input[type="text"] {
-        width: calc(100% - 70px);
-        /* Adjust width considering label/checkbox */
-        display: inline-block;
-        vertical-align: middle;
-        margin-right: 10px;
-    }
-
-    .question-options label {
-        display: inline-block;
-        margin-right: 10px;
-        vertical-align: middle;
-        font-weight: normal;
-    }
-
-    .add-question-button,
-    .add-option-button,
-    .remove-item-button,
-    .add-blank-button {
-        display: inline-block;
-        background-color: #28a745;
-        color: white;
-        padding: 10px 15px;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 1em;
-        margin-top: 10px;
-        margin-right: 5px;
-    }
-
-    .add-option-button {
-        background-color: #007bff;
-    }
-
-    .remove-item-button {
-        background-color: #dc3545;
-    }
-
-    .add-blank-button {
-        background-color: #ffc107;
-        /* Example color for add blank */
-        color: #333;
-    }
+        /* Form layout utilities (replacing Bootstrap grid) */
+        .form-row {
+            display: flex;
+            flex-wrap: wrap;
+            margin-left: -10px; /* Gutter simulation */
+            margin-right: -10px; /* Gutter simulation */
+            margin-bottom: 1rem; /* Spacing between rows */
+        }
+        .form-col {
+            flex: 1 0 0%; /* Grow and shrink */
+            padding-left: 10px; /* Gutter simulation */
+            padding-right: 10px; /* Gutter simulation */
+            margin-bottom: 1rem; /* Spacing for stacked columns on small screens or single elements */
+        }
+        .form-col-md-6 { /* For two columns on medium screens and up */
+            flex-basis: 50%;
+            max-width: 50%;
+        }
+         @media (max-width: 768px) { /* Stack columns on smaller screens */
+            .form-col-md-6 {
+                flex-basis: 100%;
+                max-width: 100%;
+            }
+        }
 
 
-    .add-question-button:hover,
-    .add-option-button:hover,
-    .remove-item-button:hover,
-    .add-blank-button:hover {
-        opacity: 0.9;
-    }
+        /* General form element styling */
+        input[type="text"],
+        input[type="number"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ced4da;
+            border-radius: 8px;
+            font-size: 1rem;
+            line-height: 1.5;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        textarea:focus,
+        select:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 0 0.25rem rgba(0, 123, 255, 0.25);
+            outline: none;
+        }
+        textarea {
+            resize: vertical;
+        }
+        label.form-label {
+            display: block;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 0.5rem;
+        }
+        .form-text-muted {
+            font-size: 0.875em;
+            color: #6c757d;
+        }
+        .text-danger {
+            color: #dc3545 !important;
+        }
+        .text-center {
+            text-align: center !important;
+        }
 
-    button[type="submit"] {
-        display: block;
-        width: 100%;
-        background-color: #007bff;
-        color: white;
-        padding: 12px 20px;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 1.1em;
-        margin-top: 20px;
-    }
+        /* Specific component styling */
+        .create-exam-container {
+            background-color: #ffffff;
+            border-radius: 15px;
+            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            /* margin: 40px auto; No longer needed if .container handles this */
+            /* max-width: 950px; No longer needed if .container handles this */
+        }
+        .form-header {
+            color: #1c2333;
+            border-bottom: 3px solid #007bff;
+            padding-bottom: 20px;
+            margin-bottom: 35px;
+            text-align: center;
+        }
+        .form-header h2 {
+            font-weight: 600;
+            font-size: 2.2rem;
+            margin: 0;
+        }
 
-    button[type="submit"]:hover {
-        background-color: #0056b3;
-    }
-
-    .question-type-select {
-        margin-bottom: 15px;
-    }
-
-    .blank-answer-group {
-        margin-bottom: 10px;
-        padding-left: 10px;
-        border-left: 2px solid #eee;
-    }
-
-    .message {
-        margin-top: 15px;
-        padding: 10px;
-        border-radius: 4px;
-    }
-
-    .success {
-        background-color: #d4edda;
-        color: #155724;
-        border: 1px solid #c3e6cb;
-    }
-
-    .error {
-        background-color: #f8d7da;
-        color: #721c24;
-        border: 1px solid #f5c6cb;
-    }
-</style>
-
-<div class="create-exam-container">
-    <h2>Create New Exam</h2>
-
-    <?php
-    // Display feedback message if any
-    if (!empty($message)) {
-        echo '<div class="message ' . (strpos($message, 'Error') !== false ? 'error' : 'success') . '">' . $message . '</div>';
-    }
-    ?>
-
-    <form id="createExamForm" method="POST" action="index.php?page=create_exam">
-
-        <div class="form-group">
-            <label for="examTitle">Exam Title:</label>
-            <input type="text" id="examTitle" name="examTitle" required>
-        </div>
-
-        <div class="form-group">
-            <label for="examDescription">Description:</label>
-            <textarea id="examDescription" name="examDescription" rows="4"></textarea>
-        </div>
-
-        <div class="form-group">
-            <label for="course_id">Assign to Course:</label>
-            <select id="course_id" name="course_id" required>
-                <option value="">-- Select Course --</option>
-                <?php foreach ($courses as $course): ?>
-                    <option value="<?php echo htmlspecialchars($course['course_id']); ?>">
-                        <?php echo htmlspecialchars($course['course_name']); ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
-        </div>
+        .question-section {
+            background-color: #f8f9fc;
+            border-radius: 10px;
+            padding: 25px;
+            margin-top: 30px;
+            border-left: 5px solid #007bff;
+        }
+        .question-section-header { /* Replaces d-flex justify-content-between align-items-center */
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        .question-section h4 {
+            margin: 0; /* Remove default margin */
+            display: flex; /* For icon alignment */
+            align-items: center; /* For icon alignment */
+        }
+        .question-section h4 .fas { /* For icon spacing */
+            margin-right: 0.5rem;
+        }
 
 
-        <div class="form-group">
-            <label for="examDuration">Duration (minutes):</label>
-            <input type="number" id="examDuration" name="examDuration" required min="1">
-        </div>
+        .question-item {
+            background-color: white;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e9ecef;
+            transition: all 0.3s ease-in-out;
+        }
+        .question-item:hover {
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+            transform: translateY(-3px);
+        }
+        .question-item-header { /* Replaces d-flex justify-content-between align-items-center */
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        .question-item h5 {
+            color: #007bff;
+            margin: 0; /* Remove default margin */
+            font-weight: 600;
+        }
+        .question-options {
+            margin-top: 18px;
+            padding-left: 15px;
+        }
+        .option-group, .blank-answer-group {
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .blank-answer-group {
+             border-left: 2px solid #dee2e6;
+             padding-left: 15px;
+        }
 
-        <div class="form-group">
-            <label for="total_marks">Total Marks:</label>
-            <input type="number" id="total_marks" name="total_marks" required min="0">
-        </div>
+        /* Buttons */
+        .btn { /* Base button style */
+            display: inline-block;
+            font-weight: 500;
+            line-height: 1.5;
+            color: #212529;
+            text-align: center;
+            text-decoration: none;
+            vertical-align: middle;
+            cursor: pointer;
+            user-select: none;
+            background-color: transparent;
+            border: 1px solid transparent;
+            padding: 8px 18px;
+            font-size: 1rem;
+            border-radius: 25px; /* Consistent rounded buttons */
+            transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+        }
+        .btn .fas { /* Icon spacing */
+            margin-right: 0.35rem;
+        }
 
+        .btn-add-question, .btn-add-option, .btn-add-blank {
+            background-color: #007bff;
+            color: white;
+        }
+        .btn-add-question:hover, .btn-add-option:hover, .btn-add-blank:hover {
+            background-color: #0056b3;
+        }
+        .btn-remove-question, .btn-remove-option {
+            background-color: #dc3545;
+            color: white;
+        }
+         .btn-remove-question:hover, .btn-remove-option:hover {
+            background-color: #c82333;
+        }
+        .btn-submit-exam {
+            background-color: #28a745;
+            color: white;
+            font-weight: 600;
+            font-size: 1.1rem;
+            padding: 12px 35px;
+            margin-top: 30px;
+            /* width: auto; Removed, let it size by content or use display:block for full width */
+            display: block; /* To allow margin auto for centering */
+            margin-left: auto;
+            margin-right: auto;
+            box-shadow: 0 2px 8px rgba(40, 167, 69, 0.4);
+        }
+        .btn-submit-exam:hover {
+            background-color: #218838;
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.5);
+        }
+        .btn-sm { /* For smaller buttons like remove option */
+            padding: 6px 10px;
+            font-size: 0.9rem;
+        }
+        /* .btn-icon might not be strictly needed if .btn-sm covers it */
 
-        <div class="question-section">
-            <h3>Questions</h3>
-            <div id="questionsContainer">
+        .message-area {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            font-size: 1rem;
+        }
+        .message-area.success {
+            background-color: #d1e7dd;
+            color: #0f5132;
+            border: 1px solid #badbcc;
+        }
+        .message-area.error {
+            background-color: #f8d7da;
+            color: #842029;
+            border: 1px solid #f5c2c7;
+        }
+
+        .badge-question-type {
+            background-color: #6c757d;
+            font-size: 0.85rem;
+            padding: 6px 12px;
+            border-radius: 15px;
+            color: white;
+            display: inline-block; /* Ensure it behaves like a badge */
+        }
+        .question-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 1rem;
+        }
+        .form-check-input { /* Basic styling for radio buttons */
+            margin-top: 0.3rem; /* Align with text */
+            margin-left: 0; /* Reset some defaults */
+        }
+        .form-check-label {
+             margin-left: 0.25rem;
+        }
+        /* Margin utilities replacements (use sparingly or apply directly) */
+        .mb-3 { margin-bottom: 1rem !important; }
+        .mb-4 { margin-bottom: 1.5rem !important; }
+        /* Add other utilities as needed or apply styles directly */
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="create-exam-container">
+            <div class="form-header">
+                <h2><i class="fas fa-file-alt"></i> Create New Exam</h2>
             </div>
 
-            <button  type="button" class="add-question-button">Add Question</button>
-        </div>
+            <?php if (!empty($message)): ?>
+                <div class="message-area <?= $message_type === 'success' ? 'success' : 'error' ?>">
+                    <?= htmlspecialchars($message) ?>
+                </div>
+            <?php endif; ?>
 
-        <button type="submit">Create Exam</button>
-    </form>
-    
-    <!-- <script src="../assets/js/create_exam.js"> -->
-<script>
+            <form id="createExamForm" method="POST" action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>?page=create_exam">
+                <div class="form-row">
+                    <div class="form-col form-col-md-6">
+                        <label for="examTitle" class="form-label">Exam Title <span class="text-danger">*</span></label>
+                        <input type="text" id="examTitle" name="examTitle" required value="<?= htmlspecialchars($_POST['examTitle'] ?? '') ?>">
+                    </div>
+                    <div class="form-col form-col-md-6">
+                        <label for="course_id" class="form-label">Course <span class="text-danger">*</span></label>
+                        <select id="course_id" name="course_id" required>
+                            <option value="">-- Select Course --</option>
+                            <?php foreach ($courses as $course): ?>
+                                <option value="<?= htmlspecialchars($course['course_id']) ?>" <?= (isset($_POST['course_id']) && $_POST['course_id'] == $course['course_id']) ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($course['course_name']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mb-4"> 
+                    <label for="examDescription" class="form-label">Description (Optional)</label>
+                    <textarea id="examDescription" name="examDescription" rows="3"><?= htmlspecialchars($_POST['examDescription'] ?? '') ?></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-col form-col-md-6">
+                        <label for="examDuration" class="form-label">Duration (minutes) <span class="text-danger">*</span></label>
+                        <input type="number" id="examDuration" name="examDuration" required min="1" value="<?= htmlspecialchars($_POST['examDuration'] ?? '') ?>">
+                    </div>
+                    <div class="form-col form-col-md-6">
+                        <label for="total_marks" class="form-label">Total Marks <span class="text-danger">*</span></label>
+                        <input type="number" id="total_marks" name="total_marks" required min="1" value="<?= htmlspecialchars($_POST['total_marks'] ?? '') ?>" readonly>
+                        <small class="form-text-muted">Total marks are calculated automatically from questions.</small>
+                    </div>
+                </div>
+
+                <div class="question-section">
+                    <div class="question-section-header">
+                        <h4><i class="fas fa-question-circle"></i>Questions</h4>
+                        <button type="button" class="btn btn-add-question" onclick="addQuestion()">
+                            <i class="fas fa-plus"></i>Add Question
+                        </button>
+                    </div>
+                    <div id="questionsContainer">
+                        <?php if (isset($_POST['questions']) && is_array($_POST['questions'])): ?>
+                            <?php foreach ($_POST['questions'] as $idx => $qData): ?>
+                                <?php /* PHP loop for pre-filling is empty, JS handles it */ ?>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </div>
+                </div>
+
+                <div style="text-align: center;"> 
+                    <button type="submit" class="btn btn-submit-exam">
+                        <i class="fas fa-save"></i>Create Exam
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
         let questionCounter = 0;
+        // let existingQuestions = 0; // This variable wasn't used in the original JS
 
-    // const logfun = () => {
-    //     alert("button");
-    // }
+        document.addEventListener('DOMContentLoaded', () => {
+            const postQuestions = <?php echo json_encode($_POST['questions'] ?? []); ?>;
+            if (postQuestions.length > 0) {
+                postQuestions.forEach(qData => {
+                    addQuestion(qData);
+                });
+            } else {
+                 // addQuestion(); // Optionally add one empty question by default
+            }
+            updateTotalMarks(); // Initial calculation
+        });
 
-    // Wait for the DOM to be fully loaded before adding event listeners
-    document.addEventListener('DOMContentLoaded', () => {
-        console.log('create_exam.php DOMContentLoaded'); // Debugging line
-
-        const questionsContainer = document.getElementById('questionsContainer');
-        const addQuestionButton = document.querySelector('.add-question-button');
-
-        // Check if the container and button exist before adding listeners
-        if (!questionsContainer) {
-            console.error('Error: #questionsContainer not found!');
-            return;
-        }
-        if (!addQuestionButton) {
-            console.error('Error: .add-question-button not found!');
-            return;
-        }
-
-        // Add event listener to the "Add Question" button
-        addQuestionButton.addEventListener('click', addQuestion);
-
-        console.log('Event listener added to .add-question-button'); // Debugging line
-
-    });
-
-
-    function addQuestion() {
-        console.log('addQuestion called'); // Debugging line
-
-        questionCounter++;
-
-        const questionsContainer = document.getElementById('questionsContainer');
-        console.log('questionsContainer:', questionsContainer); // Debugging line
-
-
-        // Check if the container exists before proceeding
-        if (!questionsContainer) {
-            console.error('Error: #questionsContainer not found!');
-            return; // Stop execution if container is not found
+        function updateTotalMarks() {
+            let total = 0;
+            document.querySelectorAll('.question-marks-input').forEach(input => {
+                const marks = parseInt(input.value, 10);
+                if (!isNaN(marks) && marks > 0) {
+                    total += marks;
+                }
+            });
+            const totalMarksInput = document.getElementById('total_marks');
+            if (totalMarksInput) {
+                totalMarksInput.value = total;
+            }
         }
 
 
-        const questionItem = document.createElement('div');
-        questionItem.classList.add('question-item');
-        // Use a unique ID for the question item based on the counter
-        const questionItemId = `question_item_${questionCounter}`;
-        questionItem.setAttribute('id', questionItemId);
-        questionItem.setAttribute('data-question-id', questionCounter);
+        function addQuestion(data = null) {
+            questionCounter++;
+            const questionsContainer = document.getElementById('questionsContainer');
+            const questionIdSuffix = `new_${questionCounter}`;
 
-        questionItem.innerHTML = `
-            <h4>Question ${questionCounter}</h4>
-            <div class="form-group">
-                <label for="question_text_${questionCounter}">Question Text:</label>
-                <input type="text" id="question_text_${questionCounter}" name="questions[${questionCounter}][text]" required>
-            </div>
+            const questionItem = document.createElement('div');
+            questionItem.className = 'question-item'; // mb-4 removed, handled by question-item margin-bottom
+            questionItem.id = `question_item_${questionIdSuffix}`;
+            questionItem.setAttribute('data-question-id', questionIdSuffix);
 
-            <div class="form-group question-type-select">
-                <label for="question_type_${questionCounter}">Question Type:</label>
-                <select id="question_type_${questionCounter}" name="questions[${questionCounter}][type]" onchange="changeQuestionType(${questionCounter}, this.value)">
-                    <option value="multiple_choice">Multiple Choice</option>
-                    <option value="true_false">True/False</option>
-                    <option value="blank_space">Fill in the Blank</option>
-                    </select>
-            </div>
+            const questionText = data && data.text ? data.text : '';
+            const questionType = data && data.type ? data.type : 'multiple_choice';
+            const questionMarks = data && data.marks ? data.marks : '1';
 
-            <div class="question-options" id="options_container_${questionCounter}">
-                ${generateOptionsHtml('multiple_choice', questionCounter)}
-            </div>
+            let questionTypeDisplay = 'Multiple Choice';
+            if (questionType === 'true_false') questionTypeDisplay = 'True/False';
+            else if (questionType === 'fill_blank') questionTypeDisplay = 'Fill in the Blank';
 
-             <button type="button" class="remove-item-button" onclick="removeQuestion(${questionCounter})">Remove Question</button>
-        `;
+            questionItem.innerHTML = `
+                <div class="question-item-header">
+                    <h5>Question <span class="question-number">${questionsContainer.children.length + 1}</span></h5>
+                    <span class="badge-question-type">${questionTypeDisplay}</span>
+                </div>
 
-        questionsContainer.appendChild(questionItem);
-    }
+                <div class="mb-3">
+                    <label for="question_text_${questionIdSuffix}" class="form-label">Question Text <span class="text-danger">*</span></label>
+                    <textarea id="question_text_${questionIdSuffix}"
+                           name="questions[${questionIdSuffix}][text]" required rows="2">${questionText}</textarea>
+                </div>
 
-    function generateOptionsHtml(type, questionId) {
-        let html = '';
-        switch (type) {
-            case 'multiple_choice':
-                html = `
-                    <div id="mc_options_${questionId}">
-                         <p>Options:</p>
+                <div class="form-row mb-3"> 
+                    <div class="form-col" style="flex-basis: 66.66%; max-width: 66.66%;"> 
+                        <label for="question_type_${questionIdSuffix}" class="form-label">Question Type</label>
+                        <select class="question-type-select" id="question_type_${questionIdSuffix}"
+                                name="questions[${questionIdSuffix}][type]"
+                                onchange="changeQuestionType('${questionIdSuffix}', this.value, this)">
+                            <option value="multiple_choice" ${questionType === 'multiple_choice' ? 'selected' : ''}>Multiple Choice</option>
+                            <option value="true_false" ${questionType === 'true_false' ? 'selected' : ''}>True/False</option>
+                            <option value="fill_blank" ${questionType === 'fill_blank' ? 'selected' : ''}>Fill in the Blank</option>
+                        </select>
+                    </div>
+                     <div class="form-col" style="flex-basis: 33.33%; max-width: 33.33%;"> 
+                        <label for="question_marks_${questionIdSuffix}" class="form-label">Marks <span class="text-danger">*</span></label>
+                        <input type="number" class="question-marks-input" id="question_marks_${questionIdSuffix}"
+                               name="questions[${questionIdSuffix}][marks]" min="1" value="${questionMarks}" required onchange="updateTotalMarks()">
+                    </div>
+                </div>
+
+                <div class="question-options" id="options_container_${questionIdSuffix}">
+                </div>
+
+                <div class="question-actions"> 
+                    <button type="button" class="btn btn-sm btn-remove-question" onclick="removeQuestion('${questionIdSuffix}')">
+                        <i class="fas fa-trash"></i>Remove Question
+                    </button>
+                </div>
+            `;
+
+            questionsContainer.appendChild(questionItem);
+            changeQuestionType(questionIdSuffix, questionType, questionItem.querySelector('.question-type-select'), data);
+            updateQuestionNumbers();
+            updateTotalMarks();
+        }
+
+        function generateOptionsHtml(type, questionIdSuffix, data = null) {
+            let html = '';
+            const namePrefix = `questions[${questionIdSuffix}]`;
+
+            switch (type) {
+                case 'multiple_choice':
+                    let optionsHtml = '';
+                    const options = (data && data.options) ? data.options : ["", ""];
+                    const correctAnswerIndex = (data && data.correct_answer !== undefined && data.correct_answer !== null && data.correct_answer !== '') ? parseInt(data.correct_answer) : -1;
+
+
+                    options.forEach((optText, index) => {
+                        // Ensure optText is a string for htmlspecialchars equivalent
+                        const safeOptText = (typeof optText === 'string' || typeof optText === 'number') ? String(optText).replace(/"/g, "&quot;") : '';
+                        optionsHtml += `
+                            <div class="option-group">
+                                <input type="radio" name="${namePrefix}[correct_answer]" value="${index}" ${correctAnswerIndex === index ? 'checked' : ''} required class="form-check-input">
+                                <input type="text" name="${namePrefix}[options][]" class="input-sm" 
+                                       placeholder="Option ${index + 1} text" value="${safeOptText}" required style="flex-grow:1; padding: 0.25rem 0.5rem; font-size: .875rem;">
+                                <button type="button" class="btn btn-sm btn-remove-option" onclick="removeOption(this, '${questionIdSuffix}')">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>`;
+                    });
+
+                    html = `
+                        <label class="form-label">Options & Correct Answer: <span class="text-danger">*</span></label>
+                        <div id="mc_options_${questionIdSuffix}">
+                            ${optionsHtml}
+                        </div>
+                        <button type="button" class="btn btn-sm btn-add-option" onclick="addMultipleChoiceOption('${questionIdSuffix}')" style="margin-top: 0.5rem;">
+                            <i class="fas fa-plus"></i>Add Option
+                        </button>
+                    `;
+                    break;
+                case 'true_false':
+                    const correctAnswerTF = (data && data.correct_answer) ? data.correct_answer : 'true';
+                    html = `
+                        <label class="form-label">Correct Answer: <span class="text-danger">*</span></label>
                         <div class="option-group">
-                            <input type="radio" name="questions[${questionId}][correct_answer]" value="option_1" id="mc_${questionId}_option_1">
-                            <label for="mc_${questionId}_option_1">Correct:</label>
-                            <input type="text" name="questions[${questionId}][options][option_1]" placeholder="Option 1 Text" required>
-                             <button type="button" class="remove-item-button" onclick="removeOption(this)">Remove Option</button>
+                            <input type="radio" class="form-check-input" name="${namePrefix}[correct_answer]" value="true" id="tf_${questionIdSuffix}_true" ${correctAnswerTF === 'true' ? 'checked' : ''} required>
+                            <label class="form-check-label" for="tf_${questionIdSuffix}_true">True</label>
                         </div>
-                         <div class="option-group">
-                            <input type="radio" name="questions[${questionId}][correct_answer]" value="option_2" id="mc_${questionId}_option_2">
-                            <label for="mc_${questionId}_option_2">Correct:</label>
-                            <input type="text" name="questions[${questionId}][options][option_2]" placeholder="Option 2 Text" required>
-                             <button type="button" class="remove-item-button" onclick="removeOption(this)">Remove Option</button>
+                        <div class="option-group">
+                            <input type="radio" class="form-check-input" name="${namePrefix}[correct_answer]" value="false" id="tf_${questionIdSuffix}_false" ${correctAnswerTF === 'false' ? 'checked' : ''}>
+                            <label class="form-check-label" for="tf_${questionIdSuffix}_false">False</label>
                         </div>
-                    </div>
-                    <button type="button" class="add-option-button" onclick="addMultipleChoiceOption(${questionId})">Add Option</button>
-                `;
-                break;
-            case 'true_false':
-                html = `
-                    <p>Correct Answer:</p>
-                    <div class="option-group">
-                        <input type="radio" name="questions[${questionId}][correct_answer]" value="true" id="tf_${questionId}_true" required>
-                        <label for="tf_${questionId}_true">True</label>
-                    </div>
-                    <div class="option-group">
-                        <input type="radio" name="questions[${questionId}][correct_answer]" value="false" id="tf_${questionId}_false">
-                        <label for="tf_${questionId}_false">False</label>
-                    </div>
-                `;
-                break;
-            case 'blank_space':
-                html = `
-                    <p>Blank Answers (Use [BLANK] in the question text for each blank):</p>
-                    <div id="blank_answers_${questionId}">
-                        <div class="blank-answer-group">
-                             <label for="blank_${questionId}_answer_1">Blank 1 Answer:</label>
-                             <input type="text" id="blank_${questionId}_answer_1" name="questions[${questionId}][answers][]" placeholder="Correct answer for blank 1" required>
-                             <button type="button" class="remove-item-button" onclick="removeOption(this)">Remove Blank</button>
+                    `;
+                    break;
+                case 'fill_blank':
+                    let answersHtml = '';
+                    const answers = (data && data.answers && Array.isArray(data.answers)) ? data.answers : (data && data.answers && typeof data.answers === 'string' ? data.answers.split('|') : [""]);
+
+
+                    answers.forEach((ansText, index) => {
+                         const safeAnsText = (typeof ansText === 'string' || typeof ansText === 'number') ? String(ansText).replace(/"/g, "&quot;") : '';
+                         answersHtml += `
+                            <div class="blank-answer-group">
+                                <input type="text" name="${namePrefix}[answers][]" class="input-sm"
+                                       placeholder="Correct answer for blank ${index + 1}" value="${safeAnsText}" required style="flex-grow:1; padding: 0.25rem 0.5rem; font-size: .875rem;">
+                                <button type="button" class="btn btn-sm btn-remove-option" onclick="removeOption(this, '${questionIdSuffix}')">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>`;
+                    });
+                    html = `
+                        <label class="form-label">Blank Answers <span class="text-danger">*</span> (Use [BLANK] in question text):</label>
+                        <div id="blank_answers_${questionIdSuffix}">
+                            ${answersHtml}
                         </div>
-                    </div>
-                    <button type="button" class="add-blank-button" onclick="addBlankAnswer(${questionId})">Add Blank Answer</button>
-                    <p><small>Use <code>[BLANK]</code> in the question text to indicate where a blank space should appear for the student.</small></p>
-                 `;
-                break;
-            // Removed math_equation and coding as they are not directly supported by the DB schema
-            default:
-                html = '<p>Select a question type to add options or answers.</p>';
-                break;
+                        <button type="button" class="btn btn-sm btn-add-blank" onclick="addBlankAnswer('${questionIdSuffix}')" style="margin-top: 0.5rem;">
+                            <i class="fas fa-plus"></i>Add Blank Answer
+                        </button>
+                        <p style="font-size: 0.875em; color: #6c757d; margin-top: 0.5rem;">
+                            In the question text, use <code>[BLANK]</code> for each blank you define below.
+                        </p>
+                    `;
+                    break;
+                default:
+                    html = '<p style="color: #6c757d;">Select a question type to see options.</p>';
+                    break;
+            }
+            return html;
         }
-        return html;
-    }
 
-    function changeQuestionType(questionId, type) {
-        const optionsContainer = document.getElementById(`options_container_${questionId}`);
-        optionsContainer.innerHTML = generateOptionsHtml(type, questionId);
-    }
+        function changeQuestionType(questionIdSuffix, type, selectElement, data = null) {
+            const optionsContainer = document.getElementById(`options_container_${questionIdSuffix}`);
+            const questionItem = document.getElementById(`question_item_${questionIdSuffix}`);
+            const badge = questionItem.querySelector('.badge-question-type');
 
-    function addMultipleChoiceOption(questionId) {
-        const mcOptionsContainer = document.getElementById(`mc_options_${questionId}`);
-        // Calculate option count based on existing option groups
-        const optionCount = mcOptionsContainer.querySelectorAll('.option-group').length + 1;
-        const optionGroup = document.createElement('div');
-        optionGroup.classList.add('option-group');
-
-        // Use a consistent naming convention for option values
-        const optionValue = `option_${optionCount}`;
-
-        optionGroup.innerHTML = `
-            <input type="radio" name="questions[${questionId}][correct_answer]" value="${optionValue}" id="mc_${questionId}_${optionValue}">
-            <label for="mc_${questionId}_${optionValue}">Correct:</label>
-            <input type="text" name="questions[${questionId}][options][${optionValue}]" placeholder="Option ${optionCount} Text" required>
-             <button type="button" class="remove-item-button" onclick="removeOption(this)">Remove Option</button>
-        `;
-        mcOptionsContainer.appendChild(optionGroup);
-    }
-
-    function addBlankAnswer(questionId) {
-        const blankAnswersContainer = document.getElementById(`blank_answers_${questionId}`);
-        // Calculate blank count based on existing blank answer groups
-        const blankCount = blankAnswersContainer.querySelectorAll('.blank-answer-group').length + 1;
-        const blankGroup = document.createElement('div');
-        blankGroup.classList.add('blank-answer-group');
-
-        blankGroup.innerHTML = `
-             <label for="blank_${questionId}_answer_${blankCount}">Blank ${blankCount} Answer:</label>
-             <input type="text" id="blank_${questionId}_answer_${blankCount}" name="questions[${questionId}][answers][]" placeholder="Correct answer for blank ${blankCount}" required>
-             <button type="button" class="remove-item-button" onclick="removeOption(this)">Remove Blank</button>
-        `;
-        blankAnswersContainer.appendChild(blankGroup);
-    }
+            // When changing type, if data exists, it might be for a different type.
+            // We pass data only if it's the initial load (addQuestion call)
+            // or if we are sure data structure matches the new type.
+            // For simplicity, if `selectElement` is provided (meaning it's a user change),
+            // we don't pass `data` to `generateOptionsHtml` to avoid mismatched structures.
+            let optionsData = data;
+            if (selectElement && selectElement.value !== (data ? data.type : '')) {
+                optionsData = null; // User changed type, reset options from data
+            }
 
 
-    function removeOption(button) {
-        // This function is used for removing both MC options and Blank Answers
-        button.parentElement.remove(); // Remove the parent .option-group or .blank-answer-group div
-    }
+            optionsContainer.innerHTML = generateOptionsHtml(type, questionIdSuffix, optionsData);
 
-    function removeQuestion(questionId) {
-        const questionItem = document.querySelector(`.question-item[data-question-id="${questionId}"]`);
-        if (questionItem) {
-            questionItem.remove();
-            // Optional: Re-number questions after removal if needed for display
-            // This would require iterating through remaining questions and updating their numbers and input names
+            let typeText = 'Multiple Choice';
+            if (type === 'true_false') typeText = 'True/False';
+            else if (type === 'fill_blank') typeText = 'Fill in Blank';
+            if (badge) badge.textContent = typeText;
         }
-    }
 
+        function addMultipleChoiceOption(questionIdSuffix) {
+            const mcOptionsContainer = document.getElementById(`mc_options_${questionIdSuffix}`);
+            if (!mcOptionsContainer) return;
+            const optionCount = mcOptionsContainer.querySelectorAll('.option-group').length;
+            const namePrefix = `questions[${questionIdSuffix}]`;
 
-    // Optional: You might want to handle the form submission with AJAX as well
-    // This prevents a full page reload after submitting the form
-    // document.getElementById('createExamForm').addEventListener('submit', function(e) {
-    //     e.preventDefault(); // Prevent default form submission
+            const optionGroup = document.createElement('div');
+            optionGroup.className = 'option-group';
+            optionGroup.innerHTML = `
+                <input type="radio" name="${namePrefix}[correct_answer]" value="${optionCount}" required class="form-check-input">
+                <input type="text" name="${namePrefix}[options][]" class="input-sm"
+                       placeholder="Option ${optionCount + 1} text" required style="flex-grow:1; padding: 0.25rem 0.5rem; font-size: .875rem;">
+                <button type="button" class="btn btn-sm btn-remove-option" onclick="removeOption(this, '${questionIdSuffix}')">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            mcOptionsContainer.appendChild(optionGroup);
+        }
 
-    //     const formData = new FormData(this); // Get form data
+        function addBlankAnswer(questionIdSuffix) {
+            const blankAnswersContainer = document.getElementById(`blank_answers_${questionIdSuffix}`);
+            if (!blankAnswersContainer) return;
+            const blankCount = blankAnswersContainer.querySelectorAll('.blank-answer-group').length;
+            const namePrefix = `questions[${questionIdSuffix}]`;
 
-    //     // Send form data via AJAX
-    //     fetch('handle_action.php?action=instructor_create_exam_submit', {
-    //         method: 'POST',
-    //         body: formData
-    //     })
-    //     .then(response => response.text()) // Or response.json() if your PHP returns JSON
-    //     .then(result => {
-    //         // Handle the response from the server
-    //         alert(result); // Show a success or error message (basic example)
-    //         // Optionally, load another page or update the view after successful submission
-    //     })
-    //     .catch(error => {
-    //         console.error('Error submitting form:', error);
-    //         alert('An error occurred during form submission.'); // Show an error message
-    //     });
-    // });
+            const blankGroup = document.createElement('div');
+            blankGroup.className = 'blank-answer-group';
+            blankGroup.innerHTML = `
+                <input type="text" name="${namePrefix}[answers][]" class="input-sm"
+                       placeholder="Correct answer for blank ${blankCount + 1}" required style="flex-grow:1; padding: 0.25rem 0.5rem; font-size: .875rem;">
+                <button type="button" class="btn btn-sm btn-remove-option" onclick="removeOption(this, '${questionIdSuffix}')">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            blankAnswersContainer.appendChild(blankGroup);
+        }
+
+        function removeOption(button, questionIdSuffix) {
+            const optionGroup = button.closest('.option-group, .blank-answer-group');
+            if (optionGroup) {
+                optionGroup.remove();
+                const mcOptionsContainer = document.getElementById(`mc_options_${questionIdSuffix}`);
+                if (mcOptionsContainer && mcOptionsContainer.contains(optionGroup)) { // Check if it was an MC option
+                     mcOptionsContainer.querySelectorAll('.option-group').forEach((group, index) => {
+                        const radio = group.querySelector('input[type="radio"]');
+                        if (radio) radio.value = index;
+                        const textInput = group.querySelector('input[type="text"]');
+                        if (textInput) textInput.placeholder = `Option ${index + 1} text`;
+                     });
+                }
+            }
+        }
+
+        function removeQuestion(questionIdSuffix) {
+            const questionItem = document.getElementById(`question_item_${questionIdSuffix}`);
+            if (questionItem && confirm('Are you sure you want to remove this question?')) {
+                questionItem.remove();
+                updateQuestionNumbers();
+                updateTotalMarks();
+            }
+        }
+
+        function updateQuestionNumbers() {
+            const questions = document.querySelectorAll('#questionsContainer .question-item');
+            questions.forEach((q, index) => {
+                const numberSpan = q.querySelector('.question-number');
+                if (numberSpan) {
+                    numberSpan.textContent = index + 1;
+                }
+            });
+        }
+
+        document.getElementById('questionsContainer').addEventListener('input', function(event) { // Changed to 'input' for better responsiveness
+            if (event.target.classList.contains('question-marks-input')) {
+                updateTotalMarks();
+            }
+        });
     </script>
-</div>
+</body>
+</html>
