@@ -23,41 +23,50 @@ $courses = Course_function::fetchCourses();
                     </tr>
                 </thead>
                 <tbody>
-                    <?php foreach ($instructors as $instructor): ?>
+                    <?php if (!empty($instructors)) { ?>
+                        <?php foreach ($instructors as $instructor): ?>
+                            <tr>
+                                <td>
+                                    <?= htmlspecialchars($instructor['name']) ?>
+                                </td>
+                                <td>
+                                    <?= htmlspecialchars($instructor['course_name']) ?>
+                                </td>
+                                <td>
+                                    <?= htmlspecialchars($instructor['email']) ?>
+                                </td>
+                                <td>
+                                    <?= htmlspecialchars($instructor['status']) ?>
+                                </td>
+                                <td>
+                                    <div class="btn-container">
+                                        <button id="edit_btn" class="open-update-modal-btn"
+                                            data-instructor_id="<?= htmlspecialchars($instructor['user_id']) ?>"
+                                            data-name="<?= htmlspecialchars($instructor['name']) ?>"
+                                            data-course_id="<?= $instructor['course_id'] ?>"
+                                            data-email="<?= htmlspecialchars($instructor['email']) ?>"
+                                            data-status="<?= htmlspecialchars($instructor['status']) ?>">
+
+                                            <img src="<?= BASE_URL ?>/assets/images/icon/edit.png" alt="update" width="28" />
+
+                                        </button>
+                                        <!-- delete button -->
+                                        <button id="delete_btn" class="delete-btn"
+                                            data-instructor_id="<?= $instructor['user_id'] ?>"
+                                            data-course_id="<?= $instructor['course_id'] ?>">
+                                            <img src="<?= BASE_URL ?>/assets/images/icon/bin.png" alt="delete" width="30" />
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php } else { ?>
                         <tr>
-                            <td>
-                                <?= htmlspecialchars($instructor['name']) ?>
-                            </td>
-                            <td>
-                                <?= htmlspecialchars($instructor['course_name']) ?>
-                            </td>
-                            <td>
-                                <?= htmlspecialchars($instructor['email']) ?>
-                            </td>
-                            <td>
-                                <?= htmlspecialchars($instructor['status']) ?>
-                            </td>
-                            <td>
-                                <div class="btn-container">
-                                    <button id="edit_btn" class="open-update-modal-btn"
-                                        data-id="<?= htmlspecialchars($instructor['user_id']) ?>"
-                                        data-name="<?= htmlspecialchars($instructor['name']) ?>"
-                                        data-course="<?= $instructor['course_id'] ?>"
-                                        data-email="<?= htmlspecialchars($instructor['email']) ?>"
-                                        data-status="<?= htmlspecialchars($instructor['status']) ?>">
-
-                                        <img src="<?= BASE_URL ?>/assets/images/icon/edit.png" alt="update" width="28" />
-
-                                    </button>
-                                    <!-- delete button -->
-                                    <button id="delete_btn" class="delete-btn" data-Iid="<?= $instructor['user_id'] ?>"
-                                        data-cid="<?= $instructor['course_id'] ?>">
-                                        <img src="<?= BASE_URL ?>/assets/images/icon/bin.png" alt="delete" width="30" />
-                                    </button>
-                                </div>
+                            <td style="text-align: center" colspan="5">
+                                <h4>No Instructor Assigned Yet</h4>
                             </td>
                         </tr>
-                    <?php endforeach; ?>
+                    <?php } ?>
                 </tbody>
             </table>
         </div>
@@ -73,8 +82,8 @@ $courses = Course_function::fetchCourses();
 
         deleteButtons.forEach((btn) => {
             btn.addEventListener("click", () => {
-                const instructor_id = btn.getAttribute("data-Iid");
-                const course_id = btn.getAttribute("data-cid");
+                const instructor_id = btn.getAttribute("data-instructor_id");
+                const course_id = btn.getAttribute("data-course_id");
 
                 if (confirm("Are you sure you want to delete this Instructor?")) {
                     fetch("/softexam/api/unassignInstructor", {

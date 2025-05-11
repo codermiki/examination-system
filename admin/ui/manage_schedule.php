@@ -21,9 +21,7 @@ $exams = Exam_function::scheduledExams();
                     </tr>
                 </thead>
                 <tbody>
-                    <?php
-                    if (!empty($exams)) {
-                        ?>
+                    <?php if (!empty($exams)) { ?>
                         <?php foreach ($exams as $exam):
                             // "2025-05-16 14:00:00"
                             $date = new DateTime($exam['scheduled_date']);
@@ -62,17 +60,13 @@ $exams = Exam_function::scheduledExams();
                                 </td>
                             </tr>
                         <?php endforeach; ?>
-                        <?php
-                    } else {
-                        ?>
+                    <?php } else { ?>
                         <tr>
                             <td style="text-align: center" colspan="6">
                                 <h4>No Exams Scheduled Yet</h4>
                             </td>
                         </tr>
-                        <?php
-                    }
-                    ?>
+                    <?php } ?>
                 </tbody>
             </table>
         </div>

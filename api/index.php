@@ -73,6 +73,19 @@ switch ("$method $path") {
         Instructor_controller::assignInstructor($instructor, $course_id);
         break;
 
+    case "POST /updateAssignedInstructor":
+        $data = json_decode(file_get_contents("php://input"), true);
+        $course_id = $data['course_id'] ?? null;
+        $instructor_id = $data['instructor_id'] ?? null;
+        $status = $data['status'] ?? null;
+
+        if (!$course_id || !$instructor_id || !$status) {
+            Response_helper::json(['error' => 'All fields are required']);
+            exit;
+        }
+        Instructor_controller::updateAssignedInstructor($course_id, $instructor_id, $status);
+        break;
+
     case "POST /unassignInstructor":
         $data = json_decode(file_get_contents("php://input"), true);
         $instructor_id = $data['instructor_id'] ?? null;

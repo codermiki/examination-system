@@ -53,6 +53,37 @@ class Instructor_service
         }
     }
 
+
+    public static function updateAssignedInstructor($course_id, $instructor_id, $status)
+    {
+        global $conn;
+
+        try {
+            $sql = "UPDATE assigned_instructors SET course_id = :course_id, status = :status WHERE instructor_id = :instructor_id";
+
+            $stmt = $conn->prepare($sql);
+
+            // Optional: check if already assigned
+            $checkStmt = $conn->prepare("SELECT * FROM assigned_instructors WHERE instructor_id = :instructor_id");
+            $checkStmt->execute([
+                ':instructor_id' => $instructor_id
+            ]);
+
+            if ($checkStmt->rowCount() > 0) {
+                $stmt->execute([
+                    ':course_id' => $course_id,
+                    ':status' => $status,
+                    ':instructor_id' => $instructor_id
+                ]);
+                return ['message' => 'Instructor Update successfully.'];
+            } else {
+                return ['error' => 'Instructor Not Found.'];
+            }
+        } catch (PDOException $e) {
+            return ['error' => 'Failed to Update Instructor.'];
+        }
+    }
+
     public static function unassignInstructor($instructor_id, $course_id)
     {
         global $conn;

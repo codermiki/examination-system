@@ -4,7 +4,7 @@
         <span class="close">&times;</span>
         <h3>Update (<span id="modalName">Name</span>)</h3>
         <form id="updateForm">
-            <input type="hidden" id="studentId" name="student_id" />
+            <input type="hidden" id="instructor_id" name="instructor_id" />
             <label>Course</label>
             <select id="course" name="course_id">
                 <?php
@@ -37,8 +37,8 @@
                 const dataset = btn.dataset;
 
                 document.getElementById("modalName").textContent = dataset.name;
-                document.getElementById("studentId").value = dataset.id;
-                document.getElementById("course").value = dataset.course;
+                document.getElementById("instructor_id").value = dataset.instructor_id;
+                document.getElementById("course").value = dataset.course_id;
                 document.getElementById("status").value = dataset.status;
                 modal.style.display = "block";
             });
@@ -59,7 +59,7 @@
             // Convert FormData to a plain object
             const dataObj = Object.fromEntries(formData.entries());
 
-            fetch("/softexam/api/updateAssignedStudent", {
+            fetch("/softexam/api/updateAssignedInstructor", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -71,6 +71,7 @@
                     if (data.message) {
                         window.location.reload();
                     } else {
+                        console.log(data.error)
                         alert("Update failed.");
                     }
                 })
