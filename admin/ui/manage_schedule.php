@@ -21,7 +21,10 @@ $exams = Exam_function::scheduledExams();
                     </tr>
                 </thead>
                 <tbody>
-                    <?php foreach ($exams as $exam): ?>
+                    <?php foreach ($exams as $exam):
+                        // "2025-05-16 14:00:00"
+                        $date = new DateTime($exam['scheduled_date']);
+                        ?>
                         <tr>
                             <td>
                                 <?= htmlspecialchars($exam['course_name']) ?>
@@ -30,10 +33,10 @@ $exams = Exam_function::scheduledExams();
                                 <?= htmlspecialchars($exam['exam_title']) ?>
                             </td>
                             <td>
-                                <?= htmlspecialchars($exam['scheduled_date']) ?>
+                                <?= htmlspecialchars($date->format('Y-m-d')) ?>
                             </td>
                             <td>
-                                <?= htmlspecialchars($exam['scheduled_date']) ?>
+                                <?= htmlspecialchars($date->format('g:i A')) ?>
                             </td>
                             <td>
                                 <?= htmlspecialchars($exam['status']) ?>
@@ -43,10 +46,10 @@ $exams = Exam_function::scheduledExams();
                                     <button id="edit_btn" class="open-update-modal-btn"
                                         data-exam_id=<?= htmlspecialchars($exam['exam_id']) ?>
                                         data-course_name=<?= htmlspecialchars($exam['course_name']) ?>
+                                        data-exam_date=<?= htmlspecialchars($date->format('Y-m-d')) ?>
+                                        data-exam_time=<?= htmlspecialchars($date->format('H:i:s')) ?>
                                         data-status="<?= htmlspecialchars($exam['status']) ?>">
-
                                         <img src="<?= BASE_URL ?>/assets/images/icon/edit.png" alt="update" width="28" />
-
                                     </button>
                                     <!-- delete button -->
                                     <button id="delete_btn" class="delete-btn" data-exam_id=<?= $exam['exam_id'] ?>>
@@ -63,7 +66,7 @@ $exams = Exam_function::scheduledExams();
 </div>
 
 
-<?php include 'instructor_modal.php'; ?>
+<?php include 'schedule_modal.php'; ?>
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
@@ -71,18 +74,16 @@ $exams = Exam_function::scheduledExams();
 
         deleteButtons.forEach((btn) => {
             btn.addEventListener("click", () => {
-                const instructor_id = btn.getAttribute("data-Iid");
-                const course_id = btn.getAttribute("data-cid");
+                const exam_id = btn.getAttribute("data-exam_id");
 
-                if (confirm("Are you sure you want to delete this Instructor?")) {
-                    fetch("/softexam/api/unassignInstructor", {
+                if (confirm("Are you sure you want to delete this Schedule?")) {
+                    fetch("/softexam/api/deleteSchedule", {
                         method: "POST",
                         headers: {
                             "Content-Type": "application/json"
                         },
                         body: JSON.stringify({
-                            instructor_id,
-                            course_id
+                            exam_id,
                         })
                     })
                         .then((res) => res.json())
@@ -90,11 +91,10 @@ $exams = Exam_function::scheduledExams();
                             if (data?.message) {
                                 window.location.reload();
                             } else {
-                                alert("Failed to delete student.");
+                                alert("Failed to delete schedule.");
                             }
                         })
                         .catch(err => {
-                            console.error(err);
                             alert("An error occurred.");
                         });
                 }

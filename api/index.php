@@ -97,6 +97,18 @@ switch ("$method $path") {
         Exam_controller::scheduleExam($exam_id, $scheduled_date);
         break;
 
+    case "POST /updateExamSchedule":
+        $data = json_decode(file_get_contents("php://input"), true);
+        $exam_id = $data['exam_id'] ?? null;
+        $scheduled_date = $data['scheduled_date'] ?? null;
+
+        if (!$exam_id || !$scheduled_date) {
+            Response_helper::json(['error' => 'Exam id and Scheduled date is required']);
+            exit;
+        }
+        Exam_controller::updateExamSchedule($exam_id, $scheduled_date);
+        break;
+
     default:
         Response_helper::json(['error' => 'Invalid Request'], 401);
         break;

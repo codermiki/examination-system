@@ -8,6 +8,13 @@ class Exam_controller
         $response = Exam_service::scheduleExam($exam_id, $scheduled_date);
         Response_helper::json($response);
     }
+    
+    public static function updateExamSchedule($exam_id, $scheduled_date): void
+    {
+        $response = Exam_service::updateExamSchedule($exam_id, $scheduled_date);
+        Response_helper::json($response);
+    }
+    
     // public static function deleteCourse($course_id): void
     // {
     //     $response = Course_service::deleteCourse($course_id);

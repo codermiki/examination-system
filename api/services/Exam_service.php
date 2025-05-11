@@ -35,4 +35,34 @@ class Exam_service
         }
     }
 
+    public static function updateExamSchedule($exam_id, $scheduled_date)
+    {
+        global $conn;
+
+        if (!$exam_id || !$scheduled_date) {
+            return ['error' => 'Invalid input. Exam id and schedule date are required.'];
+        }
+
+        try {
+            // Check if the exam is already scheduled
+            $checkStmt = $conn->prepare("SELECT * FROM exam_schedules WHERE exam_id = :exam_id");
+            $checkStmt->execute([':exam_id' => $exam_id]);
+
+            if ($checkStmt->rowCount() === 0) {
+                return ['error' => 'Exam is not scheduled yet.'];
+            }
+
+            // Update the existing schedule
+            $updateStmt = $conn->prepare("UPDATE exam_schedules SET scheduled_date = :scheduled_date WHERE exam_id = :exam_id");
+            $updateStmt->execute([
+                ':scheduled_date' => $scheduled_date,
+                ':exam_id' => $exam_id
+            ]);
+
+            return ['message' => 'Exam schedule updated successfully.'];
+        } catch (PDOException $e) {
+            return ['error' => "Failed to update exam schedule."];
+        }
+    }
+
 }
