@@ -65,4 +65,34 @@ class Exam_service
         }
     }
 
+    public static function deleteSchedule($exam_id)
+    {
+        global $conn;
+
+        if (!$exam_id) {
+            return ['error' => 'Invalid input. Exam id is required.'];
+        }
+
+        try {
+            // Check if the exam is scheduled
+            $checkStmt = $conn->prepare("SELECT * FROM exam_schedules WHERE exam_id = :exam_id");
+
+            $checkStmt->execute([':exam_id' => $exam_id]);
+
+            if ($checkStmt->rowCount() === 0) {
+                return ['error' => 'Exam is not scheduled yet.'];
+            }
+
+            // delete the existing schedule
+            $deleteStmt = $conn->prepare("DELETE FROM exam_schedules WHERE exam_id = :exam_id");
+            $deleteStmt->execute([
+                ':exam_id' => $exam_id
+            ]);
+
+            return ['message' => 'Exam schedule deleted successfully.'];
+        } catch (PDOException $e) {
+            return ['error' => "Failed to delete exam schedule."];
+        }
+    }
+
 }

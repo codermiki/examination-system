@@ -21,44 +21,58 @@ $exams = Exam_function::scheduledExams();
                     </tr>
                 </thead>
                 <tbody>
-                    <?php foreach ($exams as $exam):
-                        // "2025-05-16 14:00:00"
-                        $date = new DateTime($exam['scheduled_date']);
+                    <?php
+                    if (!empty($exams)) {
+                        ?>
+                        <?php foreach ($exams as $exam):
+                            // "2025-05-16 14:00:00"
+                            $date = new DateTime($exam['scheduled_date']);
+                            ?>
+                            <tr>
+                                <td>
+                                    <?= htmlspecialchars($exam['course_name']) ?>
+                                </td>
+                                <td>
+                                    <?= htmlspecialchars($exam['exam_title']) ?>
+                                </td>
+                                <td>
+                                    <?= htmlspecialchars($date->format('Y-m-d')) ?>
+                                </td>
+                                <td>
+                                    <?= htmlspecialchars($date->format('g:i A')) ?>
+                                </td>
+                                <td>
+                                    <?= htmlspecialchars($exam['status']) ?>
+                                </td>
+                                <td>
+                                    <div class="btn-container">
+                                        <button id="edit_btn" class="open-update-modal-btn"
+                                            data-exam_id=<?= htmlspecialchars($exam['exam_id']) ?>
+                                            data-course_name=<?= htmlspecialchars($exam['course_name']) ?>
+                                            data-exam_date=<?= htmlspecialchars($date->format('Y-m-d')) ?>
+                                            data-exam_time=<?= htmlspecialchars($date->format('H:i:s')) ?>
+                                            data-status="<?= htmlspecialchars($exam['status']) ?>">
+                                            <img src="<?= BASE_URL ?>/assets/images/icon/edit.png" alt="update" width="28" />
+                                        </button>
+                                        <!-- delete button -->
+                                        <button id="delete_btn" class="delete-btn" data-exam_id=<?= $exam['exam_id'] ?>>
+                                            <img src="<?= BASE_URL ?>/assets/images/icon/bin.png" alt="delete" width="30" />
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                        <?php
+                    } else {
                         ?>
                         <tr>
-                            <td>
-                                <?= htmlspecialchars($exam['course_name']) ?>
-                            </td>
-                            <td>
-                                <?= htmlspecialchars($exam['exam_title']) ?>
-                            </td>
-                            <td>
-                                <?= htmlspecialchars($date->format('Y-m-d')) ?>
-                            </td>
-                            <td>
-                                <?= htmlspecialchars($date->format('g:i A')) ?>
-                            </td>
-                            <td>
-                                <?= htmlspecialchars($exam['status']) ?>
-                            </td>
-                            <td>
-                                <div class="btn-container">
-                                    <button id="edit_btn" class="open-update-modal-btn"
-                                        data-exam_id=<?= htmlspecialchars($exam['exam_id']) ?>
-                                        data-course_name=<?= htmlspecialchars($exam['course_name']) ?>
-                                        data-exam_date=<?= htmlspecialchars($date->format('Y-m-d')) ?>
-                                        data-exam_time=<?= htmlspecialchars($date->format('H:i:s')) ?>
-                                        data-status="<?= htmlspecialchars($exam['status']) ?>">
-                                        <img src="<?= BASE_URL ?>/assets/images/icon/edit.png" alt="update" width="28" />
-                                    </button>
-                                    <!-- delete button -->
-                                    <button id="delete_btn" class="delete-btn" data-exam_id=<?= $exam['exam_id'] ?>>
-                                        <img src="<?= BASE_URL ?>/assets/images/icon/bin.png" alt="delete" width="30" />
-                                    </button>
-                                </div>
+                            <td style="text-align: center" colspan="6">
+                                <h4>No Exams Scheduled Yet</h4>
                             </td>
                         </tr>
-                    <?php endforeach; ?>
+                        <?php
+                    }
+                    ?>
                 </tbody>
             </table>
         </div>

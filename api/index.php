@@ -109,6 +109,17 @@ switch ("$method $path") {
         Exam_controller::updateExamSchedule($exam_id, $scheduled_date);
         break;
 
+    case "POST /deleteSchedule":
+        $data = json_decode(file_get_contents("php://input"), true);
+        $exam_id = $data['exam_id'] ?? null;
+
+        if (!$exam_id) {
+            Response_helper::json(['error' => 'Exam id is required']);
+            exit;
+        }
+        Exam_controller::deleteSchedule($exam_id);
+        break;
+
     default:
         Response_helper::json(['error' => 'Invalid Request'], 401);
         break;

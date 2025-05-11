@@ -15,9 +15,10 @@ class Exam_controller
         Response_helper::json($response);
     }
     
-    // public static function deleteCourse($course_id): void
-    // {
-    //     $response = Course_service::deleteCourse($course_id);
-    //     Response_helper::json($response);
-    // }
+    public static function deleteSchedule($exam_id): void
+    {
+        $response = Exam_service::deleteSchedule($exam_id);
+        Response_helper::json($response);
+    }
+    
 }
