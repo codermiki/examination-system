@@ -1,34 +1,12 @@
 <?php
 include_once '../config.php';
 
-// Start the session if it hasn't been started already
-if (session_status() == PHP_SESSION_NONE) {
-    session_start();
-}
 ?>
 
 <aside class="inner__left_panel">
     <!-- admin roles -->
-    <?php
-    if (isset($_SESSION['role']) && $_SESSION['role'] == 'Admin') {
-        ?>
+    <?php if (isset($_SESSION['role']) && $_SESSION['role'] == 'Admin') { ?>
         <a href="./">Dashboards</a>
-        <!-- <div class="role__container">
-            <p>MANAGE STUDENTS</p>
-            <div class="drop__down">
-                <button onclick="collapse();" type="button">Students</button>
-                <div id="collapse" class="collapse-wrapper">
-                    <div class="collapse">
-                        <div class="v__line"></div>
-                        <div class="action">
-                            <a id="assign_student_toggler" onclick="showAssignStudent(event)" href="#">Add Student</a>
-                            <a href="#">Manage Student</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div> -->
-
         <div class="role__container">
             <p>MANAGE STUDENTS</p>
             <div class="drop__down">
@@ -105,16 +83,11 @@ if (session_status() == PHP_SESSION_NONE) {
                 </div>
             </div>
         </div>
-        <?php
-    }
-    ?>
+    <?php } ?>
 
     <!-- Instructor roles -->
-    <?php
-    if (isset($_SESSION['role']) && $_SESSION['role'] == 'Instructor') {
-        ?>
+    <?php if (isset($_SESSION['role']) && $_SESSION['role'] == 'Instructor') { ?>
         <a href="./">Dashboards</a>
-
         <div class="role__container">
             <p>CREATE EXAM</p>
             <div class="drop__down">
@@ -193,26 +166,30 @@ if (session_status() == PHP_SESSION_NONE) {
                 </div>
             </div>
         </div>
+    <?php } ?>
 
-        <?php
-    }
-    ?>
-    <?php
-    if (isset($_SESSION['role']) && $_SESSION['role'] == 'Student') {
-        ?>
+    <!-- Student roles -->
+    <?php if (isset($_SESSION['role']) && $_SESSION['role'] == 'Student') { ?>
+        <a href="./">Dashboards</a>
+        <div class="role__container">
+            <p>UPCOMING EXAM</p>
+            <div class="drop__down">
+                <div class="collapse">
+                    <div class="v__line"></div>
+                    <div class="action">
+                        <a href="index.php?page=take_exam">web design and programming</a>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <div class="role__container">
             <p>AVAILABLE EXAMS</p>
             <div class="drop__down">
-                <!-- <button onclick="toggleCollapse(this);" type="button">Upcoming Exams</button> -->
                 <div class="collapse">
                     <div class="v__line"></div>
                     <div class="action">
-                        <a href="index.php?page=upcoming_exams">Upcoming Exams List</a>
                         <a href="index.php?page=exam_schedule">Exam Schedule</a>
-                        <a href="index.php?page=take_exam">Take Exam</a>
-                        <a href="index.php?page=taken_exams">Taken Exams</a>
-                        <a href="index.php?page=view_result">View Result</a>
                     </div>
                 </div>
             </div>
@@ -224,7 +201,7 @@ if (session_status() == PHP_SESSION_NONE) {
                 <div class="non-collapse ">
                     <div class="v__line"></div>
                     <div class="action">
-                        <a href="#" class="sidebar-link" data-content="student_taken_exams">Taken Exams List</a>
+                        <a href="#" class="sidebar-link" data-content="taken_exams">Taken Exams</a>
                     </div>
                 </div>
             </div>
@@ -236,32 +213,22 @@ if (session_status() == PHP_SESSION_NONE) {
                 <div class="non-collapse ">
                     <div class="v__line"></div>
                     <div class="action">
-                        <a href="#" class="sidebar-link" data-content="student_add_feedback">Add Feedback</a>
+                        <a href="#" class="sidebar-link" data-content="add_feedback">Add Feedback</a>
                     </div>
                 </div>
             </div>
         </div>
+
         <div class="role__container">
             <p>Profile</p>
             <div class="drop__down">
                 <div class="non-collapse ">
                     <div class="v__line"></div>
                     <div class="action">
-                        <a href="#" class="sidebar-link" data-content="stud_update_password">Update Password</a>
+                        <a href="#" class="sidebar-link" data-content="update_password">Update Password</a>
                     </div>
                 </div>
             </div>
         </div>
-
-        <?php
-    }
-    ?>
-
+    <?php } ?>
 </aside>
-
-<script>
-    function collapse() {
-        const el = document.querySelector("#collapse");
-        el.classList.toggle("collapsed");
-    }
-</script>

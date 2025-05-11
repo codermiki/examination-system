@@ -1,10 +1,11 @@
+<?php
+include __DIR__ . "/../../constants.php";
+?>
+
 <header>
     <nav>
-        <a href="#">
+        <a href="./">
             <div class="header__logo">
-                <div class="logo__container">
-                </div>
-                <h1>softexam</h1>
             </div>
         </a>
         <div class="header__content">

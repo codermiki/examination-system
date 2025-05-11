@@ -50,19 +50,16 @@ header nav a:hover {
 }
 
 .header__logo {
-   display: flex;
-   align-items: center;
-   gap: 10px; /* Increased gap */
-   font-size: 1.4em; /* Larger logo text */
-   font-weight: bold;
-   color: #333; /* Dark color for logo text */
+   width: 120px;
+   height: 50px;
+   background: url("../images/logo/logo.png");
+   background-repeat: no-repeat;
+   background-position: center;
+   background-size: cover;
 }
 
-.logo__container {
-   width: 40px; /* Keep logo size */
-   height: 40px;
-   background: url("../images/logo/logo.png") no-repeat center center;
-   background-size: contain; /* Use contain to ensure logo is fully visible */
+.header__logo img {
+   max-width: 100%;
 }
 
 .header__content {
@@ -182,16 +179,6 @@ footer {
    header {
       padding: 0 10px; /* Reduce padding on smaller screens */
       height: 50px; /* Slightly smaller height */
-   }
-
-   .header__logo {
-      font-size: 1.2em; /* Smaller logo text */
-      gap: 5px;
-   }
-
-   .logo__container {
-      width: 35px;
-      height: 35px;
    }
 
    header nav {
