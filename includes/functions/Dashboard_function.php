@@ -8,9 +8,9 @@ class Dashboard_function
         global $conn;
 
         $data = [
-            'admin' => 0,
-            'student' => 0,
-            'instructor' => 0,
+            'Admin' => 0,
+            'Student' => 0,
+            'Instructor' => 0,
             'total_courses' => 0,
             'upcoming_exams' => 0
         ];
