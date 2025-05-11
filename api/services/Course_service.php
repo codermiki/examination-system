@@ -3,32 +3,28 @@ require_once "config/db.config.php";
 
 class Course_service
 {
-    public static function addCourse($year, $semester, $course_ids)
+    public static function addCourse($courses)
     {
         global $conn;
 
-        if (!$year || !$semester || empty($course_ids)) {
-            return ['error' => 'Invalid input. Year, semester, and courses are required.'];
+        if (empty($courses)) {
+            return ['error' => 'Invalid input. courses are required.'];
         }
 
         try {
-            $stmt = $conn->prepare("INSERT INTO assigned_courses (course_id,course_name, year, semester) VALUES (:course_id,:course_name, :year, :semester)");
+            $stmt = $conn->prepare("INSERT INTO courses (course_id,course_name) VALUES (:course_id,:course_name)");
 
-            foreach ($course_ids as $course) {
-                // Optional: Check if already assigned (prevent duplicates)
-                $checkStmt = $conn->prepare("SELECT * FROM assigned_courses WHERE course_id = :course_id AND year = :year AND semester = :semester");
+            foreach ($courses as $course) {
+                // Check if already assigned (prevent duplicates)
+                $checkStmt = $conn->prepare("SELECT * FROM courses WHERE course_id = :course_id");
                 $checkStmt->execute([
-                    ':course_id' => $course["course_id"],
-                    ':year' => $year,
-                    ':semester' => $semester
+                    ':course_id' => $course["course_id"]
                 ]);
 
                 if ($checkStmt->rowCount() === 0) {
                     $stmt->execute([
                         ':course_id' => $course["course_id"],
-                        ':course_name' => $course["course_name"],
-                        ':year' => $year,
-                        ':semester' => $semester
+                        ':course_name' => $course["course_name"]
                     ]);
                 }
                 // Else: skip duplicate entry
@@ -37,44 +33,39 @@ class Course_service
             return ['message' => 'Courses assigned successfully.'];
 
         } catch (PDOException $e) {
-            return ['error' => 'Database error: ' . $e->getMessage()];
+            return ['error' => "Failed to assign Courses {$e}"];
         }
     }
-    public static function updateCourse($year, $semester, $course_id)
+
+    public static function deleteCourse($course_id)
     {
         global $conn;
 
-        if (!$year || !$semester || !$course_id) {
-            return ['error' => 'Invalid input. Year, semester, and courses are required.'];
+        if (!$course_id) {
+            return ['error' => 'Invalid input. courses are required.'];
         }
 
         try {
-            $sql = "UPDATE assigned_courses 
-                SET year = :year, semester = :semester 
-                WHERE course_id = :course_id";
-
-            $stmt = $conn->prepare($sql);
-
-            // Optional: Check if already assigned (prevent duplicates)
-            $checkStmt = $conn->prepare("SELECT * FROM assigned_courses WHERE course_id = :course_id");
+            // Check if there
+            $checkStmt = $conn->prepare("SELECT * FROM courses WHERE course_id =  :course_id");
             $checkStmt->execute([
                 ':course_id' => $course_id
             ]);
 
             if ($checkStmt->rowCount() > 0) {
-                $stmt->execute([
-                    ':year' => $year,
-                    ':semester' => $semester,
+                $addStmt = $conn->prepare("DELETE FROM courses WHERE course_id = :course_id");
+
+                $addStmt->execute([
                     ':course_id' => $course_id
                 ]);
             } else {
                 return ['message' => 'Course not found.'];
             }
 
-            return ['message' => 'Course updated successfully.'];
+            return ['message' => 'Course deleted successfully.'];
 
         } catch (PDOException $e) {
-            return ['error' => 'Database error: ' . $e->getMessage()];
+            return ['error' => "Failed to delete Course"];
         }
     }
 }

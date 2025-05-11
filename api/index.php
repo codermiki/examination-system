@@ -2,6 +2,8 @@
 require_once "controllers/User_controller.php";
 require_once "controllers/Course_controller.php";
 require_once "controllers/Student_controller.php";
+require_once "controllers/Instructor_controller.php";
+require_once "controllers/Exam_controller.php";
 require_once "helpers/Response_helper.php";
 
 $method = $_SERVER['REQUEST_METHOD'];
@@ -17,18 +19,14 @@ switch ("$method $path") {
 
     case "POST /addCourse":
         $data = json_decode(file_get_contents("php://input"), true);
-        $year = $data['year'] ?? null;
-        $semester = $data['semester'] ?? null;
-        $course_ids = $data['course_ids'] ?? [];
-        Course_controller::addCourse($year, $semester, $course_ids);
+        $courses = $data['courses'] ?? [];
+        Course_controller::addCourse($courses);
         break;
 
-    case "POST /updateCourse":
+    case "POST /deleteCourse":
         $data = json_decode(file_get_contents("php://input"), true);
-        $year = $data['year'] ?? null;
-        $semester = $data['semester'] ?? null;
         $course_id = $data['course_id'];
-        Course_controller::updateCourse($year, $semester, $course_id);
+        Course_controller::deleteCourse($course_id);
         break;
 
     case "POST /assignStudent":
@@ -73,6 +71,30 @@ switch ("$method $path") {
         $instructor = $data['instructor'] ?? null;
         $course_id = $data['course_id'] ?? null;
         Instructor_controller::assignInstructor($instructor, $course_id);
+        break;
+
+    case "POST /unassignInstructor":
+        $data = json_decode(file_get_contents("php://input"), true);
+        $instructor_id = $data['instructor_id'] ?? null;
+        $course_id = $data['course_id'] ?? null;
+
+        if (!$instructor_id || !$course_id) {
+            Response_helper::json(['error' => 'Instructor id and Course id is required']);
+            exit;
+        }
+        Instructor_controller::unassignInstructor($instructor_id, $course_id);
+        break;
+
+    case "POST /scheduleExam":
+        $data = json_decode(file_get_contents("php://input"), true);
+        $exam_id = $data['exam_id'] ?? null;
+        $scheduled_date = $data['scheduled_date'] ?? null;
+
+        if (!$exam_id || !$scheduled_date) {
+            Response_helper::json(['error' => 'Exam id and Scheduled date is required']);
+            exit;
+        }
+        Exam_controller::scheduleExam($exam_id, $scheduled_date);
         break;
 
     default:

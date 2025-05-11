@@ -50,7 +50,7 @@ class Student_service
             return ['error' => "Failed to Assign Student"];
         }
     }
-    
+
     public static function updateAssignedStudent($course_id, $student_id, $status)
     {
         global $conn;
@@ -80,6 +80,7 @@ class Student_service
             return ['error' => 'Database error: ' . $e->getMessage()];
         }
     }
+
     public static function unassignStudent($student_id, $course_id)
     {
         global $conn;

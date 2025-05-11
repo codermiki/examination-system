@@ -85,17 +85,9 @@ button {
 
 #delete_btn,
 #edit_btn {
-   width: 50px;
-   background-color: white;
+   width: max-content;
    padding: 0;
-}
-
-.button_container {
-   height: 50px;
-   display: flex;
-   justify-content: center;
-   align-items: center;
-   gap: 20px;
+   background-color: transparent;
 }
 
 .button_container img {
@@ -290,11 +282,6 @@ select {
    margin: 20px;
 }
 
-h1 {
-   font-size: 28px;
-   margin-bottom: 20px;
-   color: #333;
-}
 
 .card {
    background: #fff;
@@ -516,28 +503,23 @@ tbody tr:last-child td {
 
 .feedback th:nth-child(1),
 .feedback td:nth-child(1) {
-   width: 25%;
-   min-width: 120px;
-}
-.feedback th:nth-child(2),
-.feedback td:nth-child(2) {
-   min-width: 120px;
-}
-
-.feedback th:nth-child(4),
-.feedback td:nth-child(4) {
-   width: 50%;
-   min-width: 200px;
-}
-
-.feedback th:nth-child(5),
-.feedback td:nth-child(5) {
-   width: 25%;
+   width: 15%;
    min-width: 100px;
+}
+
+.feedback th:nth-child(6),
+.feedback td:nth-child(6) {
    text-align: right;
    color: #6c757d;
 }
 
 tbody tr:hover {
    background-color: #f8f9fa;
+}
+
+.btn-container {
+   display: flex;
+   justify-content: center;
+   align-items: center;
+   gap: 10px;
 }

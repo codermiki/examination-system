@@ -63,10 +63,6 @@ header nav a:hover {
    height: 40px;
    background: url("../images/logo/logo.png") no-repeat center center;
    background-size: contain; /* Use contain to ensure logo is fully visible */
-   /* Optional: Add a subtle border or background to logo container */
-   /* border: 1px solid #ccc; */
-   /* border-radius: 50%; */
-   /* background-color: #f0f0f0; */
 }
 
 .header__content {
@@ -84,25 +80,19 @@ header nav a:hover {
    cursor: pointer;
    border: none;
    font-weight: 700;
-   border-radius: 2px;
+   border-radius: 24px;
    opacity: 0.9;
    transition: all 0.2s ease-in-out;
 }
 
 .account button:hover {
-   background-color: var(--account-button-hover-bg);
-   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow on hover */
+   box-shadow: #e4e0e0 2px 0px 10px;
 }
 
-.btn:hover {
-   background-color: #e0f3ff;
-   opacity: 1;
+.account button:active {
+   color: #333;
+   background-color: transparent;
 }
-
-.account button[aria-expanded="true"] span {
-   transform: rotate(180deg); /* Rotate arrow when expanded */
-}
-
 
 .drop-down {
    position: absolute;
@@ -115,7 +105,9 @@ header nav a:hover {
    max-height: 0; /* Start collapsed */
    opacity: 0; /* Start invisible */
    visibility: hidden; /* Hide completely when collapsed */
-   transition: max-height var(--header-transition-duration) ease-in-out, opacity var(--header-transition-duration) ease, visibility var(--header-transition-duration) ease;
+   transition: max-height var(--header-transition-duration) ease-in-out,
+      opacity var(--header-transition-duration) ease,
+      visibility var(--header-transition-duration) ease;
    min-width: 200px; /* Minimum width for dropdown */
    z-index: 1001; /* Ensure it's above other header elements */
 }
@@ -188,32 +180,32 @@ footer {
 /* Responsive adjustments */
 @media (max-width: 768px) {
    header {
-       padding: 0 10px; /* Reduce padding on smaller screens */
-       height: 50px; /* Slightly smaller height */
+      padding: 0 10px; /* Reduce padding on smaller screens */
+      height: 50px; /* Slightly smaller height */
    }
 
    .header__logo {
-       font-size: 1.2em; /* Smaller logo text */
-       gap: 5px;
+      font-size: 1.2em; /* Smaller logo text */
+      gap: 5px;
    }
 
    .logo__container {
-       width: 35px;
-       height: 35px;
+      width: 35px;
+      height: 35px;
    }
 
    header nav {
-       padding: 0 10px; /* Reduce nav padding */
+      padding: 0 10px; /* Reduce nav padding */
    }
 
    .account button {
-       padding: 6px 10px; /* Reduce button padding */
-       font-size: 0.9em;
+      padding: 6px 10px; /* Reduce button padding */
+      font-size: 0.9em;
    }
 
-    .drop-down {
-        top: calc(100% + 8px); /* Adjust dropdown position */
-        right: 0; /* Keep right aligned */
-        min-width: 180px;
-    }
+   .drop-down {
+      top: calc(100% + 8px); /* Adjust dropdown position */
+      right: 0; /* Keep right aligned */
+      min-width: 180px;
+   }
 }

@@ -12,5 +12,14 @@ class Instructor_controller
             Response_helper::json($result, 200);
         }
     }
+    public static function unassignInstructor($instructor_id, $course_id)
+    {
+        $result = Instructor_service::unassignInstructor($instructor_id, $course_id);
+        if (isset($result['error'])) {
+            Response_helper::json($result, 400);
+        } else {
+            Response_helper::json($result, 200);
+        }
+    }
 
 }

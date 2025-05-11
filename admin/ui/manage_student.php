@@ -11,7 +11,6 @@ $courses = Course_function::fetchCourses();
 <!-- student list -->
 <div class="manage_instructor">
     <div class="container">
-        <h1>MANAGE Student</h1>
         <div class="card">
             <h2>STUDENT LIST</h2>
             <table>
@@ -40,21 +39,23 @@ $courses = Course_function::fetchCourses();
                                 <?= htmlspecialchars($student['status']) ?>
                             </td>
                             <td>
-                                <button id="edit_btn" class="open-update-modal-btn"
-                                    data-id="<?= htmlspecialchars($student['user_id']) ?>"
-                                    data-name="<?= htmlspecialchars($student['name']) ?>"
-                                    data-course="<?= $student['course_id'] ?>"
-                                    data-email="<?= htmlspecialchars($student['email']) ?>"
-                                    data-status="<?= htmlspecialchars($student['status']) ?>">
+                                <div class="btn-container">
+                                    <button id="edit_btn" class="open-update-modal-btn"
+                                        data-id="<?= htmlspecialchars($student['user_id']) ?>"
+                                        data-name="<?= htmlspecialchars($student['name']) ?>"
+                                        data-course="<?= $student['course_id'] ?>"
+                                        data-email="<?= htmlspecialchars($student['email']) ?>"
+                                        data-status="<?= htmlspecialchars($student['status']) ?>">
 
-                                    <img src="<?= BASE_URL ?>/assets/images/icon/edit.png" alt="update" width="28" />
+                                        <img src="<?= BASE_URL ?>/assets/images/icon/edit.png" alt="update" width="28" />
 
-                                </button>
-                                <!-- delete button -->
-                                <button id="delete_btn" class="delete-btn" data-sid="<?= $student['user_id'] ?>"
-                                    data-cid="<?= $student['course_id'] ?>">
-                                    <img src="<?= BASE_URL ?>/assets/images/icon/bin.png" alt="delete" width="30" />
-                                </button>
+                                    </button>
+                                    <!-- delete button -->
+                                    <button id="delete_btn" class="delete-btn" data-sid="<?= $student['user_id'] ?>"
+                                        data-cid="<?= $student['course_id'] ?>">
+                                        <img src="<?= BASE_URL ?>/assets/images/icon/bin.png" alt="delete" width="30" />
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                     <?php endforeach; ?>

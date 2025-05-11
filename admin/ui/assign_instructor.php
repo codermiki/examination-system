@@ -63,26 +63,27 @@ include_once __DIR__ . "/../../includes/functions/Course_function.php";
         fetch("./data/instructors.json")
             .then(res => res.json())
             .then(data => {
-                let instructor = data.filter((instructor) => instructor.user_id == user_id);
+                let instructor = data.find((instructor) => instructor.user_id == user_id);
 
                 fetch("/softexam/api/assignInstructor", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ instructor, course_id })
+                    body: JSON.stringify({
+                        instructor,
+                        course_id
+                    })
                 })
-                    .then(res => res.json())
-                    .then(response => {
+                    .then((res) => res.json())
+                    .then((response) => {
                         if (response?.error) {
                             document.getElementById("message").textContent = response?.error;
                             return;
                         }
                         document.getElementById("message").textContent = response?.message;
                         window.location.replace("index.php?page=manage_instructor")
-
-                    }).catch(err => {
-                        document.getElementById("message").textContent = "Failed to assign"
                     })
             }).catch(err => {
+                console.log("error from outer ", err)
                 document.getElementById("message").textContent = "Failed to assign"
             });
     });
