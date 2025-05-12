@@ -50,13 +50,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['exam_id'])) {
         try {
             $conn->beginTransaction();
 
-            $stmt = $conn->prepare("UPDATE exams 
-                                  SET course_id = :course_id, 
-                                      exam_title = :exam_title, 
-                                      exam_description = :exam_description, 
-                                      duration_minutes = :duration_minutes, 
-                                      total_marks = :total_marks 
-                                  WHERE exam_id = :exam_id 
+            $stmt = $conn->prepare("UPDATE exams
+                                  SET course_id = :course_id,
+                                      exam_title = :exam_title,
+                                      exam_description = :exam_description,
+                                      duration_minutes = :duration_minutes,
+                                      total_marks = :total_marks
+                                  WHERE exam_id = :exam_id
                                   AND instructor_id = :instructor_id");
 
             $stmt->bindParam(':course_id', $courseId, PDO::PARAM_INT);
@@ -71,13 +71,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['exam_id'])) {
                 throw new Exception("Error updating exam details: " . implode(" ", $stmt->errorInfo()));
             }
 
-            // Fetch current questions for this exam
             $currentQuestionsStmt = $conn->prepare("SELECT question_id FROM questions WHERE exam_id = :exam_id");
             $currentQuestionsStmt->bindParam(':exam_id', $examIdToUpdate, PDO::PARAM_INT);
             $currentQuestionsStmt->execute();
             $currentQuestionIds = $currentQuestionsStmt->fetchAll(PDO::FETCH_COLUMN);
 
-            // Get submitted question IDs
             $submittedQuestionIds = [];
             foreach ($questionsData as $qData) {
                 if (!empty($qData['question_id'])) {
@@ -90,34 +88,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['exam_id'])) {
             if (!empty($questionIdsToDelete)) {
                 $placeholders = implode(',', array_fill(0, count($questionIdsToDelete), '?'));
 
-                $deleteStudentAnswersStmt = $conn->prepare("DELETE sa FROM student_answers sa 
-                                                          JOIN questions q ON sa.question_id = q.question_id 
-                                                          WHERE q.exam_id = ? 
+                $deleteStudentAnswersStmt = $conn->prepare("DELETE sa FROM student_answers sa
+                                                          JOIN questions q ON sa.question_id = q.question_id
+                                                          WHERE q.exam_id = ?
                                                           AND sa.question_id IN ($placeholders)");
                 $bindParamsSA = array_merge([$examIdToUpdate], $questionIdsToDelete);
                 $deleteStudentAnswersStmt->execute($bindParamsSA);
 
-                $deleteChoicesStmt = $conn->prepare("DELETE FROM question_options 
+                $deleteChoicesStmt = $conn->prepare("DELETE FROM question_options
                                                    WHERE question_id IN ($placeholders)");
                 $deleteChoicesStmt->execute($questionIdsToDelete);
 
-                $deleteQuestionsStmt = $conn->prepare("DELETE FROM questions 
-                                                    WHERE exam_id = ? 
+                $deleteQuestionsStmt = $conn->prepare("DELETE FROM questions
+                                                    WHERE exam_id = ?
                                                     AND question_id IN ($placeholders)");
                 $bindParamsQ = array_merge([$examIdToUpdate], $questionIdsToDelete);
                 $deleteQuestionsStmt->execute($bindParamsQ);
             }
 
-            // Process submitted questions
             $allowedQuestionTypes = ['multiple_choice', 'true_false', 'fill_blank'];
-            foreach ($questionsData as $question) {
+            foreach ($questionsData as $index => $question) {
                 $questionId = filter_var($question['question_id'] ?? 0, FILTER_VALIDATE_INT);
                 $questionText = trim($question['text'] ?? '');
                 $questionType = $question['type'] ?? '';
                 $marks = filter_var($question['marks'] ?? 1, FILTER_VALIDATE_INT);
                 $correctAnswer = null;
 
-                // Validate question data
                 if (empty($questionText)) {
                     continue;
                 }
@@ -126,7 +122,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['exam_id'])) {
                     $questionType = 'multiple_choice';
                 }
 
-                // Determine correct answer based on type
                 if ($questionType === 'true_false') {
                     $correctAnswer = $question['correct_answer'] ?? null;
                     if (!in_array($correctAnswer, ['true', 'false'])) {
@@ -139,16 +134,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['exam_id'])) {
                             $correctAnswer = implode('|', $validAnswers);
                         }
                     }
+                } elseif ($questionType === 'multiple_choice') {
+                    $correctAnswer = $question['correct_answer'] ?? '';
+                    if (isset($question['options']) && is_array($question['options'])) {
+                        foreach ($question['options'] as $option) {
+                            if (isset($option['value']) && $option['value'] === $correctAnswer) {
+                                $correctAnswer = $option['text'];
+                                break;
+                            }
+                        }
+                    }
                 }
 
                 if (!empty($questionId) && in_array($questionId, $currentQuestionIds)) {
-                    // Update existing question
-                    $stmt = $conn->prepare("UPDATE questions 
-                                          SET question_text = :question_text, 
-                                              question_type = :question_type, 
+                    $stmt = $conn->prepare("UPDATE questions
+                                          SET question_text = :question_text,
+                                              question_type = :question_type,
                                               correct_answer = :correct_answer,
                                               marks = :marks
-                                          WHERE question_id = :question_id 
+                                          WHERE question_id = :question_id
                                           AND exam_id = :exam_id");
 
                     $stmt->bindParam(':question_text', $questionText, PDO::PARAM_STR);
@@ -162,54 +166,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['exam_id'])) {
                         throw new Exception("Error updating question ID " . $questionId . ": " . implode(" ", $stmt->errorInfo()));
                     }
 
-                    // Handle options for multiple choice questions
                     if ($questionType === 'multiple_choice') {
                         if (!isset($question['options'])) {
                             continue;
                         }
 
-                        // Fetch current options
-                        $currentOptionsStmt = $conn->prepare("SELECT option_id FROM question_options 
+                        $currentOptionsStmt = $conn->prepare("SELECT option_id FROM question_options
                                                             WHERE question_id = :question_id");
                         $currentOptionsStmt->bindParam(':question_id', $questionId, PDO::PARAM_INT);
                         $currentOptionsStmt->execute();
                         $currentOptionIds = $currentOptionsStmt->fetchAll(PDO::FETCH_COLUMN);
 
-                        // Get submitted option IDs
                         $submittedOptionIds = [];
-                        foreach ($question['options'] as $optionData) {
-                            if (isset($optionData['option_id']) && !empty($optionData['option_id'])) {
-                                $submittedOptionIds[] = (int)$optionData['option_id'];
+                        foreach ($question['options'] as $option) {
+                            if (isset($option['option_id']) && !empty($option['option_id'])) {
+                                $submittedOptionIds[] = (int)$option['option_id'];
                             }
                         }
 
-                        // Determine options to delete
                         $optionIdsToDelete = array_diff($currentOptionIds, $submittedOptionIds);
 
-                        // Delete removed options
                         if (!empty($optionIdsToDelete)) {
                             $placeholders = implode(',', array_fill(0, count($optionIdsToDelete), '?'));
-                            $deleteOptionsStmt = $conn->prepare("DELETE FROM question_options 
-                                                               WHERE question_id = ? 
+                            $deleteOptionsStmt = $conn->prepare("DELETE FROM question_options
+                                                               WHERE question_id = ?
                                                                AND option_id IN ($placeholders)");
                             $bindParams = array_merge([$questionId], $optionIdsToDelete);
                             $deleteOptionsStmt->execute($bindParams);
                         }
 
-                        // Process submitted options
-                        foreach ($question['options'] as $optionData) {
-                            $optionId = filter_var($optionData['option_id'] ?? 0, FILTER_VALIDATE_INT);
-                            $optionText = trim($optionData['text'] ?? '');
+                        foreach ($question['options'] as $option) {
+                            $optionId = filter_var($option['option_id'] ?? 0, FILTER_VALIDATE_INT);
+                            $optionText = trim($option['text'] ?? '');
 
                             if (empty($optionText)) {
                                 continue;
                             }
 
                             if (!empty($optionId) && in_array($optionId, $currentOptionIds)) {
-                                // Update existing option
-                                $stmt = $conn->prepare("UPDATE question_options 
-                                                      SET option_text = :option_text 
-                                                      WHERE option_id = :option_id 
+                                $stmt = $conn->prepare("UPDATE question_options
+                                                      SET option_text = :option_text
+                                                      WHERE option_id = :option_id
                                                       AND question_id = :question_id");
 
                                 $stmt->bindParam(':option_text', $optionText, PDO::PARAM_STR);
@@ -220,9 +217,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['exam_id'])) {
                                     throw new Exception("Error updating option ID " . $optionId . ": " . implode(" ", $stmt->errorInfo()));
                                 }
                             } else {
-                                // Insert new option
-                                $stmt = $conn->prepare("INSERT INTO question_options 
-                                                      (question_id, option_text) 
+                                $stmt = $conn->prepare("INSERT INTO question_options
+                                                      (question_id, option_text)
                                                       VALUES (:question_id, :option_text)");
 
                                 $stmt->bindParam(':question_id', $questionId, PDO::PARAM_INT);
@@ -235,9 +231,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['exam_id'])) {
                         }
                     }
                 } else {
-                    // Insert new question
-                    $stmt = $conn->prepare("INSERT INTO questions 
-                                          (exam_id, question_text, question_type, correct_answer, marks) 
+                    $stmt = $conn->prepare("INSERT INTO questions
+                                          (exam_id, question_text, question_type, correct_answer, marks)
                                           VALUES (:exam_id, :question_text, :question_type, :correct_answer, :marks)");
 
                     $stmt->bindParam(':exam_id', $examIdToUpdate, PDO::PARAM_INT);
@@ -252,17 +247,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['exam_id'])) {
 
                     $newQuestionId = $conn->lastInsertId();
 
-                    // Handle options for new multiple choice questions
                     if ($questionType === 'multiple_choice' && isset($question['options'])) {
-                        foreach ($question['options'] as $optionData) {
-                            $optionText = trim($optionData['text'] ?? '');
+                        foreach ($question['options'] as $option) {
+                            $optionText = trim($option['text'] ?? '');
 
                             if (empty($optionText)) {
                                 continue;
                             }
 
-                            $stmt = $conn->prepare("INSERT INTO question_options 
-                                                  (question_id, option_text) 
+                            $stmt = $conn->prepare("INSERT INTO question_options
+                                                  (question_id, option_text)
                                                   VALUES (:question_id, :option_text)");
 
                             $stmt->bindParam(':question_id', $newQuestionId, PDO::PARAM_INT);
@@ -278,6 +272,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['exam_id'])) {
 
             $conn->commit();
             $message = '<div class="message success">Exam "' . htmlspecialchars($examTitle) . '" updated successfully.</div>';
+            $examIdToLoad = $examIdToUpdate;
         } catch (Exception $e) {
             if ($conn->inTransaction()) {
                 $conn->rollBack();
@@ -288,11 +283,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['exam_id'])) {
         }
     }
 }
-// --- End: PHP Logic for Handling Form Submission ---
 
-// --- Start: PHP Logic for Displaying Page (List or Edit Form) ---
-
-// Fetch courses for the dropdown
 try {
     $sql = "SELECT c.course_id, c.course_name
             FROM courses c
@@ -309,7 +300,6 @@ try {
     $message .= '<div class="message error">Could not load courses list.</div>';
 }
 
-// Determine whether to show the list or the edit form
 $showEditForm = false;
 $examIdFromGet = filter_input(INPUT_GET, 'exam_id', FILTER_VALIDATE_INT);
 $examIdToLoad = $examIdToLoad ?? $examIdFromGet;
@@ -319,7 +309,7 @@ if ($examIdToLoad) {
         $sql = "SELECT e.*, c.course_name
                 FROM exams e
                 JOIN courses c ON e.course_id = c.course_id
-                WHERE e.exam_id = :exam_id 
+                WHERE e.exam_id = :exam_id
                 AND e.instructor_id = :instructor_id";
         $stmt = $conn->prepare($sql);
         $stmt->bindParam(':exam_id', $examIdToLoad, PDO::PARAM_INT);
@@ -330,25 +320,22 @@ if ($examIdToLoad) {
         if ($exam) {
             $showEditForm = true;
 
-            // Fetch questions
             $sql_q = "SELECT * FROM questions WHERE exam_id = :exam_id ORDER BY question_id ASC";
             $stmt_q = $conn->prepare($sql_q);
             $stmt_q->bindParam(':exam_id', $examIdToLoad, PDO::PARAM_INT);
             $stmt_q->execute();
             $questions = $stmt_q->fetchAll(PDO::FETCH_ASSOC);
 
-            // Fetch options for multiple-choice questions
             foreach ($questions as &$question) {
                 if ($question['question_type'] === 'multiple_choice') {
-                    $sql_c = "SELECT * FROM question_options 
-                              WHERE question_id = :question_id 
+                    $sql_c = "SELECT * FROM question_options
+                              WHERE question_id = :question_id
                               ORDER BY option_id ASC";
                     $stmt_c = $conn->prepare($sql_c);
                     $stmt_c->bindParam(':question_id', $question['question_id'], PDO::PARAM_INT);
                     $stmt_c->execute();
                     $question['options'] = $stmt_c->fetchAll(PDO::FETCH_ASSOC);
 
-                    // Determine correct option for radio selection
                     foreach ($question['options'] as $optionIndex => &$option) {
                         $option['value'] = 'option_' . ($optionIndex + 1);
                         if ($option['option_text'] === $question['correct_answer']) {
@@ -374,7 +361,6 @@ if ($examIdToLoad) {
     }
 }
 
-// If no exam_id provided or exam not found, fetch the list of exams
 if (!$showEditForm) {
     try {
         $sql = "SELECT e.exam_id, e.exam_title, e.exam_description, e.created_at, c.course_name
@@ -391,7 +377,6 @@ if (!$showEditForm) {
         $message .= '<div class="message error">Could not load your exams list.</div>';
     }
 }
-// --- End: PHP Logic for Displaying Page ---
 ?>
 
 <div class="container">
@@ -407,7 +392,7 @@ if (!$showEditForm) {
         <a href="index.php?page=edit_exam" class="back-link">&larr; Back to Exam List</a>
 
         <div class="card">
-            <form id="editExamForm" method="POST" action="edit_exam.php">
+            <form id="editExamForm" method="POST" action="index.php?page=edit_exam">
                 <input type="hidden" name="exam_id" value="<?php echo htmlspecialchars($exam['exam_id']); ?>">
 
                 <div class="form-group">
@@ -456,14 +441,11 @@ if (!$showEditForm) {
                     <button type="button" class="btn btn-secondary" id="addQuestionBtn">Add New Question</button>
                 </div>
 
-                <button type="submit" onclick="display()" class="btn btn-primary btn-block" style="margin-top: 30px;">Update Exam</button>
+                <button type="submit" class="btn btn-primary btn-block" style="margin-top: 30px;">Update Exam</button>
             </form>
         </div>
 
         <script>
-            function display() {
-                alert("test working");
-            }
             let questionCounter = 0;
 
             document.addEventListener('DOMContentLoaded', () => {
@@ -472,7 +454,6 @@ if (!$showEditForm) {
 
                 addQuestionBtn.addEventListener('click', addQuestion);
 
-                // Populate existing questions
                 const existingQuestions = <?php echo json_encode($questions); ?>;
 
                 if (existingQuestions && Array.isArray(existingQuestions) && existingQuestions.length > 0) {
@@ -504,7 +485,7 @@ if (!$showEditForm) {
                         </div>
                         <div class="form-group">
                             <label class="form-label">Question Type:</label>
-                            <select name="questions[${questionCounter}][type]" class="form-control" 
+                            <select name="questions[${questionCounter}][type]" class="form-control"
                                     onchange="changeQuestionType(${questionCounter}, this.value)">
                                 <option value="multiple_choice" selected>Multiple Choice</option>
                                 <option value="true_false">True/False</option>
@@ -541,12 +522,12 @@ if (!$showEditForm) {
                         <input type="hidden" name="questions[${questionCounter}][question_id]" value="${questionData.question_id}">
                         <div class="form-group">
                             <label class="form-label">Question Text:</label>
-                            <input type="text" name="questions[${questionCounter}][text]" class="form-control" 
+                            <input type="text" name="questions[${questionCounter}][text]" class="form-control"
                                    value="${escapeHtml(questionData.question_text)}" required>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Question Type:</label>
-                            <select name="questions[${questionCounter}][type]" class="form-control" 
+                            <select name="questions[${questionCounter}][type]" class="form-control"
                                     onchange="changeQuestionType(${questionCounter}, this.value)">
                                 <option value="multiple_choice" ${questionData.question_type === 'multiple_choice' ? 'selected' : ''}>Multiple Choice</option>
                                 <option value="true_false" ${questionData.question_type === 'true_false' ? 'selected' : ''}>True/False</option>
@@ -555,7 +536,7 @@ if (!$showEditForm) {
                         </div>
                         <div class="form-group">
                             <label class="form-label">Marks:</label>
-                            <input type="number" name="questions[${questionCounter}][marks]" class="form-control" 
+                            <input type="number" name="questions[${questionCounter}][marks]" class="form-control"
                                    value="${questionData.marks || 1}" min="1" required>
                         </div>
                         <div class="question-options" id="options_container_${questionCounter}">
@@ -578,7 +559,7 @@ if (!$showEditForm) {
                                     <div id="mc_options_${questionIndex}">
                                         ${generateMultipleChoiceOptionsHtml(questionIndex, options, correctOptionValue)}
                                     </div>
-                                    <button type="button" class="btn btn-secondary btn-sm" 
+                                    <button type="button" class="btn btn-secondary btn-sm"
                                             onclick="addMultipleChoiceOption(${questionIndex})">
                                         Add Option
                                     </button>
@@ -591,14 +572,14 @@ if (!$showEditForm) {
                                 <div class="form-group">
                                     <label class="form-label">Correct Answer:</label>
                                     <div class="option-group">
-                                        <input type="radio" name="questions[${questionIndex}][correct_answer]" 
-                                               value="true" id="tf_${questionIndex}_true" 
+                                        <input type="radio" name="questions[${questionIndex}][correct_answer]"
+                                               value="true" id="tf_${questionIndex}_true"
                                                ${correctAnswerTF === 'true' ? 'checked' : ''} required>
                                         <label for="tf_${questionIndex}_true">True</label>
                                     </div>
                                     <div class="option-group">
-                                        <input type="radio" name="questions[${questionIndex}][correct_answer]" 
-                                               value="false" id="tf_${questionIndex}_false" 
+                                        <input type="radio" name="questions[${questionIndex}][correct_answer]"
+                                               value="false" id="tf_${questionIndex}_false"
                                                ${correctAnswerTF === 'false' ? 'checked' : ''}>
                                         <label for="tf_${questionIndex}_false">False</label>
                                     </div>
@@ -614,7 +595,7 @@ if (!$showEditForm) {
                                     <div id="blank_answers_${questionIndex}">
                                         ${generateBlankAnswersHtml(questionIndex, correctAnswersBlank)}
                                     </div>
-                                    <button type="button" class="btn btn-secondary btn-sm" 
+                                    <button type="button" class="btn btn-secondary btn-sm"
                                             onclick="addBlankAnswer(${questionIndex})">
                                         Add Blank Answer
                                     </button>
@@ -653,14 +634,14 @@ if (!$showEditForm) {
                 const optionValue = `option_${optionIndex}`;
                 return `
                         <div class="option-group">
-                            <input type="radio" name="questions[${questionIndex}][correct_answer]" 
-                                   value="${optionValue}" id="mc_${questionIndex}_${optionValue}" 
+                            <input type="radio" name="questions[${questionIndex}][correct_answer]"
+                                   value="${optionValue}" id="mc_${questionIndex}_${optionValue}"
                                    ${isChecked ? 'checked' : ''} required>
                             <label for="mc_${questionIndex}_${optionValue}">Correct:</label>
-                            <input type="text" name="questions[${questionIndex}][options][${optionValue}][text]" 
-                                   class="form-control" value="${escapeHtml(text)}" 
+                            <input type="text" name="questions[${questionIndex}][options][${optionIndex}][text]"
+                                   class="form-control" value="${escapeHtml(text)}"
                                    placeholder="Option ${optionIndex} Text" required>
-                            <input type="hidden" name="questions[${questionIndex}][options][${optionValue}][option_id]" 
+                            <input type="hidden" name="questions[${questionIndex}][options][${optionIndex}][option_id]"
                                    value="${optionId}">
                             <button type="button" class="btn btn-danger btn-sm" onclick="removeOption(this)">
                                 Remove
@@ -687,8 +668,8 @@ if (!$showEditForm) {
                 return `
                         <div class="blank-answer-group">
                             <label>Blank ${answerIndex} Answer:</label>
-                            <input type="text" name="questions[${questionIndex}][answers][]" 
-                                   class="form-control" value="${escapeHtml(text)}" 
+                            <input type="text" name="questions[${questionIndex}][answers][]"
+                                   class="form-control" value="${escapeHtml(text)}"
                                    placeholder="Correct answer for blank ${answerIndex}" required>
                             <button type="button" class="btn btn-danger btn-sm" onclick="removeOption(this)">
                                 Remove
