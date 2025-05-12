@@ -19,14 +19,13 @@
   box-sizing: border-box;
 }
 
-
 .container {
   max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
 }
 
-.page-header {
+/* .page-header {
   margin-bottom: 30px;
   padding-bottom: 15px;
   border-bottom: 1px solid var(--medium-gray);
@@ -37,7 +36,7 @@
   font-size: 28px;
   font-weight: 600;
   margin-bottom: 10px;
-}
+} */
 
 .back-link {
   display: inline-block;

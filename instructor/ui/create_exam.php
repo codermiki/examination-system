@@ -97,12 +97,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
         }
-        // Optional: Validate if sum of question marks matches total_marks if total_marks is manually entered
-        // if ($message_type !== 'error' && $current_total_marks !== $totalMarks) {
-        // $message = "Error: Sum of marks for all questions ($current_total_marks) does not match the Total Marks for the exam ($totalMarks).";
-        // $message_type = 'error';
-        // }
-
 
         if ($message_type !== 'error') {
             try {

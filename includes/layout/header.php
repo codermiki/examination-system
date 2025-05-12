@@ -44,11 +44,11 @@
                         <div class="logout">
                             <?php
                             if (isset($_SESSION['email'])) {
-                                ?>
+                            ?>
                                 <form action="./" method="post">
                                     <input class="btn" type="submit" name="logout" id="" value="logout">
                                 </form>
-                                <?php
+                            <?php
                             }
                             ?>
                         </div>
@@ -63,10 +63,11 @@
 <script>
     const el = document.querySelector("#drop_down");
     const togglerBtn = document.querySelector("#toggler");
+
     function toggle() {
         el.classList.toggle("display");
     }
-    document.addEventListener("click", function (e) {
+    document.addEventListener("click", function(e) {
         if (!el.contains(e.target) && !togglerBtn.contains(e.target)) {
             el.classList.remove("display");
         }

@@ -85,7 +85,9 @@ if (!$showSingleExamView) {
 
 <div class="container">
     <?php if (!empty($message)) echo $message; ?>
-
+    <!-- <div class="manage_exam_header">
+        <h2> Manage Your Exams</h2>
+    </div> -->
     <?php if ($showSingleExamView && $exam): ?>
         <div class="card">
             <div class="card-header">
