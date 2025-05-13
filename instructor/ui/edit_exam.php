@@ -7,13 +7,17 @@ if (!isset($_SESSION['email'])) {
     exit();
 }
 
-$stmt = $conn->prepare("SELECT role FROM users WHERE email = :email");
-$stmt->bindParam(':email', $_SESSION['email']);
-$stmt->execute();
-$user = $stmt->fetch(PDO::FETCH_ASSOC);
+// $stmt = $conn->prepare("SELECT role FROM users WHERE email = :email");
+// $stmt->bindParam(':email', $_SESSION['email']);
+// $stmt->execute();
+// $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-if (!$user || $user['role'] !== 'Instructor') {
-    echo '<p>Access denied. You must be an instructor.</p>';
+// if (!$user || $user['role'] !== 'Instructor') {
+//     echo '<p>Access denied. You must be an instructor.</p>';
+//     exit();
+// }
+if (!isset($_SESSION['email']) || !isset($_SESSION['role']) || $_SESSION['role'] !== 'Instructor' || !isset($_SESSION['user_id'])) {
+    header('Location: ../../login.php');
     exit();
 }
 
@@ -23,18 +27,20 @@ $questions = [];
 $courses = [];
 $instructorExams = [];
 
-$stmt = $conn->prepare("SELECT user_id FROM users WHERE email = :email");
-$stmt->bindParam(':email', $_SESSION['email']);
-$stmt->execute();
-$user = $stmt->fetch(PDO::FETCH_ASSOC);
-$instructorId = $user['user_id'];
+// $stmt = $conn->prepare("SELECT user_id FROM users WHERE email = :email");
+// $stmt->bindParam(':email', $_SESSION['email']);
+// $stmt->execute();
+// $user = $stmt->fetch(PDO::FETCH_ASSOC);
+// $instructorId = $user['user_id'];
+
+$instructorId = $_SESSION['user_id'];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['exam_id'])) {
     $examIdToUpdate = filter_var($_POST['exam_id'], FILTER_VALIDATE_INT);
     $examTitle = trim($_POST['exam_title'] ?? '');
     $examDescription = trim($_POST['exam_description'] ?? '');
     $examDuration = filter_var($_POST['exam_duration'] ?? 0, FILTER_VALIDATE_INT);
-    $courseId = filter_var($_POST['course_id'] ?? 0, FILTER_VALIDATE_INT);
+    $courseId = filter_var($_POST['course_id'] ?? 0); //, FILTER_VALIDATE_INT
     $totalMarks = filter_var($_POST['total_marks'] ?? 0, FILTER_VALIDATE_INT);
     $questionsData = $_POST['questions'] ?? [];
 
@@ -59,7 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['exam_id'])) {
                                   WHERE exam_id = :exam_id
                                   AND instructor_id = :instructor_id");
 
-            $stmt->bindParam(':course_id', $courseId, PDO::PARAM_INT);
+            $stmt->bindParam(':course_id', $courseId, PDO::PARAM_STR);
             $stmt->bindParam(':exam_title', $examTitle, PDO::PARAM_STR);
             $stmt->bindParam(':exam_description', $examDescription, PDO::PARAM_STR);
             $stmt->bindParam(':duration_minutes', $examDuration, PDO::PARAM_INT);
