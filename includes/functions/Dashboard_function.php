@@ -15,35 +15,37 @@ class Dashboard_function
             'upcoming_exams' => 0
         ];
 
-        // 1. Count users by role
-        $sql_users = "SELECT role, COUNT(*) AS user_count FROM users GROUP BY role;";
-        $stmt_users = $conn->prepare($sql_users);
-        $stmt_users->execute();
-        $user_results = $stmt_users->fetchAll(PDO::FETCH_ASSOC);
+        // 1. Count Admins from users table
+        $sql_admins = "SELECT COUNT(*) AS admin_count FROM users WHERE role = 'Admin';";
+        $stmt_admins = $conn->prepare($sql_admins);
+        $stmt_admins->execute();
+        $data['Admin'] = (int) $stmt_admins->fetchColumn();
 
-        foreach ($user_results as $row) {
-            $role = $row['role'];
-            if (isset($data[$role])) {
-                $data[$role] = (int) $row['user_count'];
-            }
-        }
+        // 2. Count assigned students
+        $sql_students = "SELECT COUNT(DISTINCT student_id) AS student_count FROM assigned_students;";
+        $stmt_students = $conn->prepare($sql_students);
+        $stmt_students->execute();
+        $data['Student'] = (int) $stmt_students->fetchColumn();
 
-        // 2. Count total courses
+        // 3. Count assigned instructors
+        $sql_instructors = "SELECT COUNT(DISTINCT instructor_id) AS instructor_count FROM assigned_instructors;";
+        $stmt_instructors = $conn->prepare($sql_instructors);
+        $stmt_instructors->execute();
+        $data['Instructor'] = (int) $stmt_instructors->fetchColumn();
+
+        // 4. Count total courses
         $sql_courses = "SELECT COUNT(*) AS total_courses FROM courses;";
         $stmt_courses = $conn->prepare($sql_courses);
         $stmt_courses->execute();
-        $row_courses = $stmt_courses->fetch(PDO::FETCH_ASSOC);
+        $data['total_courses'] = (int) $stmt_courses->fetchColumn();
 
-        $data['total_courses'] = (int) $row_courses['total_courses'];
-
-        // 3. Count upcoming exams
+        // 5. Count upcoming exams
         $sql_exams = "SELECT COUNT(*) AS upcoming_exams FROM exam_schedules WHERE scheduled_date >= CURDATE();";
         $stmt_exams = $conn->prepare($sql_exams);
         $stmt_exams->execute();
-        $row_exams = $stmt_exams->fetch(PDO::FETCH_ASSOC);
-
-        $data['upcoming_exams'] = (int) $row_exams['upcoming_exams'];
+        $data['upcoming_exams'] = (int) $stmt_exams->fetchColumn();
 
         return $data;
     }
+
 }

@@ -1,20 +1,4 @@
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-body {
-  font-family: sans-serif; 
-  background-color: #f0f2f5; 
-  color: #333;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-  padding: 20px; 
-}
 
 .quiz-container {
   background-color: #ffffff; 
@@ -168,7 +152,7 @@ body {
 }
 
 
-
+/* 
 @media (max-width: 600px) {
   .quiz-header {
       flex-direction: column;
@@ -193,4 +177,4 @@ body {
       padding: 8px 15px;
       font-size: 0.9em;
   }
-}
+} */

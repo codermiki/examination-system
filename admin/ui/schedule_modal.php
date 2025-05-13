@@ -7,12 +7,8 @@
             <input type="hidden" id="exam_id" name="exam_id" />
             <label>Schedule</label>
 
-            <label for="exam_date">Exam Date:</label>
-            <input type="date" id="exam_date" name="exam_date" required>
-
-
-            <label for="exam_time">Exam Time:</label>
-            <input type="time" id="exam_time" name="exam_time" required>
+            <label for="scheduled_date">Exam Date and Time:</label>
+            <input type="datetime-local" id="scheduled_date" name="scheduled_date" required>
 
             <button style="margin-top: 10px" type="submit" class="update-btn">Update Now</button>
         </form>
@@ -32,8 +28,7 @@
 
                 document.getElementById("modalName").textContent = dataset.course_name;
                 document.getElementById("exam_id").value = dataset.exam_id;
-                document.getElementById("exam_date").value = dataset.exam_date;
-                document.getElementById("exam_time").value = dataset.exam_time;
+                document.getElementById("scheduled_date").value = dataset.scheduled_date;
                 modal.style.display = "block";
             });
 
@@ -54,7 +49,7 @@
 
             const data = {
                 exam_id: dataObj.exam_id,
-                scheduled_date: `${dataObj.exam_date} ${dataObj.exam_time}`,
+                scheduled_date: dataObj.scheduled_date,
                 status: dataObj.status,
             }
 

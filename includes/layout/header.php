@@ -49,6 +49,10 @@ include __DIR__ . "/../../constants.php";
                                 <form action="./" method="post">
                                     <input class="btn" type="submit" name="logout" id="" value="logout">
                                 </form>
+
+                                <button style="padding:5px 10px; margin: 10px;"
+                                    onclick="window.location.href='/softexam/reset_password.php'">Update
+                                    Password</button>
                                 <?php
                             }
                             ?>

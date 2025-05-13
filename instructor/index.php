@@ -2,15 +2,16 @@
 // import session configuration
 include_once '../config.php';
 
-
-if (session_status() == PHP_SESSION_NONE) {
-    session_start();
-}
-
-
 if (!isset($_SESSION['email']) || !isset($_SESSION['role'])) {
     header('Location: ../login.php');
     exit();
+}
+
+if (isset($_SESSION['must_reset_password'])) {
+    if ($_SESSION['must_reset_password'] == true) {
+        header("Location: ../");
+        exit();
+    }
 }
 
 if ($_SESSION['role'] !== 'Instructor') {

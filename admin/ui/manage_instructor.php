@@ -32,7 +32,7 @@ $courses = Course_function::fetchCourses();
                                 <td>
                                     <?= htmlspecialchars($instructor['course_name']) ?>
                                 </td>
-                                <td>
+                                <td> 
                                     <?= htmlspecialchars($instructor['email']) ?>
                                 </td>
                                 <td>

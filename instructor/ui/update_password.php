@@ -34,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['updatepass'])) {
             // Hash the password before storing
             $hashedPassword = password_hash($newPass, PASSWORD_DEFAULT);
 
-            $stmt = $pdo->prepare("UPDATE users SET password = :password WHERE user_id = :user_id");
+            $stmt = $conn->prepare("UPDATE users SET password = :password WHERE user_id = :user_id");
             $stmt->bindParam(':password', $hashedPassword, PDO::PARAM_STR);
             $stmt->bindParam(':user_id', $userId, PDO::PARAM_STR); // Changed to PARAM_STR since user_id is varchar
 
@@ -61,6 +61,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['updatepass'])) {
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -197,6 +198,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['updatepass'])) {
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <div class="card">
@@ -213,17 +215,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['updatepass'])) {
                 <form action="<?= htmlspecialchars($_SERVER['PHP_SELF']) ?>" method="POST" id="passwordForm">
                     <div class="form-group">
                         <label for="pass1">New Password</label>
-                        <input type="password" id="pass1" name="pass1" class="form-control" required 
-                               minlength="8" value="<?= htmlspecialchars($newPass ?? '') ?>">
-                        <div class="password-strength">Must be at least 8 characters with uppercase, lowercase, and number</div>
+                        <input type="password" id="pass1" name="pass1" class="form-control" required minlength="8"
+                            value="<?= htmlspecialchars($newPass ?? '') ?>">
+                        <div class="password-strength">Must be at least 8 characters with uppercase, lowercase, and
+                            number</div>
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="pass2">Confirm Password</label>
-                        <input type="password" id="pass2" name="pass2" class="form-control" required 
-                               minlength="8" value="<?= htmlspecialchars($confPass ?? '') ?>">
+                        <input type="password" id="pass2" name="pass2" class="form-control" required minlength="8"
+                            value="<?= htmlspecialchars($confPass ?? '') ?>">
                     </div>
-                    
+
                     <button type="submit" name="updatepass" class="btn">Save Changes</button>
                 </form>
             </div>
@@ -232,30 +235,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['updatepass'])) {
 
     <script>
         // Client-side password validation
-        document.getElementById('passwordForm').addEventListener('submit', function(e) {
+        document.getElementById('passwordForm').addEventListener('submit', function (e) {
             const pass1 = document.getElementById('pass1').value;
             const pass2 = document.getElementById('pass2').value;
-            
+
             if (pass1 !== pass2) {
                 alert('Passwords do not match!');
                 e.preventDefault();
                 return false;
             }
-            
+
             if (pass1.length < 8) {
                 alert('Password must be at least 8 characters long!');
                 e.preventDefault();
                 return false;
             }
-            
+
             if (!/[A-Z]/.test(pass1) || !/[a-z]/.test(pass1) || !/[0-9]/.test(pass1)) {
                 alert('Password must contain at least one uppercase letter, one lowercase letter, and one number!');
                 e.preventDefault();
                 return false;
             }
-            
+
             return true;
         });
     </script>
 </body>
+
 </html>

@@ -47,8 +47,7 @@ $exams = Exam_function::scheduledExams();
                                         <button id="edit_btn" class="open-update-modal-btn"
                                             data-exam_id=<?= htmlspecialchars($exam['exam_id']) ?>
                                             data-course_name=<?= htmlspecialchars($exam['course_name']) ?>
-                                            data-exam_date=<?= htmlspecialchars($date->format('Y-m-d')) ?>
-                                            data-exam_time=<?= htmlspecialchars($date->format('H:i:s')) ?>
+                                            data-scheduled_date=<?= htmlspecialchars($date->format('Y-m-d\THh:i')) ?>
                                             data-status="<?= htmlspecialchars($exam['status']) ?>">
                                             <img src="<?= BASE_URL ?>/assets/images/icon/edit.png" alt="update" width="28" />
                                         </button>

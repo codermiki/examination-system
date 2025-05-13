@@ -6,6 +6,14 @@ if (!isset($_SESSION['email']) || !isset($_SESSION['role'])) {
     header('Location: ../login.php');
 }
 
+if (isset($_SESSION['must_reset_password'])) {
+    if ($_SESSION['must_reset_password'] == true) {
+        header("Location: ../");
+        exit();
+    }
+}
+
+
 if (!($_SESSION['role'] == 'Student')) {
     header('Location: ../');
 }
@@ -28,6 +36,7 @@ $page = $_GET["page"] ?? "dashboard";
     <link rel="stylesheet" href="../assets/css/main.css">
     <link rel="stylesheet" href="../assets/css/admin.css">
     <link rel="stylesheet" href="../assets/css/sideBar.css">
+    <link rel="stylesheet" href="../assets/css/student.css">
 </head>
 
 <body>
@@ -36,12 +45,6 @@ $page = $_GET["page"] ?? "dashboard";
     ?>
 
     <main class="main__container">
-        <section class="left__panel">
-            <?php
-            include "../includes/layout/SideBar.php";
-            ?>
-        </section>
-
         <section id="main-content" class="right__panel">
             <?php
             switch ($page) {
@@ -69,16 +72,8 @@ $page = $_GET["page"] ?? "dashboard";
                     include "./ui/taken_exams.php";
                     break;
 
-                case 'view_result':
-                    include "./ui/view_result.php";
-                    break;
-
                 case 'add_feedback':
                     include "./ui/add_feedback.php";
-                    break;
-
-                case 'student_submit_exam':
-                    include "./ui/submit_exam.php";
                     break;
 
                 default:

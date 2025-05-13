@@ -4,6 +4,14 @@ include_once '../config.php';
 if (!isset($_SESSION['email']) || !isset($_SESSION['role'])) {
     header('Location: ../login.php');
 }
+
+if (isset($_SESSION['must_reset_password'])) {
+    if ($_SESSION['must_reset_password'] == true) {
+        header("Location: ../");
+        exit();
+    }
+}
+
 if (!($_SESSION['role'] == 'Admin')) {
     header('Location: ../');
 }

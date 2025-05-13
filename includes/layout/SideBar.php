@@ -72,17 +72,6 @@ include_once '../config.php';
                 </div>
             </div>
         </div>
-        <div class="role__container">
-            <p>Profile</p>
-            <div class="drop__down">
-                <div class="non-collapse ">
-                    <div class="v__line"></div>
-                    <div class="action">
-                        <a href="#" class="sidebar-link" data-content="admin_update_password">Update Password</a>
-                    </div>
-                </div>
-            </div>
-        </div>
     <?php } ?>
 
     <!-- Instructor roles -->
@@ -162,70 +151,6 @@ include_once '../config.php';
                     <div class="v__line"></div>
                     <div class="action">
                         <a href="index.php?page=update_password">Update Password</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    <?php } ?>
-
-    <!-- Student roles -->
-    <?php if (isset($_SESSION['role']) && $_SESSION['role'] == 'Student') { ?>
-        <a href="./">Dashboards</a>
-        <div class="role__container">
-            <p>UPCOMING EXAM</p>
-            <div class="drop__down">
-                <div class="collapse">
-                    <div class="v__line"></div>
-                    <div class="action">
-                        <a href="index.php?page=take_exam">web design and programming</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="role__container">
-            <p>AVAILABLE EXAMS</p>
-            <div class="drop__down">
-                <div class="collapse">
-                    <div class="v__line"></div>
-                    <div class="action">
-                        <a href="index.php?page=exam_schedule">Exam Schedule</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="role__container">
-            <p>TAKEN EXAMS</p>
-            <div class="drop__down">
-                <div class="non-collapse ">
-                    <div class="v__line"></div>
-                    <div class="action">
-                        <a href="#" class="sidebar-link" data-content="taken_exams">Taken Exams</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="role__container">
-            <p>FEEDBACKS</p>
-            <div class="drop__down">
-                <div class="non-collapse ">
-                    <div class="v__line"></div>
-                    <div class="action">
-                        <a href="#" class="sidebar-link" data-content="add_feedback">Add Feedback</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="role__container">
-            <p>Profile</p>
-            <div class="drop__down">
-                <div class="non-collapse ">
-                    <div class="v__line"></div>
-                    <div class="action">
-                        <a href="#" class="sidebar-link" data-content="update_password">Update Password</a>
                     </div>
                 </div>
             </div>

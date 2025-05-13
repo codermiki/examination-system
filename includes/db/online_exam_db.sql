@@ -102,6 +102,26 @@ CREATE TABLE exams (
 );
 
 -- insert exams
+INSERT INTO exams (course_id, instructor_id, exam_title, duration_minutes, total_marks, status)
+VALUES 
+('CS101', 'INST1001', 'Midterm Exam - Programming', 90, 100, 'Active');
+
+-- insert question 
+INSERT INTO questions (exam_id, question_text, question_type, correct_answer, marks)
+VALUES 
+(7, 'What is the output of 2 + 2 in JavaScript?', 'multiple_choice', '4', 5),
+(7, 'Java is a statically typed language. True or False?', 'true_false', 'True', 3),
+(7, 'Fill in the blank: The ___ tag is used to define JavaScript in HTML.', 'fill_blank', 'script', 4);
+-- insert options
+INSERT INTO question_options (question_id, option_text)
+VALUES 
+(10, '3'),
+(10, '4'),
+(10, '22'),
+(10, 'undefined');
+
+
+-- insert exams
 
 INSERT INTO exams (course_id, instructor_id, exam_title, duration_minutes, total_marks, status)
 VALUES 
@@ -198,8 +218,7 @@ CREATE TABLE student_exam_status (
     exam_id INT NOT NULL,
     has_taken BOOLEAN DEFAULT FALSE,
     taken_on DATETIME,
-    score INT,  -- store exam result
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    score FLOAT,  -- store exam result
 
     FOREIGN KEY (student_id) REFERENCES users(user_id) ON DELETE CASCADE,
     FOREIGN KEY (exam_id) REFERENCES exams(exam_id) ON DELETE CASCADE,

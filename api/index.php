@@ -8,14 +8,15 @@ require_once "helpers/Response_helper.php";
 
 $method = $_SERVER['REQUEST_METHOD'];
 
-
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $path = str_replace("/softexam/api", "", $path);
 
 switch ("$method $path") {
-    case "GET /users":
-        User_controller::getAllUsers();
+    case "GET /install":
+        User_controller::install();
         break;
+
+    // courses route handler
 
     case "POST /addCourse":
         $data = json_decode(file_get_contents("php://input"), true);
@@ -33,6 +34,8 @@ switch ("$method $path") {
         $data = json_decode(file_get_contents("php://input"), true);
         $course_id = $data['course_id'] ?? null;
         $student_ids = $data['student_ids'] ?? [];
+
+        // Student route handler
 
         if (!$course_id || empty($student_ids)) {
             Response_helper::json(['error' => 'Course ID and student list are required']);
@@ -66,6 +69,8 @@ switch ("$method $path") {
         Student_controller::unassignStudent($student_id, $course_id);
         break;
 
+    // Instructor route handler
+
     case "POST /assignInstructor":
         $data = json_decode(file_get_contents("php://input"), true);
         $instructor = $data['instructor'] ?? null;
@@ -97,6 +102,8 @@ switch ("$method $path") {
         }
         Instructor_controller::unassignInstructor($instructor_id, $course_id);
         break;
+
+    // Exam schedule route handler
 
     case "POST /scheduleExam":
         $data = json_decode(file_get_contents("php://input"), true);
@@ -132,6 +139,51 @@ switch ("$method $path") {
         }
         Exam_controller::deleteSchedule($exam_id);
         break;
+
+    // Questions and Answer route handler
+
+    case "POST /getQuestions":
+        $data = json_decode(file_get_contents("php://input"), true);
+        $exam_id = $data['exam_id'] ?? null;
+        $student_id = $data['student_id'] ?? null;
+        if (!$exam_id || !$student_id) {
+            Response_helper::json(['error' => 'Exam id and Student id is required']);
+            exit;
+        }
+        Exam_controller::getQuestions($exam_id, $student_id);
+        break;
+
+    case "POST /postAnswer":
+        $data = json_decode(file_get_contents("php://input"), true);
+        $student_id = $data['student_id'] ?? null;
+        $exam_id = $data['exam_id'] ?? null;
+        $question_id = $data['question_id'] ?? null;
+        $answer_text = $data['answer_text'] ?? null;
+
+        if (!$student_id || !$exam_id || !$question_id || !$answer_text) {
+            Response_helper::json(['error' => 'Invalid request']);
+            exit;
+        }
+
+        Exam_controller::postAnswer($student_id, $exam_id, $question_id, $answer_text);
+        break;
+
+    // Exam Submit route handler
+
+    case "POST /submitExam":
+        $data = json_decode(file_get_contents("php://input"), true);
+        $student_id = $data['student_id'] ?? null;
+        $exam_id = $data['exam_id'] ?? null;
+
+        if (!$student_id || !$exam_id) {
+            Response_helper::json(['error' => 'Invalid request']);
+            exit;
+        }
+
+        Exam_controller::submitExam($student_id, $exam_id);
+        break;
+
+    // Invalid request route handler
 
     default:
         Response_helper::json(['error' => 'Invalid Request'], 401);
