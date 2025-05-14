@@ -77,7 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 }
             } elseif ($questionType === 'true_false') {
-                if (!isset($question['correct_answer']) || !in_array($question['correct_answer'], ['true', 'false'])) {
+                if (!isset($question['correct_answer']) || !in_array($question['correct_answer'], ['True', 'False'])) {
                     $message = "Error: Invalid correct answer for True/False Question " . ($index + 1) . ".";
                     $message_type = 'error';
                     break;
@@ -412,15 +412,15 @@ try {
                     `;
                 break;
             case 'true_false':
-                const correctAnswerTF = (data && data.correct_answer) ? data.correct_answer : 'true';
+                const correctAnswerTF = (data && data.correct_answer) ? data.correct_answer : 'True';
                 html = `
                         <label class="form-label">Correct Answer: <span class="text-danger">*</span></label>
                         <div class="option-group">
-                            <input type="radio" class="form-check-input" name="${namePrefix}[correct_answer]" value="true" id="tf_${questionIdSuffix}_true" ${correctAnswerTF === 'true' ? 'checked' : ''} required>
+                            <input type="radio" class="form-check-input" name="${namePrefix}[correct_answer]" value="True" id="tf_${questionIdSuffix}_true" ${correctAnswerTF === 'True' ? 'checked' : ''} required>
                             <label class="form-check-label" for="tf_${questionIdSuffix}_true">True</label>
                         </div>
                         <div class="option-group">
-                            <input type="radio" class="form-check-input" name="${namePrefix}[correct_answer]" value="false" id="tf_${questionIdSuffix}_false" ${correctAnswerTF === 'false' ? 'checked' : ''}>
+                            <input type="radio" class="form-check-input" name="${namePrefix}[correct_answer]" value="False" id="tf_${questionIdSuffix}_false" ${correctAnswerTF === 'False' ? 'checked' : ''}>
                             <label class="form-check-label" for="tf_${questionIdSuffix}_false">False</label>
                         </div>
                     `;

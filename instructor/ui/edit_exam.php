@@ -116,7 +116,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['exam_id'])) {
 
                 if ($questionType === 'true_false') {
                     $correctAnswer = $question['correct_answer'] ?? null;
-                    if (!in_array($correctAnswer, ['true', 'false'])) {
+                    if (!in_array($correctAnswer, ['True', 'False'])) {
                         continue;
                     }
                 } elseif ($questionType === 'fill_blank') {
@@ -565,14 +565,14 @@ if (!$showEditForm) {
                                     <label class="form-label">Correct Answer:</label>
                                     <div class="option-group">
                                         <input type="radio" name="questions[${questionIndex}][correct_answer]"
-                                               value="true" id="tf_${questionIndex}_true"
-                                               ${correctAnswerTF === 'true' ? 'checked' : ''} required>
+                                               value="True" id="tf_${questionIndex}_true"
+                                               ${correctAnswerTF === 'True' ? 'checked' : ''} required>
                                         <label for="tf_${questionIndex}_true">True</label>
                                     </div>
                                     <div class="option-group">
                                         <input type="radio" name="questions[${questionIndex}][correct_answer]"
-                                               value="false" id="tf_${questionIndex}_false"
-                                               ${correctAnswerTF === 'false' ? 'checked' : ''}>
+                                               value="False" id="tf_${questionIndex}_false"
+                                               ${correctAnswerTF === 'False' ? 'checked' : ''}>
                                         <label for="tf_${questionIndex}_false">False</label>
                                     </div>
                                 </div>
