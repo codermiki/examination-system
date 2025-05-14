@@ -14,11 +14,13 @@ if (isset($_SESSION['must_reset_password'])) {
 
 if (!($_SESSION['role'] == 'Admin')) {
     header('Location: ../');
+    exit();
 }
 
 if (isset($_POST['logout'])) {
     session_destroy();
     header('Location: ../');
+    exit();
 }
 
 $page = $_GET["page"] ?? "dashboard";
