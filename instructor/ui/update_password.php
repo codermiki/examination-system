@@ -14,6 +14,7 @@ if (!isset($_SESSION['email'], $_SESSION['role'], $_SESSION['user_id']) || $_SES
 }
 
 $message = '';
+$messageType = ''; // success or error
 $userId = $_SESSION['user_id'];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['updatepass'])) {
@@ -22,13 +23,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['updatepass'])) {
 
     // Validate passwords
     if (empty($newPass) || empty($confPass)) {
-        $message = '<p class="error">Error: Please fill in both password fields.</p>';
+        $message = 'Please fill in both password fields.';
+        $messageType = 'error';
     } elseif ($newPass !== $confPass) {
-        $message = '<p class="error">Error: Passwords do not match.</p>';
+        $message = 'Passwords do not match.';
+        $messageType = 'error';
     } elseif (strlen($newPass) < 8) {
-        $message = '<p class="error">Error: Password must be at least 8 characters long.</p>';
+        $message = 'Password must be at least 8 characters long.';
+        $messageType = 'error';
     } elseif (!preg_match('/[A-Z]/', $newPass) || !preg_match('/[a-z]/', $newPass) || !preg_match('/[0-9]/', $newPass)) {
-        $message = '<p class="error">Error: Password must contain at least one uppercase letter, one lowercase letter, and one number.</p>';
+        $message = 'Password must contain at least one uppercase letter, one lowercase letter, and one number.';
+        $messageType = 'error';
     } else {
         try {
             // Hash the password before storing
@@ -36,29 +41,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['updatepass'])) {
 
             $stmt = $conn->prepare("UPDATE users SET password = :password WHERE user_id = :user_id");
             $stmt->bindParam(':password', $hashedPassword, PDO::PARAM_STR);
-            $stmt->bindParam(':user_id', $userId, PDO::PARAM_STR); // Changed to PARAM_STR since user_id is varchar
+            $stmt->bindParam(':user_id', $userId, PDO::PARAM_STR);
 
             if ($stmt->execute()) {
                 if ($stmt->rowCount() > 0) {
-                    $message = '<p class="success">Password changed successfully!</p>';
+                    $message = 'Password changed successfully!';
+                    $messageType = 'success';
                     // Clear password fields after successful update
                     $newPass = $confPass = '';
                 } else {
-                    $message = '<p class="error">Error: Could not update password. User not found.</p>';
+                    $message = 'Could not update password. User not found.';
+                    $messageType = 'error';
                     error_log("Password update failed: User ID " . $userId . " not found.");
                 }
             } else {
                 error_log("Password update DB error for user ID " . $userId . ": " . implode(" ", $stmt->errorInfo()));
-                $message = '<p class="error">Error updating password. Please try again.</p>';
+                $message = 'Error updating password. Please try again.';
+                $messageType = 'error';
             }
         } catch (PDOException $e) {
             error_log("Password update exception for user ID " . $userId . ": " . $e->getMessage());
-            $message = '<p class="error">An unexpected error occurred. Please try again.</p>';
+            $message = 'An unexpected error occurred. Please try again.';
+            $messageType = 'error';
         }
     }
 }
 ?>
 
+<<<<<<< HEAD
+=======
 <!DOCTYPE html>
 <html lang="en">
 
@@ -78,20 +89,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['updatepass'])) {
             --gray: #6c757d;
             --border: #dee2e6;
         }
+>>>>>>> main
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+<!-- <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"> -->
 
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f5f7fa;
-            color: var(--dark);
-            line-height: 1.6;
-        }
+<div class="container">
+    <div class="card-updatePass ">
+        <div class="card-header-updatePass">
+            <h2>Update Password</h2>
+        </div>
+        <div class="card-body">
+            <?php if (!empty($message)): ?>
+                <div class="alert alert-<?= $messageType ?>">
+                    <span class="alert-icon"><?= $messageType === 'success' ? '✓' : '✗' ?></span>
+                    <?= htmlspecialchars($message) ?>
+                </div>
+            <?php endif; ?>
 
+<<<<<<< HEAD
+            <form action="<?= htmlspecialchars($_SERVER['PHP_SELF']) ?>" method="POST" id="passwordForm">
+                <div class="form-group">
+                    <label for="pass1">New Password</label>
+                    <div class="input-group">
+                        <input type="password" id="pass1" name="pass1" class="form-control" required
+                            minlength="8" value="<?= htmlspecialchars($newPass ?? '') ?>" placeholder="Enter New Password">
+                        <span class="toggle-password" onclick="togglePasswordVisibility('pass1')">👁️</span>
+=======
         .container {
             width: 100%;
             max-width: 500px;
@@ -209,9 +232,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['updatepass'])) {
                 <?php if (!empty($message)): ?>
                     <div class="alert <?= strpos($message, 'Error') !== false ? 'alert-error' : 'alert-success' ?>">
                         <?= $message ?>
+>>>>>>> main
                     </div>
-                <?php endif; ?>
+                    <div class="password-strength">Must be at least 8 characters with uppercase, lowercase, and number</div>
+                </div>
 
+<<<<<<< HEAD
+                <div class="form-group">
+                    <label for="pass2">Confirm Password</label>
+                    <div class="input-group">
+                        <input type="password" id="pass2" name="pass2" class="form-control" required
+                            minlength="8" value="<?= htmlspecialchars($confPass ?? '') ?>" placeholder="Confirm The Password">
+                        <span class="toggle-password" onclick="togglePasswordVisibility('pass2')">👁️</span>
+                    </div>
+                </div>
+
+                <button type="submit" name="updatepass" class="updatePassbtn">Update Password</button>
+            </form>
+=======
                 <form action="<?= htmlspecialchars($_SERVER['PHP_SELF']) ?>" method="POST" id="passwordForm">
                     <div class="form-group">
                         <label for="pass1">New Password</label>
@@ -230,9 +268,101 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['updatepass'])) {
                     <button type="submit" name="updatepass" class="btn">Save Changes</button>
                 </form>
             </div>
+>>>>>>> main
         </div>
     </div>
+</div>
 
+<<<<<<< HEAD
+<script>
+    // Toggle password visibility
+    function togglePasswordVisibility(fieldId) {
+        const field = document.getElementById(fieldId);
+        field.type = field.type === 'password' ? 'text' : 'password';
+    }
+
+    // Client-side password validation
+    document.getElementById('passwordForm').addEventListener('submit', function(e) {
+        const pass1 = document.getElementById('pass1').value;
+        const pass2 = document.getElementById('pass2').value;
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'alert alert-error';
+        errorDiv.innerHTML = '<span class="alert-icon">✗</span>';
+
+        let isValid = true;
+
+        if (pass1 !== pass2) {
+            errorDiv.innerHTML += 'Passwords do not match!';
+            isValid = false;
+        } else if (pass1.length < 8) {
+            errorDiv.innerHTML += 'Password must be at least 8 characters long!';
+            isValid = false;
+        } else if (!/[A-Z]/.test(pass1) || !/[a-z]/.test(pass1) || !/[0-9]/.test(pass1)) {
+            errorDiv.innerHTML += 'Password must contain at least one uppercase letter, one lowercase letter, and one number!';
+            isValid = false;
+        }
+
+        if (!isValid) {
+            // Remove existing error messages
+            const existingAlerts = document.querySelectorAll('.alert-error');
+            existingAlerts.forEach(alert => alert.remove());
+
+            // Insert new error message
+            const cardBody = document.querySelector('.card-body');
+            cardBody.insertBefore(errorDiv, cardBody.firstChild);
+
+            e.preventDefault();
+            return false;
+        }
+
+        return true;
+    });
+
+    // Real-time password strength indicator
+    document.getElementById('pass1').addEventListener('input', function() {
+        const password = this.value;
+        const strengthIndicator = document.querySelector('.password-strength');
+
+        if (password.length === 0) {
+            strengthIndicator.textContent = 'Must be at least 8 characters with uppercase, lowercase, and number';
+            strengthIndicator.style.color = 'var(--gray)';
+            return;
+        }
+
+        let strength = 0;
+        let messages = [];
+
+        if (password.length >= 8) strength++;
+        if (/[A-Z]/.test(password)) strength++;
+        if (/[a-z]/.test(password)) strength++;
+        if (/[0-9]/.test(password)) strength++;
+
+        if (password.length < 8) {
+            messages.push('at least 8 characters');
+        }
+        if (!/[A-Z]/.test(password)) {
+            messages.push('one uppercase letter');
+        }
+        if (!/[a-z]/.test(password)) {
+            messages.push('one lowercase letter');
+        }
+        if (!/[0-9]/.test(password)) {
+            messages.push('one number');
+        }
+
+        if (strength === 4) {
+            strengthIndicator.textContent = 'Strong password ✓';
+            strengthIndicator.style.color = 'var(--success)';
+        } else if (strength >= 2) {
+            strengthIndicator.textContent = 'Moderate password (' + messages.join(', ') + ' missing)';
+            strengthIndicator.style.color = 'orange';
+        } else {
+            strengthIndicator.textContent = 'Weak password (' + messages.join(', ') + ' missing)';
+            strengthIndicator.style.color = 'var(--error)';
+        }
+    });
+</script>
+=======
     <script>
         // Client-side password validation
         document.getElementById('passwordForm').addEventListener('submit', function (e) {
@@ -263,3 +393,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['updatepass'])) {
 </body>
 
 </html>
+>>>>>>> main
