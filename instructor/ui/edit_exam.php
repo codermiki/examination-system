@@ -127,15 +127,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['exam_id'])) {
                         }
                     }
                 } elseif ($questionType === 'multiple_choice') {
-                    $correctAnswer = $question['correct_answer'] ?? '';
+                    $submittedCorrectAnswerValue = $question['correct_answer'] ?? '';
+                    $correctAnswer = null; // Initialize correct answer text
+
                     if (isset($question['options']) && is_array($question['options'])) {
-                        foreach ($question['options'] as $option) {
-                            if (isset($option['value']) && $option['value'] === $correctAnswer) {
-                                $correctAnswer = $option['text'];
-                                break;
+                        // Extract the numerical index from the submitted value (e.g., 'option_1' -> 1)
+                        // Use a regular expression to find the number after 'option_'
+                        if (preg_match('/^option_(\d+)$/', $submittedCorrectAnswerValue, $matches)) {
+                            $selectedOptionIndex = (int)$matches[1]; // Get the number
+
+                            // Find the option in the submitted options data using this index
+                            // The keys in $question['options'] should correspond to the JavaScript optionCounter
+                            if (isset($question['options'][$selectedOptionIndex])) {
+                                // Get the actual text of the selected option
+                                $correctAnswer = trim($question['options'][$selectedOptionIndex]['text'] ?? '');
                             }
                         }
                     }
+                    // If correctAnswer is still null here, it means the submitted data was invalid
+                    // You might want to add error handling or skip this question update
+                    // For now, we'll proceed, but the correct_answer might be empty if something went wrong.
                 }
 
                 if (!empty($questionId) && in_array($questionId, $currentQuestionIds)) {
