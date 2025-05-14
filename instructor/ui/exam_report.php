@@ -18,7 +18,7 @@ $stats = [
     'high_score' => 0,
     'attempt_count' => 0
 ];
-$instructorId = $_SESSION['user_id']; // Using string ID as per your schema
+$instructorId = $_SESSION['user_id']; 
 
 // Database connection check
 if (!isset($conn) || !($conn instanceof PDO)) {

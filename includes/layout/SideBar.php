@@ -80,15 +80,10 @@ include_once '../config.php';
         <div class="role__container">
             <p>CREATE EXAM</p>
             <div class="drop__down">
-                <!-- <button class="collapsebtn" onclick="toggleCollapse(this);" type="button">Exam</button> -->
                 <div class="collapse">
                     <div class="v__line"></div>
                     <div class="action">
-                        <!-- <a href="/softexam/instructor/index.php?page=manage_exam">Manage Exam</a> -->
                         <a href="index.php?page=create_exam">Create Exam</a>
-                        <a href="index.php?page=import_exam">Import Exam</a>
-                        <!-- <a href="index.php?page=view_exam">View Exam</a>
-                        <a href="index.php?page=edit_exam">Edit Exam</a> -->
                     </div>
                 </div>
             </div>
@@ -140,17 +135,6 @@ include_once '../config.php';
                     <div class="v__line"></div>
                     <div class="action">
                         <a href="index.php?page=feedbacks">Feedbacks</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="role__container">
-            <p>Profile</p>
-            <div class="drop__down">
-                <div class="non-collapse ">
-                    <div class="v__line"></div>
-                    <div class="action">
-                        <a href="index.php?page=update_password">Update Password</a>
                     </div>
                 </div>
             </div>
