@@ -28,18 +28,6 @@ class User_service
                     'email' => 'admin@example.com',
                     'role' => 'Admin'
                 ],
-                [
-                    'user_id' => 2,
-                    'name' => 'Jane Instructor',
-                    'email' => 'instructor@example.com',
-                    'role' => 'Instructor'
-                ],
-                [
-                    'user_id' => 3,
-                    'name' => 'John Student',
-                    'email' => 'student@example.com',
-                    'role' => 'Student'
-                ]
             ];
 
             $insertStmt = $conn->prepare("INSERT INTO users (user_id, name, email, password, role, must_reset_password)
@@ -56,8 +44,8 @@ class User_service
             }
 
             return [
-                'message' => 'Default users installed successfully.',
-                'created' => ['Admin', 'Instructor', 'Student']
+                'message' => 'Default Admin installed successfully.',
+                'created' => ['Admin']
             ];
         } catch (PDOException $e) {
             return [
