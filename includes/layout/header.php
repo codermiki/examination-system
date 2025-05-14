@@ -45,19 +45,15 @@ include __DIR__ . "/../../constants.php";
                         <div class="logout">
                             <?php
                             if (isset($_SESSION['email'])) {
-                            ?>
+                                ?>
                                 <form action="./" method="post">
                                     <input class="btn" type="submit" name="logout" id="" value="logout">
                                 </form>
-<<<<<<< HEAD
-                            <?php
-=======
 
                                 <button style="padding:5px 10px; margin: 10px;"
                                     onclick="window.location.href='/softexam/reset_password.php'">Update
                                     Password</button>
                                 <?php
->>>>>>> main
                             }
                             ?>
                         </div>
@@ -76,7 +72,7 @@ include __DIR__ . "/../../constants.php";
     function toggle() {
         el.classList.toggle("display");
     }
-    document.addEventListener("click", function(e) {
+    document.addEventListener("click", function (e) {
         if (!el.contains(e.target) && !togglerBtn.contains(e.target)) {
             el.classList.remove("display");
         }
