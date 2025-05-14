@@ -12,6 +12,44 @@ if (!isset($_SESSION['email']) || !isset($_SESSION['role']) || $_SESSION['role']
     exit();
 }
 
+// Handle status update
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['exam_id'], $_POST['new_status'])) {
+    $examId = filter_input(INPUT_POST, 'exam_id', FILTER_VALIDATE_INT);
+    $newStatus = $_POST['new_status']; // assuming values are either "Active" or "Inactive"
+    $instructorId = $_SESSION['user_id'] ?? null;
+
+    // Validate new status
+    $validStatuses = ['Active', 'Inactive'];
+    if ($examId && in_array($newStatus, $validStatuses) && $instructorId) {
+        try {
+            $sql = "UPDATE exams SET status = :status WHERE exam_id = :exam_id AND instructor_id = :instructor_id";
+            $stmt = $conn->prepare($sql);
+            $stmt->bindParam(':status', $newStatus, PDO::PARAM_STR);
+            $stmt->bindParam(':exam_id', $examId, PDO::PARAM_INT);
+            $stmt->bindParam(':instructor_id', $instructorId, PDO::PARAM_INT);
+            $stmt->execute();
+
+            $_SESSION['status_message'] = '<div class="alert success"><span class="icon">✓</span> Exam status updated successfully.</div>';
+        } catch (PDOException $e) {
+            error_log("Error updating exam status: " . $e->getMessage());
+            $_SESSION['status_message'] = '<div class="alert error"><span class="icon">⚠️</span> Error updating exam status.</div>';
+            header("Location: index.php?page=view_exam");
+            exit();
+        }
+    } else {
+        $_SESSION['status_message'] = '<div class="alert error"><span class="icon">⚠️</span> Invalid input.</div>';
+        header("Location: index.php?page=view_exam");
+        exit();
+    }
+}
+
+
+// Display status message if set
+if (isset($_SESSION['status_message'])) {
+    $message = $_SESSION['status_message'];
+    unset($_SESSION['status_message']);
+}
+
 $message = '';
 $exam = null;
 $questions = [];
@@ -81,6 +119,8 @@ if (!$showSingleExamView) {
         $message = '<div class="alert error"><span class="icon">⚠️</span> Error loading exam list.</div>';
     }
 }
+
+
 ?>
 
 <div class="container">
@@ -201,9 +241,14 @@ if (!$showSingleExamView) {
                                     <td><?= htmlspecialchars($exam['course_name']) ?></td>
                                     <td><?= htmlspecialchars(date('M j, Y', strtotime($exam['created_at']))) ?></td>
                                     <td>
-                                        <span class="badge <?= $exam['status'] === 'Active' ? 'badge-success' : 'badge-danger' ?>">
-                                            <?= htmlspecialchars(ucfirst($exam['status'])) ?>
-                                        </span>
+                                        <form method="post" class="status-form">
+                                            <input type="hidden" name="exam_id" value="<?= htmlspecialchars($exam['exam_id']) ?>">
+                                            <select name="new_status" class="status-select <?= $exam['status'] === 'Active' ? 'Active' : 'Inactive' ?>" onchange="this.form.submit()">
+                                                <option value="Active" <?= $exam['status'] === 'Active' ? 'selected' : '' ?>>Active</option>
+                                                <option value="Inactive" <?= $exam['status'] === 'Inactive' ? 'selected' : '' ?>>Inactive</option>
+                                            </select>
+                                            <button type="submit" name="update_status" style="display:none;"></button>
+                                        </form>
                                     </td>
 
                                     <td class="actions-cell">
@@ -213,7 +258,7 @@ if (!$showSingleExamView) {
                                         <a href="index.php?page=edit_exam&exam_id=<?= htmlspecialchars($exam['exam_id']) ?>" class="btn btn-warning btn-sm">
                                             <span class="icon">✏️</span> Edit
                                         </a>
-                                        <a href="ui/delete_exam.php?exam_id=<?= htmlspecialchars($exam['exam_id']) ?>" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this exam? This action cannot be undone.');">
+                                        <a href="index.php?page=delete_exam&exam_id=<?= htmlspecialchars($exam['exam_id']) ?>" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this exam? This action cannot be undone.');">
                                             <span class="icon">🗑️</span> Delete
                                         </a>
                                     </td>
