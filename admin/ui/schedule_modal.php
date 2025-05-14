@@ -4,23 +4,13 @@
         <span class="close">&times;</span>
         <h3>Update (<span id="modalName">Name</span>)</h3>
         <form id="updateForm">
-            <input type="hidden" id="instructor_id" name="instructor_id" />
-            <label>Course</label>
-            <select id="course" name="course_id">
-                <?php
-                foreach ($courses as $course):
-                    ?>
-                    <option value=<?= $course['course_id'] ?>><?= htmlspecialchars($course['course_name']) ?></option>
-                <?php endforeach ?>
-            </select>
+            <input type="hidden" id="exam_id" name="exam_id" />
+            <label>Schedule</label>
 
-            <label>Status</label>
-            <select id="status" name="status">
-                <option value="Active">Active</option>
-                <option value="Inactive">Inactive</option>
-            </select>
+            <label for="scheduled_date">Exam Date and Time:</label>
+            <input type="datetime-local" id="scheduled_date" name="scheduled_date" required>
 
-            <button type="submit" class="update-btn">Update Now</button>
+            <button style="margin-top: 10px" type="submit" class="update-btn">Update Now</button>
         </form>
     </div>
 </div>
@@ -36,10 +26,9 @@
             btn.addEventListener("click", () => {
                 const dataset = btn.dataset;
 
-                document.getElementById("modalName").textContent = dataset.name;
-                document.getElementById("instructor_id").value = dataset.instructor_id;
-                document.getElementById("course").value = dataset.course_id;
-                document.getElementById("status").value = dataset.status;
+                document.getElementById("modalName").textContent = dataset.course_name;
+                document.getElementById("exam_id").value = dataset.exam_id;
+                document.getElementById("scheduled_date").value = dataset.scheduled_date;
                 modal.style.display = "block";
             });
 
@@ -55,23 +44,27 @@
             e.preventDefault();
 
             const formData = new FormData(form);
-
             // Convert FormData to a plain object
             const dataObj = Object.fromEntries(formData.entries());
 
-            fetch("/softexam/api/updateAssignedInstructor", {
+            const data = {
+                exam_id: dataObj.exam_id,
+                scheduled_date: dataObj.scheduled_date,
+                status: dataObj.status,
+            }
+
+            fetch("/softexam/api/updateExamSchedule", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify(dataObj)
+                body: JSON.stringify(data)
             })
-                .then(res => res.json())
+                .then((res) => res.json())
                 .then(data => {
                     if (data.message) {
                         window.location.reload();
                     } else {
-                        console.log(data.error)
                         alert("Update failed.");
                     }
                 })

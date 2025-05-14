@@ -1,394 +1,306 @@
 <?php
-// includes/student/student_take_exam.php
+include __DIR__ . "/../../includes/functions/Exam_function.php";
 
-// This file is a placeholder for the exam taking interface.
-// Implementing the full exam taking logic is complex and requires:
-// - Fetching exam details and questions
-// - Displaying questions based on type (MC, TF, Blank)
-// - Handling student input
-// - Implementing a timer
-// - Saving student answers periodically or on submission
-// - Preventing cheating (optional but recommended)
-
-// Include necessary configuration or database files
-include_once '../config.php';
-include_once '../includes/db/db.config.php';
-
-// Start the session if it hasn't been started already
-if (session_status() == PHP_SESSION_NONE) {
-    session_start();
+// Check if user ID is available
+if (!isset($_SESSION['user_id'])) {
+    echo "<div class='full-screen'><h2>❌ User session expired. Please log in again.</h2></div>";
+    exit;
 }
-
-// Security check: Ensure the user is logged in and is a student
-if (!isset($_SESSION['email']) || !isset($_SESSION['role']) || $_SESSION['role'] !== 'student' || !isset($_SESSION['user_id'])) {
-    echo '<p>Access denied. You must be a logged-in student to take exams.</p>';
-    exit();
-}
-
-$studentId = $_SESSION['user_id']; // Get the logged-in student's user_id
-$examId = null; // Variable to hold the exam ID from the request
-$exam = null; // Variable to hold exam details
-$questions = []; // Array to hold questions
-
-// --- Start: PHP Logic to Fetch Exam and Questions ---
-$_GET['exam_id']=1;
-// Check if exam_id is provided in the GET request
-if (isset($_GET['exam_id']) && filter_var($_GET['exam_id'], FILTER_VALIDATE_INT)) {
-    $examId = filter_var($_GET['exam_id'], FILTER_VALIDATE_INT);
-
-    try {
-        // Fetch exam details
-        $sql = "SELECT e.*, c.course_name
-                FROM exams e
-                JOIN courses c ON e.course_id = c.course_id
-                WHERE e.exam_id = :exam_id AND e.status = 'active'"; // Check if exam is active
-        $stmt = $pdo->prepare($sql);
-        $stmt->bindParam(':exam_id', $examId, PDO::PARAM_INT);
-        $stmt->execute();
-        $exam = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        // If exam is found and active, fetch its questions
-        if ($exam) {
-            // Check if the student has already started this exam
-            $stmt = $pdo->prepare("SELECT id FROM student_exams WHERE student_id = :student_id AND exam_id = :exam_id AND submitted_at IS NULL");
-            $stmt->bindParam(':student_id', $studentId, PDO::PARAM_INT);
-            $stmt->bindParam(':exam_id', $examId, PDO::PARAM_INT);
-            $stmt->execute();
-            $studentExam = $stmt->fetch(PDO::FETCH_ASSOC);
-
-            $studentExamId = null;
-
-            if ($studentExam) {
-                // Student has already started this exam, resume it
-                $studentExamId = $studentExam['id'];
-                // You would also fetch their existing answers here
-                // $stmt = $pdo->prepare("SELECT * FROM student_answers WHERE student_exam_id = :student_exam_id");
-                // $stmt->bindParam(':student_exam_id', $studentExamId, PDO::PARAM_INT);
-                // $stmt->execute();
-                // $studentAnswers = $stmt->fetchAll(PDO::FETCH_ASSOC);
-                echo "<p class='success'>Resuming exam: " . htmlspecialchars($exam['title']) . "</p>";
-
-            } else {
-                // Student is starting the exam for the first time
-                // Check exam schedule to see if it's within the allowed time frame
-                // This requires more complex logic involving exam_schedule and current time.
-                // For simplicity, this placeholder assumes it's allowed if the exam is active.
-
-                // Insert a new record into student_exams
-                $stmt = $pdo->prepare("INSERT INTO student_exams (student_id, exam_id, started_at) VALUES (:student_id, :exam_id, NOW())");
-                $stmt->bindParam(':student_id', $studentId, PDO::PARAM_INT);
-                $stmt->bindParam(':exam_id', $examId, PDO::PARAM_INT);
-                 if ($stmt->execute()) {
-                     $studentExamId = $pdo->lastInsertId();
-                     echo "<p class='success'>Starting exam: " . htmlspecialchars($exam['title']) . "</p>";
-                 } else {
-                     throw new Exception("Error starting exam.");
-                 }
-            }
-
-            // Fetch questions for the exam
-            $sql = "SELECT q.* FROM questions q WHERE q.exam_id = :exam_id ORDER BY q.question_id ASC"; // Order might be randomized in a real system
-            $stmt = $pdo->prepare($sql);
-            $stmt->bindParam(':exam_id', $examId, PDO::PARAM_INT);
-            $stmt->execute();
-            $questions = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-            // For multiple-choice questions, fetch their choices
-            foreach ($questions as &$question) {
-                if ($question['question_type'] === 'multiple_choice') {
-                    $sql = "SELECT choice_id, choice_text FROM choices WHERE question_id = :question_id ORDER BY choice_id ASC"; // Order might be randomized
-                    $stmt = $pdo->prepare($sql);
-                    $stmt->bindParam(':question_id', $question['question_id'], PDO::PARAM_INT);
-                    $stmt->execute();
-                    $question['choices'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
-                }
-            }
-            unset($question);
-
-        } else {
-            echo '<p class="error">Exam not found, not active, or you do not have permission to take it.</p>';
-        }
-
-    } catch (PDOException $e) {
-        error_log("Error fetching exam for taking: " . $e->getMessage());
-        echo '<p class="error">Error loading exam. Please try again later.</p>';
-    } catch (Exception $e) {
-         error_log("Error starting/resuming exam: " . $e->getMessage());
-         echo '<p class="error">Error starting or resuming exam. Please try again later.</p>';
-    }
-
-} else {
-    echo '<p class="error">No exam ID provided to take.</p>';
-}
-
-// --- End: PHP Logic to Fetch Exam and Questions ---
-
 ?>
 
-<style>
-    /* Basic styling for the take exam page */
-    .take-exam-container {
-        background-color: #f9f9f9;
-        padding: 20px;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        max-width: 800px;
-        margin: 20px auto;
+<?php if ((!isset($_POST['start']) || $_POST['start'] !== "true") && isset($_POST['exam_id'])):
+    $exam_id = htmlspecialchars($_POST['exam_id']);
+    ?>
+    <div class="back">
+        <button onclick="window.history.back()">← Back</button>
+    </div>
+
+    <div class="full-screen">
+        <div class="instructions-box">
+            <h1>📖 Exam Instructions</h1>
+            <ul>
+                <li>Use only one device to complete the exam.</li>
+                <li>Do not refresh the page or open new tabs/windows.</li>
+                <li>The exam is timed; it will auto-submit when time expires.</li>
+                <li>Your webcam may be monitored during the test.</li>
+                <li>Do not navigate away from the exam window.</li>
+                <li>Read all questions carefully before answering.</li>
+                <li>Click "Start Exam" to begin — no going back once started.</li>
+            </ul>
+            <form action="?page=take_exam" method="post">
+                <div class="agreement">
+                    <input type="hidden" name="exam_id" value="<?= $exam_id ?>" />
+                    <input type="checkbox" id="agree" name="start" value="true" required />
+                    <label for="agree">I have read and agree to the exam rules.</label>
+                </div>
+                <button class="btn-start" type="submit">Start Exam</button>
+            </form>
+        </div>
+    </div>
+
+<?php else:
+    $exam_id = $_POST['exam_id'] ?? null;
+
+    $examStartStr = Exam_function::examStart($exam_id);
+    $durationMinutes = Exam_function::examDuration($exam_id);
+
+    // $examStartStr = "2025-05-13 15:18:00";
+    // $durationMinutes = 90;
+
+    if (!$examStartStr || !$durationMinutes) {
+        echo `<div class='full-screen'>
+                     <button onclick="window.location.href='/softexam/student'">← Back</button>;
+                     <h2>⚠️ Invalid exam configuration.</h2>
+              </div>`;
+        exit;
     }
 
-    .take-exam-container h2 {
-        text-align: center;
-        color: #333;
-        margin-bottom: 20px;
-    }
+    $startTimestamp = new DateTime($examStartStr);
+    $endTimestamp = clone $startTimestamp;
+    $endTimestamp->modify("+{$durationMinutes} minutes");
 
-    .exam-info {
-        text-align: center;
-        margin-bottom: 20px;
-        padding-bottom: 15px;
-        border-bottom: 1px solid #eee;
-    }
+    $now = new DateTime();
 
-    .question-section {
-        margin-top: 20px;
-    }
-
-    .question-item {
-        background-color: #fff;
-        border: 1px solid #ddd;
-        padding: 15px;
-        margin-bottom: 15px;
-        border-radius: 4px;
-    }
-
-    .question-item h4 {
-        margin-top: 0;
-        margin-bottom: 10px;
-        color: #007bff;
-    }
-
-    .question-item .question-text {
-        font-weight: bold;
-        margin-bottom: 10px;
-    }
-
-    .question-options-student { /* Different class name for student view */
-        margin-top: 10px;
-        padding-left: 20px;
-    }
-
-    .question-options-student .option-group {
-        margin-bottom: 10px;
-    }
-
-    .question-options-student input[type="radio"],
-    .question-options-student input[type="checkbox"] { /* If you add multi-select */
-        margin-right: 5px;
-    }
-
-    .question-options-student label {
-        font-weight: normal;
-    }
-
-    .blank-input {
-        width: 200px; /* Adjust as needed */
-        padding: 8px;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        margin-left: 5px;
-        margin-right: 5px;
-    }
-
-     .coding-area textarea {
-         width: 100%;
-         padding: 10px;
-         border: 1px solid #ccc;
-         border-radius: 4px;
-         font-family: monospace;
-         min-height: 200px;
-         resize: vertical;
-     }
-
-
-    .submit-exam-button {
-        display: block;
-        width: 100%;
-        background-color: #28a745;
-        color: white;
-        padding: 12px 20px;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 1.1em;
-        margin-top: 20px;
-    }
-
-    .submit-exam-button:hover {
-        background-color: #218838;
-    }
-
-     .message {
-        margin-top: 15px;
-        padding: 10px;
-        border-radius: 4px;
-    }
-
-    .success {
-        background-color: #d4edda;
-        color: #155724;
-        border: 1px solid #c3e6cb;
-    }
-
-    .error {
-        background-color: #f8d7da;
-        color: #721c24;
-        border: 1px solid #f5c6cb;
-    }
-</style>
-
-<div class="take-exam-container">
-    <?php if ($exam): ?>
-        <h2><?php echo htmlspecialchars($exam['title']); ?></h2>
-        <div class="exam-info">
-            <p>Course: <?php echo htmlspecialchars($exam['course_name']); ?></p>
-            <p>Time Limit: <?php echo htmlspecialchars($exam['time_limit']); ?> minutes</p>
-            <div id="examTimer">Time Left: --:--</div>
+    if ($now < $startTimestamp):
+        $startMS = $startTimestamp->getTimestamp() * 1000;
+        ?>
+        <div class="full-screen">
+            <h2>⏳ Exam hasn't started yet.</h2>
+            <p>Time remaining until exam begins:</p>
+            <h1 id="countdown">--:--:--</h1>
         </div>
 
-        <form id="takeExamForm" method="POST" action="handle_action.php?action=student_submit_exam">
-             <input type="hidden" name="exam_id" value="<?php echo htmlspecialchars($exam['exam_id']); ?>">
-            <input type="hidden" name="student_exam_id" value="<?php echo htmlspecialchars($studentExamId); ?>">
+        <script>
+            const examStartTime = <?= $startMS ?>;
+            function startCountdownToExam() {
+                const countdownEl = document.getElementById('countdown');
+                const interval = setInterval(() => {
+                    const now = Date.now();
+                    const remaining = examStartTime - now;
+                    if (remaining <= 0) {
+                        clearInterval(interval);
+                        location.reload(); // Reload page to load exam
+                    } else {
+                        const hrs = Math.floor(remaining / 3600000);
+                        const mins = Math.floor((remaining % 3600000) / 60000);
+                        const secs = Math.floor((remaining % 60000) / 1000);
+                        countdownEl.innerText = `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+                    }
+                }, 1000);
+            }
+            startCountdownToExam();
+        </script>
 
-
-            <div class="question-section">
-                <h3>Questions</h3>
-                <?php if (empty($questions)): ?>
-                    <p>No questions found for this exam.</p>
-                <?php else: ?>
-                    <?php $questionNumber = 1; ?>
-                    <?php foreach ($questions as $question): ?>
-                        <div class="question-item">
-                            <h4>Question <?php echo $questionNumber++; ?></h4>
-                             <input type="hidden" name="answers[<?php echo $question['question_id']; ?>][question_id]" value="<?php echo $question['question_id']; ?>">
-
-                            <p class="question-text"><?php echo nl2br(htmlspecialchars($question['question_text'])); ?></p>
-
-                            <div class="question-options-student">
-                                <?php if ($question['question_type'] === 'multiple_choice' && isset($question['choices'])): ?>
-                                    <?php foreach ($question['choices'] as $choice): ?>
-                                        <div class="option-group">
-                                            <input type="radio"
-                                                   name="answers[<?php echo $question['question_id']; ?>][answer]"
-                                                   id="choice_<?php echo $choice['choice_id']; ?>"
-                                                   value="<?php echo htmlspecialchars($choice['choice_text']); ?>"
-                                                   required> <label for="choice_<?php echo $choice['choice_id']; ?>">
-                                                <?php echo htmlspecialchars($choice['choice_text']); ?>
-                                            </label>
-                                        </div>
-                                    <?php endforeach; ?>
-                                <?php elseif ($question['question_type'] === 'true_false'): ?>
-                                     <div class="option-group">
-                                        <input type="radio" name="answers[<?php echo $question['question_id']; ?>][answer]" id="tf_<?php echo $question['question_id']; ?>_true" value="true" required>
-                                        <label for="tf_<?php echo $question['question_id']; ?>_true">True</label>
-                                    </div>
-                                     <div class="option-group">
-                                        <input type="radio" name="answers[<?php echo $question['question_id']; ?>][answer]" id="tf_<?php echo $question['question_id']; ?>_false" value="false">
-                                        <label for="tf_${question['question_id']}_false">False</label>
-                                    </div>
-                                <?php elseif ($question['question_type'] === 'blank_space'): ?>
-                                     <p>Enter your answer(s):</p>
-                                     <textarea name="answers[<?php echo $question['question_id']; ?>][answer]" rows="2" placeholder="Enter your answer(s) here"></textarea>
-                                     <?php endif; ?>
-                            </div>
-                             </div>
-                    <?php endforeach; ?>
-                <?php endif; ?>
-            </div>
-
-            <button type="submit" class="submit-exam-button">Submit Exam</button>
-        </form>
-
-    <?php else: // Display message if exam data could not be fetched ?>
         <?php
-        // Display error message (already set in the PHP logic)
-        // if (!empty($message)) { echo $message; }
-        ?>
-    <?php endif; ?>
+        exit;
+    endif;
 
-</div>
+    if ($now > $endTimestamp):
+        echo "<div class='full-screen'><h2>⏰ Exam time has passed. You can no longer take this exam.</h2></div>";
+        exit;
+    endif;
 
-<script>
-    // --- Start: JavaScript for Timer (Basic Placeholder) ---
-    // This is a very basic timer and needs significant improvement for a real exam system.
-    // A real system would handle timing on the server-side to prevent client-side manipulation.
+    $endMS = $endTimestamp->getTimestamp() * 1000;
+    ?>
+    <!-- Main Exam Page -->
+    <div class="quiz-container">
+        <div class="quiz-header">
+            <div class="header-left">
+                <p class="subtitle exam-title"></p>
+            </div>
+            <div class="header-right">
+                <div class="timer">Remaining Time: <span id="time">--:--</span></div>
+            </div>
+        </div>
+        <div id="question-area" class="quiz-main">
+            <!-- Questions will load here -->
+        </div>
+    </div>
 
-    document.addEventListener('DOMContentLoaded', () => {
-        const timerElement = document.getElementById('examTimer');
-        const timeLimitMinutes = <?php echo $exam ? (int)$exam['time_limit'] : 0; ?>;
-        let timeLeftSeconds = timeLimitMinutes * 60;
+    <script>
+        const user_id = <?= json_encode($_SESSION['user_id']) ?>;
+        const exam_id = <?= json_encode($exam_id) ?>;
+        const examEndTime = <?= $endMS ?>;
 
-        if (timerElement && timeLimitMinutes > 0) {
-            // In a real system, you would calculate remaining time based on started_at timestamp
-            // and potentially retrieve it from the server if resuming an exam.
+        let currentQuestion = 0;
+        let questions = [];
 
-            const timerInterval = setInterval(() => {
-                const minutes = Math.floor(timeLeftSeconds / 60);
-                const seconds = timeLeftSeconds % 60;
+        function startCountdown() {
+            const timerEl = document.getElementById('time');
+            const interval = setInterval(() => {
+                const now = Date.now();
+                const remaining = examEndTime - now;
+                if (remaining <= 0) {
+                    clearInterval(interval);
+                    timerEl.innerText = '00:00';
+                    autoSubmitExam();
+                } else {
+                    const mins = Math.floor(remaining / 60000);
+                    const secs = Math.floor((remaining % 60000) / 1000);
+                    timerEl.innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+                }
+            }, 1000);
+        }
 
-                timerElement.textContent = `Time Left: ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        async function autoSubmitExam() {
+            const response = await fetch('/softexam/api/submitExam', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    student_id: user_id,
+                    exam_id: exam_id
+                })
+            });
+            const data = await response.json();
 
-                if (timeLeftSeconds <= 0) {
-                    clearInterval(timerInterval);
-                    timerElement.textContent = 'Time is up!';
-                    // Automatically submit the form when time is up
-                    document.getElementById('takeExamForm').submit();
-                    alert('Time is up! Your exam has been automatically submitted.'); // Basic alert
+            return data;
+        }
+
+        async function loadQuestions() {
+            document.getElementById('question-area').innerHTML = '<p>Loading questions...</p>';
+            try {
+                const res = await fetch('/softexam/api/getQuestions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        student_id: user_id,
+                        exam_id
+                    })
+                });
+                const response = await res.json();
+                if (response?.error) {
+                    document.querySelector(".exam-title").innerHTML = `
+                     <button onclick="window.location.href='/softexam/student'">← Back</button>`;
+                    document.getElementById('question-area').innerHTML = `
+                            <h2>${response?.error}</h2>`;
                 }
 
-                timeLeftSeconds--;
-            }, 1000);
+                if (response?.message) {
+                    const data = autoSubmitExam();
+                    if (data?.success) {
+                        document.querySelector(".exam-title").innerHTML = `
+                     <button onclick="window.location.href='/softexam/student'">← Back</button>`;
+                        document.getElementById('question-area').innerHTML = `<h2>🎉${response?.message} And ${data?.success}!</h2>`;
+                    }
+                    else if (data?.error) {
+                        document.querySelector(".exam-title").innerHTML = `
+                     <button onclick="window.location.href='/softexam/student'">← Back</button>`;
+                        document.getElementById('question-area').innerHTML = `<h2>${response?.message} But ${data?.error}</h2>`;
+                    }
+                }
 
-            // Basic warning before closing/leaving the page (can be annoying)
-            // A real system would handle this server-side or with more sophisticated JS
-            window.addEventListener('beforeunload', (event) => {
-                 // Cancel the event as stated by the standard.
-                 event.preventDefault();
-                 // Chrome requires returnValue to be set.
-                 event.returnValue = '';
-                 // Display a message to the user (most browsers ignore custom messages)
-                 return 'Your exam is in progress. Are you sure you want to leave?';
-            });
+                if (response?.exam_title) {
+                    document.querySelector(".exam-title").textContent = response.exam_title;
+                }
+
+                if (response?.questions?.length) {
+                    questions = response?.questions;
+                    showQuestion();
+                }
+
+            } catch (err) {
+                document.querySelector(".exam-title").innerHTML = `
+                     <button onclick="window.location.href='/softexam/student'">← Back</button>`;
+                document.getElementById('question-area').innerHTML = '<p>❌ Failed to load questions.</p>';
+            }
         }
-    });
-    // --- End: JavaScript for Timer ---
 
-    // Optional: Handle form submission with AJAX to prevent full page reload
-    // and potentially save answers periodically.
-    // This is highly recommended for a real exam system.
-    // document.getElementById('takeExamForm').addEventListener('submit', function(e) {
-    //     e.preventDefault(); // Prevent default form submission
+        function showQuestion() {
+            const question = questions[currentQuestion];
+            const container = document.getElementById('question-area');
+            const isLast = currentQuestion === questions.length - 1;
 
-    //     const formData = new FormData(this); // Get form data
+            let html = `<form id="question-form">
+            <section class="question-block">
+                <h2>${currentQuestion + 1}.) ${question.question_text}</h2>
+                <div class="options-grid">`;
 
-    //     // Send form data via AJAX
-    //     fetch('handle_action.php?action=student_submit_exam', {
-    //         method: 'POST',
-    //         body: formData
-    //     })
-    //     .then(response => response.text()) // Or response.json()
-    //     .then(result => {
-    //         // Handle the response (e.g., show success message, redirect to results)
-    //         alert(result); // Basic alert
-    //         // Redirect to results page or dashboard
-    //         // window.location.href = 'handle_action.php?action=student_taken_exams';
-    //     })
-    //     .catch(error => {
-    //         console.error('Error submitting exam:', error);
-    //         alert('An error occurred during exam submission.');
-    //     });
-    // });
-</script>
+            switch (question?.question_type) {
+                case "multiple_choice":
+                    question.options.forEach((opt, i) => {
+                        html += `<div class="option">
+                        <input type="radio" id="opt${i}" name="answer" value="${opt}" required>
+                        <label for="opt${i}">${opt}</label>
+                    </div>`;
+                    });
+                    break;
+                case "fill_blank":
+                    html += `<div class="option"><input type="text" name="answer" placeholder="write your answer" required></div>`;
+                    break;
+                case "true_false":
+                    html += `<div class="option"><input type="radio" id="true" name="answer" value="True" required><label for="true">True</label></div>
+                         <div class="option"><input type="radio" id="false" name="answer" value="False" required><label for="false">False</label></div>`;
+                    break;
+            }
 
-<?php
-// If exam data was not found or not active, the error message will be displayed by the PHP logic above.
-?>
+            html += `</div></section>
+            <footer class="quiz-footer">
+                <button type="submit" class="submit-btn">${isLast ? 'Submit Exam' : 'Next'}</button>
+            </footer>
+        </form>`;
+
+            container.innerHTML = html;
+            document.getElementById('question-form').addEventListener('submit', submitAnswer);
+        }
+
+        async function submitAnswer(e) {
+            e.preventDefault();
+            const currentQ = questions[currentQuestion];
+            let answer = '';
+            switch (currentQ.question_type) {
+                case "multiple_choice":
+                case "true_false":
+                    const selected = document.querySelector('input[name="answer"]:checked');
+                    if (!selected) return alert("Please select an answer.");
+                    answer = selected.value;
+                    break;
+                case "fill_blank":
+                    const input = document.querySelector('input[name="answer"]');
+                    if (!input || input.value.trim() === "") return alert("Please enter an answer.");
+                    answer = input.value.trim();
+                    break;
+            }
+
+            const response = await fetch('/softexam/api/postAnswer', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    student_id: user_id,
+                    question_id: currentQ.question_id,
+                    answer_text: answer,
+                    exam_id: exam_id
+                })
+            });
+            const data = await response.json();
+
+            if (data?.success) {
+                currentQuestion++;
+            }
+
+            if (currentQuestion < questions.length) {
+                showQuestion();
+            } else {
+                const data = await autoSubmitExam();
+                if (data?.success) {
+                    document.querySelector(".exam-title").innerHTML = `
+                      <button onclick="window.location.href='/softexam/student'">← Back</button>`;
+                    document.getElementById('question-area').innerHTML = `<h2>🎉 ${data?.success}!</h2>`;
+                }
+                else if (data?.error) {
+                    document.querySelector(".exam-title").innerHTML = `
+                      <button onclick="window.location.href='/softexam/student'">← Back</button>`;
+                    document.getElementById('question-area').innerHTML = `<h2>${data?.error}</h2>`;
+                }
+                else {
+                    document.querySelector(".exam-title").innerHTML = `
+                      <button onclick="window.location.href='/softexam/student'">← Back</button>`;
+                    document.getElementById('question-area').innerHTML = `<h2>Exam not submitted</h2>`;
+                }
+            }
+        }
+
+        startCountdown();
+        loadQuestions();
+    </script>
+
+<?php endif; ?>

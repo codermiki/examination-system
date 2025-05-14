@@ -2,6 +2,8 @@
 include_once __DIR__ . "/../../constants.php";
 include_once __DIR__ . "/../../includes/functions/Course_function.php";
 
+$courses = Course_function::fetchCourses();
+
 ?>
 
 <div class="manage_instructor">
@@ -17,20 +19,26 @@ include_once __DIR__ . "/../../includes/functions/Course_function.php";
                     </tr>
                 </thead>
                 <tbody>
-                    <?php
-                    $courses = Course_function::fetchCourses();
-                    foreach ($courses as $course): ?>
-                        <tr data-id="<?= $course['course_id'] ?>">
-                            <td><?= htmlspecialchars($course['course_id']) ?></td>
-                            <td><?= htmlspecialchars($course['course_name']) ?></td>
-                            <td>
-                                <!-- delete button -->
-                                <button id="delete_btn" class="delete-btn" data-Cid="<?= $course['course_id'] ?>">
-                                    <img src="<?= BASE_URL ?>/assets/images/icon/bin.png" alt="delete" width="30" />
-                                </button>
+                    <?php if (!empty($courses)) { ?>
+                        <?php foreach ($courses as $course): ?>
+                            <tr data-id="<?= $course['course_id'] ?>">
+                                <td><?= htmlspecialchars($course['course_id']) ?></td>
+                                <td><?= htmlspecialchars($course['course_name']) ?></td>
+                                <td>
+                                    <!-- delete button -->
+                                    <button id="delete_btn" class="delete-btn" data-Cid="<?= $course['course_id'] ?>">
+                                        <img src="<?= BASE_URL ?>/assets/images/icon/bin.png" alt="delete" width="30" />
+                                    </button>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php } else { ?>
+                        <tr>
+                            <td style="text-align: center" colspan="3">
+                                <h4>No Courses Added Yet</h4>
                             </td>
                         </tr>
-                    <?php endforeach; ?>
+                    <?php } ?>
                 </tbody>
             </table>
         </div>

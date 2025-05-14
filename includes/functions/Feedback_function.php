@@ -17,8 +17,8 @@ class Feedback_function
                 JOIN users u ON f.student_id = u.user_id
                 JOIN exams e ON f.exam_id = e.exam_id
                 JOIN courses c ON e.course_id = c.course_id
-                WHERE u.role = 'Instructor'
                 ORDER BY f.created_at DESC";
+
         $stmt = $conn->prepare($sql);
         $stmt->execute();
         $result = $stmt->fetchAll(PDO::FETCH_ASSOC);

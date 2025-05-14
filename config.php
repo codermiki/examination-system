@@ -1,4 +1,7 @@
 <?php
+// set Time Zone
+date_default_timezone_set('Africa/Addis_Ababa');
+
 // session configuration
 ini_set('session.use_only_cookies', 1);
 ini_set('session.use_strict_mode', 1);

@@ -48,6 +48,7 @@ header nav a:hover {
 }
 
 .header__logo {
+<<<<<<< HEAD
   display: flex;
   align-items: center;
   gap: 10px; /* Increased gap */
@@ -61,6 +62,18 @@ header nav a:hover {
   height: 40px;
   background: url("../images/logo/logo.png") no-repeat center center;
   background-size: contain; /* Use contain to ensure logo is fully visible */
+=======
+   width: 120px;
+   height: 50px;
+   background: url("../images/logo/logo.png");
+   background-repeat: no-repeat;
+   background-position: center;
+   background-size: cover;
+}
+
+.header__logo img {
+   max-width: 100%;
+>>>>>>> main
 }
 
 .header__content {
@@ -182,6 +195,7 @@ footer {
     height: 50px; /* Slightly smaller height */
   }
 
+<<<<<<< HEAD
   .header__logo {
     font-size: 1.2em; /* Smaller logo text */
     gap: 5px;
@@ -195,6 +209,11 @@ footer {
   header nav {
     padding: 0 10px; /* Reduce nav padding */
   }
+=======
+   header nav {
+      padding: 0 10px; /* Reduce nav padding */
+   }
+>>>>>>> main
 
   .account button {
     padding: 6px 10px; /* Reduce button padding */

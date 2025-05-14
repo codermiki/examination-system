@@ -4,6 +4,14 @@ include_once '../config.php';
 if (!isset($_SESSION['email']) || !isset($_SESSION['role'])) {
     header('Location: ../login.php');
 }
+
+if (isset($_SESSION['must_reset_password'])) {
+    if ($_SESSION['must_reset_password'] == true) {
+        header("Location: ../");
+        exit();
+    }
+}
+
 if (!($_SESSION['role'] == 'Admin')) {
     header('Location: ../');
 }
@@ -24,7 +32,8 @@ $page = $_GET["page"] ?? "dashboard";
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>online examination admin portal</title>
+    <title>admin dashboard | softexam</title>
+    <link rel="shortcut icon" href="../assets/favicon/favicon.png" type="image/x-icon">
     <link rel="stylesheet" href="../assets/css/header.css">
     <link rel="stylesheet" href="../assets/css/main.css">
     <link rel="stylesheet" href="../assets/css/sideBar.css">

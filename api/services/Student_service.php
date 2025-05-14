@@ -19,13 +19,13 @@ class Student_service
 
                 // 2. If student doesn't exist, insert new student
                 if (!$isExist) {
-
+                    $hashedPassword = password_hash($student['email'], PASSWORD_DEFAULT);
                     $addUserStmt = $conn->prepare("INSERT INTO users (user_id, name, email, password, role) VALUES (:user_id, :name, :email, :password, 'Student')");
                     $addUserStmt->execute([
                         ':user_id' => $student['user_id'],
                         ':name' => $student['name'],
                         ':email' => $student['email'],
-                        ':password' => $student['email']
+                        ':password' => $hashedPassword
                     ]);
                 }
 

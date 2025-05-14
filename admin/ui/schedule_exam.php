@@ -23,13 +23,8 @@ include_once __DIR__ . "/../../includes/functions/Exam_function.php";
                 </div>
 
                 <div>
-                    <label for="exam_date">Exam Date:</label>
-                    <input type="date" id="exam_date" name="exam_date" required>
-                </div>
-
-                <div>
-                    <label for="exam_time">Exam Time:</label>
-                    <input type="time" id="exam_time" name="exam_time" required>
+                    <label for="exam_date">Exam Date and Time:</label>
+                    <input type="datetime-local" id="scheduled_date" name="scheduled_date" required>
                 </div>
 
                 <div style="margin-top: 20px;">
@@ -46,15 +41,12 @@ include_once __DIR__ . "/../../includes/functions/Exam_function.php";
         e.preventDefault(); // Prevent form reload
 
         const exam_id = document.getElementById("exams").value;
-        const exam_date = document.getElementById("exam_date").value;
-        const exam_time = document.getElementById("exam_time").value;
+        const scheduled_date = document.getElementById("scheduled_date").value;
 
-        if (!exam_id || !exam_date || !exam_time) {
+        if (!exam_id || !scheduled_date) {
             alert("Please fill in all fields.");
             return;
         }
-
-        const scheduled_date = `${exam_date} ${exam_time}:00`; // Combine date and time
 
         fetch("/softexam/api/scheduleExam", {
             method: "POST",

@@ -1,123 +1,83 @@
 <?php
-// includes/student/student_dashboard.php
-
-// This is the default dashboard page for students.
-
-// Include necessary configuration or database files
-include_once '../config.php';
-include_once '../includes/db/db.config.php';
-
-// Start the session if it hasn't been started already
-if (session_status() == PHP_SESSION_NONE) {
-    session_start();
-}
-
-// Security check: Ensure the user is logged in and is a student
-if (!isset($_SESSION['email']) || !isset($_SESSION['role']) || $_SESSION['role'] !== 'student' || !isset($_SESSION['user_id'])) {
-    echo '<p>Access denied. You must be a logged-in student to view this page.</p>';
-    exit();
-}
-
-$studentId = $_SESSION['user_id']; // Get the logged-in student's user_id
-$studentName = $_SESSION['name'] ?? 'Student'; // Get student name from session
-
-// --- Start: PHP Logic for Dashboard Data (Optional) ---
-// You can fetch some summary data here, e.g.,
-// - Number of upcoming exams
-// - Number of taken exams
-// - Recent results
-
-$upcomingExamsCount = 0;
-$takenExamsCount = 0;
-
-try {
-    // Count upcoming exams (example: exams scheduled in the future for courses the student is enrolled in)
-    // This requires joining student_courses (if you have one) or checking exam_schedule against student's courses
-    // For now, a simplified count of all scheduled exams
-    $stmt = $pdo->query("SELECT COUNT(*) FROM exam_schedule WHERE exam_date >= CURDATE()");
-    $upcomingExamsCount = $stmt->fetchColumn();
-
-    // Count taken exams for this student
-    $stmt = $pdo->prepare("SELECT COUNT(*) FROM student_exams WHERE student_id = :student_id AND submitted_at IS NOT NULL");
-    $stmt->bindParam(':student_id', $studentId, PDO::PARAM_INT);
-    $stmt->execute();
-    $takenExamsCount = $stmt->fetchColumn();
-
-} catch (PDOException $e) {
-    error_log("Error fetching student dashboard data: " . $e->getMessage());
-    // Handle error gracefully
-}
-
-// --- End: PHP Logic for Dashboard Data ---
+include_once __DIR__ . "/../../constants.php";
+include_once __DIR__ . "/../../includes/functions/Exam_function.php";
+$user_id = $_SESSION['user_id'];
+$scheduledExams = Exam_function::scheduledExamsPerStudent($user_id);
+$takenExams = Exam_function::takenExamsPerStudent($user_id);
 
 ?>
 
-<style>
-    /* Basic styling for the student dashboard */
-    .student-dashboard-container {
-        background-color: #f9f9f9;
-        padding: 20px;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        max-width: 800px;
-        margin: 20px auto;
-        text-align: center;
-    }
+<div class="container">
+    <h1>🎓Welcome to Student Dashboard</h1>
 
-    .student-dashboard-container h2 {
-        color: #333;
-        margin-bottom: 15px;
-    }
+    <div class="grid">
+        <!-- Available Exams -->
+        <div class="card available">
+            <h2>📝 Available Exam</h2>
+            <ul>
+                <?php if (!empty($scheduledExams)) {
+                    $availableExam = $scheduledExams[0];
+                    $scheduledDate = new DateTime($availableExam['scheduled_date']);
+                    $formattedDate = $scheduledDate->format('Y-m-d h:i A'); ?>
+                    <li>✔ <?= htmlspecialchars($formattedDate) ?> –
+                        <?= htmlspecialchars($availableExam['course_name']) ?>
+                    </li>
 
-    .dashboard-stats {
-        margin-top: 20px;
-        display: flex;
-        justify-content: space-around;
-        flex-wrap: wrap;
-    }
+                    <form action="?page=take_exam" method="POST">
+                        <input type="hidden" name="exam_id" value="<?= htmlspecialchars($availableExam['exam_id']) ?>">
+                        <button type="submit" class="btn">Start Exam</button>
+                    </form>
 
-    .stat-box {
-        background-color: #fff;
-        padding: 15px;
-        border-radius: 8px;
-        border: 1px solid #ddd;
-        margin: 10px;
-        flex: 1;
-        min-width: 180px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-    }
+                <?php } else { ?>
+                    <li>No Available Exam</li>
+                <?php } ?>
 
-    .stat-box h3 {
-        color: #007bff;
-        margin-top: 0;
-        margin-bottom: 5px;
-    }
-
-    .stat-box p {
-        font-size: 1.2em;
-        font-weight: bold;
-        color: #555;
-    }
-</style>
-
-<div class="student-dashboard-container">
-    <h2>Welcome, <?php echo htmlspecialchars($studentName); ?>!</h2>
-    <p>This is your student dashboard. Use the sidebar to navigate.</p>
-
-    <div class="dashboard-stats">
-        <div class="stat-box">
-            <h3>Upcoming Exams</h3>
-            <p><?php echo htmlspecialchars($upcomingExamsCount); ?></p>
-        </div>
-        <div class="stat-box">
-            <h3>Exams Taken</h3>
-            <p><?php echo htmlspecialchars($takenExamsCount); ?></p>
-        </div>
+            </ul>
         </div>
 
-    <p style="margin-top: 20px;">Select an option from the left sidebar to view your upcoming exams, taken exams, or add feedback.</p>
+        <!-- Exam Schedule -->
+        <div class="card schedule">
+            <h2>📆 Exam Schedule</h2>
+            <ul>
+                <?php if (!empty($scheduledExams)) {
+                    $scheduledExamCounter = 0;
+                    foreach ($scheduledExams as $scheduledExam) {
+                        if ($scheduledExamCounter >= 3)
+                            break; ?>
+                        <li>✔ <?= htmlspecialchars($scheduledExam['scheduled_date']) ?>
+                            <?= htmlspecialchars($scheduledExam['course_name']) ?>
+                        </li>
+                        <?php
+                        $scheduledExamCounter++;
+                    } ?>
+                    <a href="?page=exam_schedule" class="btn">More</a>
+                <?php } else { ?>
+                    <li>No Exam Scheduled Yet</li>
+                <?php } ?>
+            </ul>
+        </div>
+
+        <!-- Taken Exams -->
+        <div class="card taken">
+            <h2>✅ Taken Exams</h2>
+            <ul>
+                <?php if (!empty($takenExams)) {
+                    $takenExamCounter = 0;
+                    foreach ($takenExams as $takenExam) {
+                        if ($takenExamCounter >= 3)
+                            break;
+                        ?>
+                        <li>✔ <?= htmlspecialchars($takenExam['course_name']) ?> -
+                            <?= htmlspecialchars($takenExam['score']) ?> /
+                            <?= htmlspecialchars($takenExam['total_marks']) ?>
+                        </li>
+                    <?php } ?>
+                    <a href="?page=taken_exams" class="btn">More</a>
+                    <a href="?page=add_feedback" class="btn">Add Feedback</a>
+                <?php } else { ?>
+                    <li>No Exam Taken Yet</li>
+                <?php } ?>
+            </ul>
+        </div>
+    </div>
 </div>
-
-<?php
-// No JavaScript needed for this basic dashboard.
-?>

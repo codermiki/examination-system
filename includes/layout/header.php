@@ -1,10 +1,11 @@
+<?php
+include __DIR__ . "/../../constants.php";
+?>
+
 <header>
     <nav>
-        <a href="#">
+        <a href="./">
             <div class="header__logo">
-                <div class="logo__container">
-                </div>
-                <h1>softexam</h1>
             </div>
         </a>
         <div class="header__content">
@@ -48,7 +49,15 @@
                                 <form action="./" method="post">
                                     <input class="btn" type="submit" name="logout" id="" value="logout">
                                 </form>
+<<<<<<< HEAD
                             <?php
+=======
+
+                                <button style="padding:5px 10px; margin: 10px;"
+                                    onclick="window.location.href='/softexam/reset_password.php'">Update
+                                    Password</button>
+                                <?php
+>>>>>>> main
                             }
                             ?>
                         </div>
