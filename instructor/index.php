@@ -47,6 +47,7 @@ $page = $_GET["page"] ?? "dashboard";
     <link rel="stylesheet" href="../assets/css/feedbacks.css">
     <link rel="stylesheet" href="../assets/css/updatePass.css">
     <link rel="stylesheet" href="../assets/css/header.css">
+    <link rel="stylesheet" href="../assets/css/dashboardInstructor.css">
 </head>
 
 <body>
@@ -74,10 +75,6 @@ $page = $_GET["page"] ?? "dashboard";
                     break;
                 case 'view_exam':
                     include "./ui/view_exam.php";
-                    break;
-
-                case 'update_password':
-                    include "./ui/update_password.php";
                     break;
 
                 case 'import_exam':
