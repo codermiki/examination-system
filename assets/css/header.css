@@ -1,228 +1,182 @@
 :root {
-  --header-bg: #ffffff; /* White background */
-  --header-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /* Softer, more spread shadow */
-  --header-link-color: #333; /* Dark grey for links */
-  --header-link-hover-color: #007bff; /* Blue on hover */
-  --header-transition-duration: 0.3s;
-  --account-button-bg: #e9ecef; /* Light grey button background */
-  --account-button-hover-bg: #dee2e6; /* Slightly darker on hover */
-  --dropdown-bg: #ffffff; /* White dropdown background */
-  --dropdown-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); /* More prominent dropdown shadow */
-  --dropdown-border-color: #e9ecef; /* Light border for dropdown items */
-  --logout-button-bg: #dc3545; /* Red for logout */
-  --logout-button-hover-bg: #c82333; /* Darker red on hover */
-  --logout-button-color: #ffffff; /* White text for logout */
+   --header-bg: #ffffff; /* White background */
+   --header-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /* Softer, more spread shadow */
+   --header-link-color: #333; /* Dark grey for links */
+   --header-link-hover-color: #007bff; /* Blue on hover */
+   --header-transition-duration: 0.3s;
+   --account-button-bg: #e9ecef; /* Light grey button background */
+   --account-button-hover-bg: #dee2e6; /* Slightly darker on hover */
+   --dropdown-bg: #ffffff; /* White dropdown background */
+   --dropdown-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); /* More prominent dropdown shadow */
+   --dropdown-border-color: #e9ecef; /* Light border for dropdown items */
+   --logout-button-bg: #dc3545; /* Red for logout */
+   --logout-button-hover-bg: #c82333; /* Darker red on hover */
+   --logout-button-color: #ffffff; /* White text for logout */
 }
 
 header {
-  height: 60px; /* Increased height */
-  padding: 0 20px; /* Adjusted padding */
-  background-color: var(--header-bg);
-  box-shadow: var(--header-shadow);
-  position: sticky;
-  top: 0;
-  left: 0;
-  transition: all 0.3s ease;
-  z-index: 2000;
+   height: 60px; /* Increased height */
+   padding: 0 20px; /* Adjusted padding */
+   background-color: var(--header-bg);
+   box-shadow: var(--header-shadow);
+   position: sticky;
+   top: 0;
+   left: 0;
+   transition: all 0.3s ease;
+   z-index: 2000;
 }
 
 header nav {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%; /* Make nav take full header width */
-  height: 100%;
-  padding: 0; /* Remove nav padding */
+   display: flex;
+   justify-content: space-between;
+   align-items: center;
+   width: 100%; /* Make nav take full header width */
+   height: 100%;
+   padding: 0; /* Remove nav padding */
 }
 
 header nav a {
-  text-decoration: none;
-  color: var(--header-link-color);
-  transition: color var(--header-transition-duration) ease;
-  display: flex; /* Use flex for logo area */
-  align-items: center;
+   text-decoration: none;
+   color: var(--header-link-color);
+   transition: color var(--header-transition-duration) ease;
+   display: flex; /* Use flex for logo area */
+   align-items: center;
 }
 
 header nav a:hover {
-  color: var(--header-link-hover-color);
+   color: var(--header-link-hover-color);
 }
 
 .header__logo {
-<<<<<<< HEAD
-  display: flex;
-  align-items: center;
-  gap: 10px; /* Increased gap */
-  font-size: 1.4em; /* Larger logo text */
-  font-weight: bold;
-  color: #333; /* Dark color for logo text */
+   display: flex;
+   align-items: center;
+   gap: 10px; /* Increased gap */
+   font-size: 1.4em; /* Larger logo text */
+   font-weight: bold;
+   color: #333; /* Dark color for logo text */
 }
 
-.logo__container {
-  width: 40px; /* Keep logo size */
-  height: 40px;
-  background: url("../images/logo/logo.png") no-repeat center center;
-  background-size: contain; /* Use contain to ensure logo is fully visible */
-=======
+.header__logo {
    width: 120px;
    height: 50px;
    background: url("../images/logo/logo.png");
    background-repeat: no-repeat;
-   background-position: center;
    background-size: cover;
+   background-position: center;
 }
 
 .header__logo img {
    max-width: 100%;
->>>>>>> main
 }
 
 .header__content {
-  display: flex;
-  align-items: center;
+   display: flex;
+   align-items: center;
 }
 
 .account {
-  position: relative; /* Needed for positioning the dropdown */
-  display: inline-block;
+   position: relative; /* Needed for positioning the dropdown */
+   display: inline-block;
 }
 
 .account button {
-  padding: 8px 15px; /* Adjusted padding */
-  cursor: pointer;
-  border: none;
-  font-weight: 700;
-  border-radius: 24px;
-  opacity: 0.9;
-  transition: all 0.2s ease-in-out;
+   padding: 8px 15px; /* Adjusted padding */
+   cursor: pointer;
+   border: none;
+   font-weight: 700;
+   border-radius: 24px;
+   opacity: 0.9;
+   transition: all 0.2s ease-in-out;
 }
 
 .account button:hover {
-  box-shadow: #e4e0e0 2px 0px 10px;
+   box-shadow: #e4e0e0 2px 0px 10px;
 }
 
 .account button:active {
-  color: #333;
-  background-color: transparent;
+   color: #333;
+   background-color: transparent;
 }
 
 .drop-down {
-  position: absolute;
-  top: calc(100% + 10px); /* Position below the button with some space */
-  right: 0; /* Align to the right of the button */
-  background-color: var(--dropdown-bg);
-  box-shadow: var(--dropdown-shadow);
-  border-radius: 8px; /* Rounded corners */
-  overflow: hidden; /* Hide content during transition */
-  max-height: 0; /* Start collapsed */
-  opacity: 0; /* Start invisible */
-  visibility: hidden; /* Hide completely when collapsed */
-  transition: max-height var(--header-transition-duration) ease-in-out,
-    opacity var(--header-transition-duration) ease,
-    visibility var(--header-transition-duration) ease;
-  min-width: 200px; /* Minimum width for dropdown */
-  z-index: 1001; /* Ensure it's above other header elements */
+   position: absolute;
+   top: calc(100% + 10px); /* Position below the button with some space */
+   right: 0; /* Align to the right of the button */
+   background-color: var(--dropdown-bg);
+   box-shadow: var(--dropdown-shadow);
+   border-radius: 8px; /* Rounded corners */
+   overflow: hidden; /* Hide content during transition */
+   max-height: 0; /* Start collapsed */
+   opacity: 0; /* Start invisible */
+   visibility: hidden; /* Hide completely when collapsed */
+   transition: max-height var(--header-transition-duration) ease-in-out,
+      opacity var(--header-transition-duration) ease,
+      visibility var(--header-transition-duration) ease;
+   min-width: 200px; /* Minimum width for dropdown */
+   z-index: 1001; /* Ensure it's above other header elements */
 }
 
 .drop-down.display {
-  max-height: 200px; /* Sufficient height to show content */
-  opacity: 1;
-  visibility: visible;
+   max-height: 200px; /* Sufficient height to show content */
+   opacity: 1;
+   visibility: visible;
 }
 
 .user {
-  padding: 10px 15px; /* Adjusted padding */
-  text-align: left;
+   padding: 10px 15px; /* Adjusted padding */
+   text-align: left;
 }
 
 .user .email {
-  font-size: 0.9em;
-  color: #555;
-  margin-bottom: 5px;
-  word-break: break-word; /* Prevent long emails from overflowing */
+   font-size: 0.9em;
+   color: #555;
+   margin-bottom: 5px;
+   word-break: break-word; /* Prevent long emails from overflowing */
 }
 
 .user hr {
-  border: none;
-  height: 1px;
-  background-color: var(--dropdown-border-color);
-  margin: 10px 0;
+   border: none;
+   height: 1px;
+   background-color: var(--dropdown-border-color);
+   margin: 10px 0;
 }
 
 .logout {
-  padding: 0 15px 10px; /* Padding around the logout button */
+   padding: 0 15px 10px; /* Padding around the logout button */
 }
 
 .logout form {
-  margin: 0; /* Remove form margin */
+   margin: 0; /* Remove form margin */
 }
 
 .logout .btn {
-  width: 100%;
-  padding: 10px;
-  cursor: pointer;
-  border: none;
-  font-weight: 600;
-  background-color: var(--logout-button-bg);
-  color: var(--logout-button-color);
-  border-radius: 4px;
-  transition: background-color var(--header-transition-duration) ease;
-  text-align: center; /* Center button text */
+   width: 100%;
+   padding: 10px;
+   cursor: pointer;
+   border: none;
+   font-weight: 600;
+   background-color: var(--logout-button-bg);
+   color: var(--logout-button-color);
+   border-radius: 4px;
+   transition: background-color var(--header-transition-duration) ease;
+   text-align: center; /* Center button text */
 }
 
 .logout .btn:hover {
-  background-color: var(--logout-button-hover-bg);
+   background-color: var(--logout-button-hover-bg);
 }
 
 /* footer style (kept from previous code, assuming it's in header.css) */
 /* It's generally better to have footer styles in a separate footer.css */
 footer {
-  padding: 30px 0;
-  background-color: #d8d8d8;
-  text-align: center; /* Center footer content */
+   padding: 30px 0;
+   background-color: #d8d8d8;
+   text-align: center; /* Center footer content */
 }
 
 .footer__container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 10px;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  header {
-    padding: 0 10px; /* Reduce padding on smaller screens */
-    height: 50px; /* Slightly smaller height */
-  }
-
-<<<<<<< HEAD
-  .header__logo {
-    font-size: 1.2em; /* Smaller logo text */
-    gap: 5px;
-  }
-
-  .logo__container {
-    width: 35px;
-    height: 35px;
-  }
-
-  header nav {
-    padding: 0 10px; /* Reduce nav padding */
-  }
-=======
-   header nav {
-      padding: 0 10px; /* Reduce nav padding */
-   }
->>>>>>> main
-
-  .account button {
-    padding: 6px 10px; /* Reduce button padding */
-    font-size: 0.9em;
-  }
-
-  .drop-down {
-    top: calc(100% + 8px); /* Adjust dropdown position */
-    right: 0; /* Keep right aligned */
-    min-width: 180px;
-  }
+   display: flex;
+   justify-content: center;
+   align-items: center;
+   gap: 10px;
 }

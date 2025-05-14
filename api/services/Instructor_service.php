@@ -23,12 +23,15 @@ class Instructor_service
 
             // If instructor doesn't exist, insert new instructor
             if (!$isExist) {
+
+                $hashedPassword = password_hash($instructor['email'], PASSWORD_DEFAULT);
+
                 $addUserStmt = $conn->prepare("INSERT INTO users (user_id, name, email, password, role) VALUES (:user_id, :name, :email, :password, 'Instructor')");
                 $addUserStmt->execute([
                     ':user_id' => $instructor['user_id'],
                     ':name' => $instructor['name'],
                     ':email' => $instructor['email'],
-                    ':password' => $instructor['email']  // Consider hashing in real use
+                    ':password' => $hashedPassword  // Consider hashing in real use
                 ]);
             }
 
