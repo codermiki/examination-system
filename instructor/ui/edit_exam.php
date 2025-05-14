@@ -7,15 +7,6 @@ if (!isset($_SESSION['email'])) {
     exit();
 }
 
-// $stmt = $conn->prepare("SELECT role FROM users WHERE email = :email");
-// $stmt->bindParam(':email', $_SESSION['email']);
-// $stmt->execute();
-// $user = $stmt->fetch(PDO::FETCH_ASSOC);
-
-// if (!$user || $user['role'] !== 'Instructor') {
-//     echo '<p>Access denied. You must be an instructor.</p>';
-//     exit();
-// }
 if (!isset($_SESSION['email']) || !isset($_SESSION['role']) || $_SESSION['role'] !== 'Instructor' || !isset($_SESSION['user_id'])) {
     header('Location: ../../login.php');
     exit();
@@ -27,11 +18,6 @@ $questions = [];
 $courses = [];
 $instructorExams = [];
 
-// $stmt = $conn->prepare("SELECT user_id FROM users WHERE email = :email");
-// $stmt->bindParam(':email', $_SESSION['email']);
-// $stmt->execute();
-// $user = $stmt->fetch(PDO::FETCH_ASSOC);
-// $instructorId = $user['user_id'];
 
 $instructorId = $_SESSION['user_id'];
 

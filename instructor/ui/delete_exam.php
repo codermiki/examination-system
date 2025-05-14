@@ -53,7 +53,6 @@ if (isset($_GET['exam_id']) && isset($_GET['confirm_delete']) && $_GET['confirm_
                 $conn->commit();
                 $message = '<p class="success">Exam deleted successfully.</p>';
             }
-
         } catch (PDOException $e) {
             if ($conn->inTransaction()) {
                 $conn->rollBack();
@@ -75,13 +74,12 @@ try {
     $stmt->bindParam(':instructor_id', $instructorId, PDO::PARAM_INT);
     $stmt->execute();
     $instructorExams = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
 } catch (PDOException $e) {
     error_log("Error fetching instructor's exams for delete list: " . $e->getMessage());
     if (empty($message)) {
-         $message = '<p class="error">Error loading your exams list. Please try again later.</p>';
+        $message = '<p class="error">Error loading your exams list. Please try again later.</p>';
     } else {
-         $message .= '<p class="error">Could not fully load your exams list after attempting deletion.</p>';
+        $message .= '<p class="error">Could not fully load your exams list after attempting deletion.</p>';
     }
 }
 
@@ -89,6 +87,7 @@ try {
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -105,10 +104,11 @@ try {
             color: #333;
         }
 
-        .page-container h1, .page-container h2 {
-             color: #0056b3;
-             text-align: center;
-             margin-bottom: 25px;
+        .page-container h1,
+        .page-container h2 {
+            color: #0056b3;
+            text-align: center;
+            margin-bottom: 25px;
         }
 
         .page-container h2 {
@@ -146,7 +146,8 @@ try {
             overflow: hidden;
         }
 
-        .exam-table th, .exam-table td {
+        .exam-table th,
+        .exam-table td {
             padding: 12px;
             text-align: left;
             border-bottom: 1px solid #ddd;
@@ -181,9 +182,9 @@ try {
         .exam-table td small {
             color: #666;
         }
-
     </style>
 </head>
+
 <body>
 
     <main>
@@ -214,8 +215,8 @@ try {
                                 <td><?php echo htmlspecialchars($instExam['course_name']); ?></td>
                                 <td><?php echo htmlspecialchars(date('M d, Y', strtotime($instExam['created_at']))); ?></td>
                                 <td>
-                                    <a href="ui/delete_exam.php?exam_id=<?php echo htmlspecialchars($instExam['exam_id']); ?>&confirm_delete=yes"
-                                       onclick="return confirm('Are you sure you want to delete the exam titled \'<?php echo htmlspecialchars($instExam['title']); ?>\'? This action cannot be undone and will delete all associated questions, choices, and student answers.');">
+                                    <a href="index.php?page=delete_exam&exam_id=<?php echo htmlspecialchars($instExam['exam_id']); ?>&confirm_delete=yes"
+                                        onclick="return confirm('Are you sure you want to delete the exam titled \'<?php echo htmlspecialchars($instExam['title']); ?>\'? This action cannot be undone and will delete all associated questions, choices, and student answers.');">
                                         Delete
                                     </a>
                                 </td>
@@ -231,4 +232,5 @@ try {
     </main>
 
 </body>
+
 </html>

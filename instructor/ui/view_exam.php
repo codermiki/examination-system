@@ -225,7 +225,7 @@ if (!$showSingleExamView) {
                     <div class="empty-state">
                         <span class="icon">📋</span>
                         <p>You haven't created any exams yet.</p>
-                        <p style="margin-top:1rem;"><a href="create_exam.php" class="btn btn-primary">Create New Exam</a></p>
+                        <p style="margin-top:1rem;"><a href="index.php?page=create_exam" class="btn btn-primary">Create New Exam</a></p>
                     </div>
                 <?php endif; ?>
             </div>
